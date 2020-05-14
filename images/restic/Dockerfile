@@ -15,6 +15,6 @@ ENV RESTIC_BACKUP_SOURCES /data
 ENV RESTIC_BACKUP_TAGS ""
 ENV RESTIC_CACHE_DIR /config/restic/cache
 
-COPY root /
+COPY root/ /
 
 VOLUME /config

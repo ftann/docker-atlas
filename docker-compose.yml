@@ -11,66 +11,19 @@ services:
 #    image: adminer
 #    container_name: adminer
 #    depends_on:
-#      - airsonic_db
 #      - nextcloud_db
 #      - teamspeak_db
 #    networks:
-#      - airsonic_db
 #      - nextcloud_db
 #      - teamspeak_db
 #    ports:
 #      - 8080:8080
 #    restart: always
 
-  airsonic:
-    image: linuxserver/airsonic:${AIRSONIC}
-    container_name: airsonic
-    depends_on:
-      - airsonic_db
-      - ldap
-    networks:
-      - airsonic_db
-      - auth
-      - proxy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-    volumes:
-      - ./volumes/airsonic:/config
-      - ${VOLUME_MEDIA}:/media
-      - ${VOLUME_MEDIA}/music:/music
-      - ${VOLUME_MEDIA}/playlists:/playlists
-      - ${VOLUME_MEDIA}/podcasts:/podcasts
-    restart: always
-
-  airsonic_db:
-    image: linuxserver/mariadb:${MARIADB}
-    container_name: airsonic_db
-    networks:
-      - airsonic_db
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - MYSQL_DATABASE=airsonic
-      - MYSQL_USER=airsonic
-      - FILE__MYSQL_PASSWORD=/run/secrets/airsonic_db
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/airsonic_db
-    volumes:
-      - ./volumes/airsonic_db:/config
-    secrets:
-      - airsonic_db
-    restart: always
-
   ldap:
     image: ctor/ldap:${LDAP}
     container_name: ldap
-    build: images/ldap
+    build: ./images/ldap
     networks:
       - ipv6
       - auth
@@ -145,7 +98,6 @@ services:
     image: linuxserver/letsencrypt:${LETSENCRYPT}
     container_name: nginx
     depends_on:
-      - airsonic
       - nextcloud
       - plex
       - syncthing
@@ -201,19 +153,18 @@ services:
     volumes:
       - ./volumes/plex:/config
       - ${VOLUME_MEDIA}:/data
-    restart: unless-stopped
+    restart: always
 
   restic_data:
-    image: ctor/restic:latest
+    image: ctor/restic:${RESTIC}
     container_name: restic_data
-    build: images/restic
+    build: ./images/restic
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=Europe/Zurich
-      - RESTIC_REPOSITORY=b2:atlas-data
-      - RESTIC_SCHEDULE=30 4 * * 1
-      - RESTIC_BACKUP_SOURCES=/data
+      - RESTIC_REPOSITORY=<empty>
+      - RESTIC_SCHEDULE=30 4 * * *
       - RESTIC_BACKUP_TAGS=data
       - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
       - FILE__RESTIC_PASSWORD=/run/secrets/restic_data
@@ -234,16 +185,15 @@ services:
     restart: always
 
   restic_volumes:
-    image: ctor/restic:latest
+    image: ctor/restic:${RESTIC}
     container_name: restic_volumes
-    build: images/restic
+    build: ./images/restic
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=Europe/Zurich
-      - RESTIC_REPOSITORY=b2:atlas-volumes
+      - RESTIC_REPOSITORY=<empty>
       - RESTIC_SCHEDULE=30 3 * * *
-      - RESTIC_BACKUP_SOURCES=/data
       - RESTIC_BACKUP_TAGS=volumes
       - RESTIC_FORGET_ARGS=--prune --keep-daily 4 --keep-weekly 2 --keep-monthly 2
       - FILE__RESTIC_PASSWORD=/run/secrets/restic_volumes
@@ -252,8 +202,6 @@ services:
     volumes:
       - ./volumes/restic_volumes:/config
       # Backup sources.
-      - ./volumes/airsonic:/data/airsonic:ro
-      - ./volumes/airsonic_db:/data/airsonic_db:ro
       - ./volumes/ldap:/data/ldap:ro
       - ./volumes/nginx:/data/nginx:ro
       - ./volumes/nextcloud:/data/nextcloud:ro
@@ -301,6 +249,7 @@ services:
       - 10011:10011
       - 30033:30033
     environment:
+      - TZ=${TZ}
       - TS3SERVER_DB_PLUGIN=ts3db_mariadb
       - TS3SERVER_DB_SQLCREATEPATH=create_mariadb
       - TS3SERVER_DB_HOST=teamspeak_db
@@ -311,7 +260,6 @@ services:
       - TS3SERVER_DB_NAME=teamspeak
       - TS3SERVER_DB_WAITUNTILREADY=30
       - TS3SERVER_LICENSE=accept
-      - TZ=${TZ}
     volumes:
       - ./volumes/teamspeak:/var/ts3server
     secrets:
@@ -324,6 +272,8 @@ services:
     networks:
       - teamspeak_db
     environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
       - MYSQL_DATABASE=teamspeak
       - MYSQL_USER=teamspeak
@@ -338,7 +288,7 @@ services:
   udpxy:
     image: ctor/udpxy:${UDPXY}
     container_name: udpxy
-    build: images/udpxy
+    build: ./images/udpxy
     network_mode: "host"
     ports:
       - 4022:4022
@@ -361,7 +311,6 @@ networks:
     name: ipv6
   auth:
   proxy:
-  airsonic_db:
   nextcloud_db:
   teamspeak_db:
 
@@ -380,8 +329,6 @@ secrets:
     file: ./secrets/ldap_auth
   ldap_db:
     file: ./secrets/ldap_db
-  airsonic_db:
-    file: ./secrets/airsonic_db
   nextcloud_db:
     file: ./secrets/nextcloud_db
   teamspeak_db:

@@ -15,9 +15,9 @@ mk_tag_args() {
 TAGS="$(mk_tag_args "${RESTIC_BACKUP_TAGS}")"
 
 # shellcheck disable=SC2086
-restic backup $TAGS "${RESTIC_OPTIONS[@]}" "$RESTIC_BACKUP_SOURCES"
+s6-setuidgid abc restic backup $TAGS "${RESTIC_OPTIONS[@]}" "$RESTIC_BACKUP_SOURCES"
 
 [[ -z "$RESTIC_FORGET_ARGS" ]] && exit 0
 
 # shellcheck disable=SC2086
-restic forget $TAGS "${RESTIC_OPTIONS[@]}" --prune --group-by "paths,tags" $RESTIC_FORGET_ARGS
+s6-setuidgid abc restic forget $TAGS "${RESTIC_OPTIONS[@]}" --prune --group-by "paths,tags" $RESTIC_FORGET_ARGS
