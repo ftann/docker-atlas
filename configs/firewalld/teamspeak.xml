@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>teamspeak</short>
+  <description>TeamSpeak is software for quality voice communication via the Internet.</description>
+  <port protocol="tcp" port="10011"/>
+  <port protocol="tcp" port="30033"/>
+  <port protocol="udp" port="9987"/>
+</service>

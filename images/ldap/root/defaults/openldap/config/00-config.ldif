@@ -1,0 +1,18 @@
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+olcReferral: ldap://root.openldap.org
+olcConfigDir: /config/databases/slapd.d/
+olcPidFile: /run/openldap/slapd.pid
+olcLogLevel: 0
+olcThreads: 2
+olcTLSCipherSuite: HIGH:-SSLv2:-SSLv3
+olcTLSCACertificateFile: {{ LDAP_CERTS }}/chain.pem
+olcTLSCertificateFile: {{ LDAP_CERTS }}/cert.pem
+olcTLSCertificateKeyFile: {{ LDAP_CERTS }}/privkey.pem
+olcTLSVerifyClient: never
+olcTLSProtocolMin: 3.3
+olcSecurity: simple_bind=128
+olcLocalSSF: 71
+olcRequires: bind
+olcDisallows: bind_anon

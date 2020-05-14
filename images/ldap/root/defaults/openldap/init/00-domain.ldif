@@ -1,0 +1,12 @@
+dn: {{ LDAP_DOMAIN }}
+dc: ctor
+o: ctor
+objectClass: dcObject
+objectClass: organization
+
+dn: cn={{ LDAP_ROOT }},{{ LDAP_DOMAIN }}
+cn: root
+description: root
+objectClass: organizationalRole
+objectClass: top
+roleOccupant: {{ LDAP_DOMAIN }}

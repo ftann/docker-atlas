@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bash
+
+# Fixes high memory usage.
+ulimit -n 1024
+
+/usr/sbin/slapd \
+    -u abc -g abc \
+    -h "ldap:/// ldaps:///" \
+    -F /config/databases/slapd.d \
+    -d 0

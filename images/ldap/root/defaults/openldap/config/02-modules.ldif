@@ -1,0 +1,8 @@
+dn: cn=module,cn=config
+cn: module
+objectClass: olcModuleList
+objectClass: top
+olcModuleLoad: back_mdb.so
+olcModuleLoad: memberof.so
+olcModuleLoad: ppolicy.so
+olcModuleLoad: refint.so

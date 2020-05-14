@@ -1,0 +1,6 @@
+dn: cn={{ LDAP_BIND_USER }},{{ LDAP_DOMAIN }}
+cn: {{ LDAP_BIND_USER }}
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+userPassword: {{ LDAP_BIND_PASSWORD }}
+description: authentication user with readonly access

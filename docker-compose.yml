@@ -1,0 +1,388 @@
+version: '3.7'
+
+#
+# ATLAS
+# Home server
+#
+
+services:
+
+#  adminer:
+#    image: adminer
+#    container_name: adminer
+#    depends_on:
+#      - airsonic_db
+#      - nextcloud_db
+#      - teamspeak_db
+#    networks:
+#      - airsonic_db
+#      - nextcloud_db
+#      - teamspeak_db
+#    ports:
+#      - 8080:8080
+#    restart: always
+
+  airsonic:
+    image: linuxserver/airsonic:${AIRSONIC}
+    container_name: airsonic
+    depends_on:
+      - airsonic_db
+      - ldap
+    networks:
+      - airsonic_db
+      - auth
+      - proxy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    volumes:
+      - ./volumes/airsonic:/config
+      - ${VOLUME_MEDIA}:/media
+      - ${VOLUME_MEDIA}/music:/music
+      - ${VOLUME_MEDIA}/playlists:/playlists
+      - ${VOLUME_MEDIA}/podcasts:/podcasts
+    restart: always
+
+  airsonic_db:
+    image: linuxserver/mariadb:${MARIADB}
+    container_name: airsonic_db
+    networks:
+      - airsonic_db
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - MYSQL_DATABASE=airsonic
+      - MYSQL_USER=airsonic
+      - FILE__MYSQL_PASSWORD=/run/secrets/airsonic_db
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/airsonic_db
+    volumes:
+      - ./volumes/airsonic_db:/config
+    secrets:
+      - airsonic_db
+    restart: always
+
+  ldap:
+    image: ctor/ldap:${LDAP}
+    container_name: ldap
+    build: images/ldap
+    networks:
+      - ipv6
+      - auth
+    ports:
+    #  - 389:389
+      - 636:636
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Zurich
+      - LDAP_DOMAIN=${LDAP_DOMAIN}
+      - LDAP_ROOT=root
+      - LDAP_BIND_USER=auth
+      - LDAP_CERTS=/config/certs/live/<domain>
+      - FILE__LDAP_CONFIG_PASSWORD=/run/secrets/ldap_db
+      - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
+      - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
+    volumes:
+      - ./volumes/ldap:/config
+      - ./configs/ldap:/config/initdb.d:ro
+      - ./volumes/nginx/etc/letsencrypt:/config/certs:ro
+    secrets:
+      - ldap_auth
+      - ldap_db
+    ulimits:
+      nofile: 1024
+    restart: always
+
+  nextcloud:
+    image: linuxserver/nextcloud:${NEXTCLOUD}
+    container_name: nextcloud
+    depends_on:
+      - ldap
+      - nextcloud_db
+    networks:
+      - auth
+      - nextcloud_db
+      - proxy
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=${UMASK}
+    volumes:
+      - ./volumes/nextcloud:/config
+      - ${VOLUME_NEXTCLOUD}:/data
+      - ${VOLUME_MEDIA}:/media
+      - ${VOLUME_POOL}:/pool
+      - ${VOLUME_SYNC}:/sync
+    restart: always
+
+  nextcloud_db:
+    image: linuxserver/mariadb:${MARIADB}
+    container_name: nextcloud_db
+    networks:
+      - nextcloud_db
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - FILE__MYSQL_PASSWORD=/run/secrets/nextcloud_db
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/nextcloud_db
+    volumes:
+      - ./volumes/nextcloud_db:/config
+    secrets:
+      - nextcloud_db
+    restart: always
+
+  nginx:
+    image: linuxserver/letsencrypt:${LETSENCRYPT}
+    container_name: nginx
+    depends_on:
+      - airsonic
+      - nextcloud
+      - plex
+      - syncthing
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - ipv6
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - URL=<domain>
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+    #  - STAGING=true
+    volumes:
+      - ./volumes/nginx:/config
+      - ./configs/www:/config/www:ro
+      - ./secrets/cloudflare:/config/dns-conf/cloudflare.ini:ro
+    restart: always
+
+  plex:
+    image: linuxserver/plex:${PLEX}
+    container_name: plex
+    networks:
+      - proxy
+    #ports:
+    # - 32400:32400/tcp
+    # - 3005:3005/tcp
+    # - 8324:8324/tcp
+    # - 32469:32469/tcp
+    # - 1900:1900/udp
+    # - 32410:32410/udp
+    # - 32412:32412/udp
+    # - 32413:32413/udp
+    # - 32414:32414/udp
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET={UMASK}
+      - VERSION=docker
+    # - PLEX_CLAIM=
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    volumes:
+      - ./volumes/plex:/config
+      - ${VOLUME_MEDIA}:/data
+    restart: unless-stopped
+
+  restic_data:
+    image: ctor/restic:latest
+    container_name: restic_data
+    build: images/restic
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Zurich
+      - RESTIC_REPOSITORY=b2:atlas-data
+      - RESTIC_SCHEDULE=30 4 * * 1
+      - RESTIC_BACKUP_SOURCES=/data
+      - RESTIC_BACKUP_TAGS=data
+      - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
+      - FILE__RESTIC_PASSWORD=/run/secrets/restic_data
+      - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
+      - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
+    volumes:
+      - ./volumes/restic_data:/config
+      # Backup sources.
+      - /mnt/data/backup:/data/backup:ro
+      - /mnt/data/media:/data/media:ro
+      - /mnt/data/nextcloud:/data/nextcloud:ro
+      - /mnt/data/pool:/data/pool:ro
+      - /mnt/data/syncthing:/data/syncthing:ro
+    secrets:
+      - backblaze_id
+      - backblaze_key
+      - restic_data
+    restart: always
+
+  restic_volumes:
+    image: ctor/restic:latest
+    container_name: restic_volumes
+    build: images/restic
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Zurich
+      - RESTIC_REPOSITORY=b2:atlas-volumes
+      - RESTIC_SCHEDULE=30 3 * * *
+      - RESTIC_BACKUP_SOURCES=/data
+      - RESTIC_BACKUP_TAGS=volumes
+      - RESTIC_FORGET_ARGS=--prune --keep-daily 4 --keep-weekly 2 --keep-monthly 2
+      - FILE__RESTIC_PASSWORD=/run/secrets/restic_volumes
+      - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
+      - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
+    volumes:
+      - ./volumes/restic_volumes:/config
+      # Backup sources.
+      - ./volumes/airsonic:/data/airsonic:ro
+      - ./volumes/airsonic_db:/data/airsonic_db:ro
+      - ./volumes/ldap:/data/ldap:ro
+      - ./volumes/nginx:/data/nginx:ro
+      - ./volumes/nextcloud:/data/nextcloud:ro
+      - ./volumes/nextcloud_db:/data/nextcloud_db:ro
+      - ./volumes/syncthing:/data/syncthing:ro
+      - ./volumes/teamspeak:/data/teamspeak:ro
+      - ./volumes/teamspeak_db:/data/teamspeak_db:ro
+    secrets:
+      - backblaze_id
+      - backblaze_key
+      - restic_volumes
+    restart: always
+
+  syncthing:
+    image: linuxserver/syncthing:${SYNCTHING}
+    container_name: syncthing
+    networks:
+      - ipv6
+      - auth
+      - proxy
+    ports:
+      # - 8384:8384
+      - 22000:22000
+      - 21027:21027/udp
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK_SET=${UMASK}
+    volumes:
+      - ./volumes/syncthing:/config
+      - ${VOLUME_SYNC}:/data1
+    restart: always
+
+  teamspeak:
+    image: teamspeak:${TEAMSPEAK}
+    container_name: teamspeak
+    depends_on:
+      - teamspeak_db
+    networks:
+      - ipv6
+      - teamspeak_db
+    ports:
+      - 9987:9987/udp
+      - 10011:10011
+      - 30033:30033
+    environment:
+      - TS3SERVER_DB_PLUGIN=ts3db_mariadb
+      - TS3SERVER_DB_SQLCREATEPATH=create_mariadb
+      - TS3SERVER_DB_HOST=teamspeak_db
+      - TS3SERVER_DB_USER=teamspeak
+      - TS3SERVER_DB_PASSWORD=<empty>
+      # Wait for fix
+      # - TS3SERVER_DB_PASSWORD_FILE=/run/secrets/teamspeak_db
+      - TS3SERVER_DB_NAME=teamspeak
+      - TS3SERVER_DB_WAITUNTILREADY=30
+      - TS3SERVER_LICENSE=accept
+      - TZ=${TZ}
+    volumes:
+      - ./volumes/teamspeak:/var/ts3server
+    secrets:
+      - teamspeak_db
+    restart: always
+
+  teamspeak_db:
+    image: linuxserver/mariadb:${MARIADB}
+    container_name: teamspeak_db
+    networks:
+      - teamspeak_db
+    environment:
+      - TZ=${TZ}
+      - MYSQL_DATABASE=teamspeak
+      - MYSQL_USER=teamspeak
+      - FILE__MYSQL_PASSWORD=/run/secrets/teamspeak_db
+      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/teamspeak_db
+    volumes:
+      - ./volumes/teamspeak_db:/config
+    secrets:
+      - teamspeak_db
+    restart: always
+
+  udpxy:
+    image: ctor/udpxy:${UDPXY}
+    container_name: udpxy
+    build: images/udpxy
+    network_mode: "host"
+    ports:
+      - 4022:4022
+    restart: always
+
+  ipv6_nat:
+    image: robbertkl/ipv6nat:${IPV6NAT}
+    container_name: ipv6_nat
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+
+networks:
+  # IPv6 NAT network
+  ipv6:
+    name: ipv6
+  auth:
+  proxy:
+  airsonic_db:
+  nextcloud_db:
+  teamspeak_db:
+
+secrets:
+  backblaze_id:
+    file: ./secrets/backblaze_id
+  backblaze_key:
+    file: ./secrets/backblaze_key
+  restic_data:
+    file: ./secrets/restic_data
+  restic_volumes:
+    file: ./secrets/restic_volumes
+  cloudflare:
+    file: ./secrets/cloudflare
+  ldap_auth:
+    file: ./secrets/ldap_auth
+  ldap_db:
+    file: ./secrets/ldap_db
+  airsonic_db:
+    file: ./secrets/airsonic_db
+  nextcloud_db:
+    file: ./secrets/nextcloud_db
+  teamspeak_db:
+    file: ./secrets/teamspeak_db

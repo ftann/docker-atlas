@@ -1,0 +1,66 @@
+#!/usr/bin/with-contenv bash
+
+[[ -e /config/.installed ]] && exit 0
+
+CONFIG=/config/databases/slapd.d
+CONFIG_INIT=/config/config.ldif
+DATABASE=/config/databases/openldap-data
+DATABASE_INIT=/config/database.ldif
+
+create_password_hash() {
+  slappasswd -n -h {SSHA} -s "$1"
+}
+
+replace_placeholder() {
+  sed -i "s|{{ $1 }}|$2|g" "$3"
+}
+
+mkdir -p "$CONFIG"
+mkdir -p "$DATABASE"
+
+{
+  for file in /defaults/openldap/config/*.ldif; do
+    [ -e "$file" ] || continue
+    cat "$file"
+    echo
+  done
+} >>"$CONFIG_INIT"
+
+{
+  for file in /defaults/openldap/db/*.ldif; do
+    [ -e "$file" ] || continue
+    cat "$file"
+    echo
+  done
+} >>"$CONFIG_INIT"
+
+{
+  for file in /defaults/openldap/init/*.ldif; do
+    [ -e "$file" ] || continue
+    cat "$file"
+    echo
+  done
+} >>"$DATABASE_INIT"
+
+BIND_PASSWORD=$(create_password_hash "$LDAP_BIND_PASSWORD")
+CONFIG_PASSWORD=$(create_password_hash "$LDAP_CONFIG_PASSWORD")
+ROOT_PASSWORD=$(create_password_hash "$LDAP_ROOT_PASSWORD")
+
+replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$CONFIG_INIT"
+replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$CONFIG_INIT"
+replace_placeholder LDAP_CERTS "$LDAP_CERTS" "$CONFIG_INIT"
+replace_placeholder LDAP_CONFIG_PASSWORD "$CONFIG_PASSWORD" "$CONFIG_INIT"
+replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$CONFIG_INIT"
+replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$CONFIG_INIT"
+replace_placeholder LDAP_ROOT_PASSWORD "$ROOT_PASSWORD" "$CONFIG_INIT"
+
+slapadd -n 0 -F "$CONFIG" -l "$CONFIG_INIT"
+
+replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$DATABASE_INIT"
+replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$DATABASE_INIT"
+replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$DATABASE_INIT"
+replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$DATABASE_INIT"
+
+slapadd -n 1 -F "$CONFIG" -l "$DATABASE_INIT"
+
+rm "$CONFIG_INIT" "$DATABASE_INIT"

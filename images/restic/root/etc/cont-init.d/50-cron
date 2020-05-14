@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+[[ -z "$RESTIC_SCHEDULE" ]] && exit 1
+
+replace_placeholder() {
+  sed -i "s|{{ $1 }}|$2|g" "$3"
+}
+
+mkdir -p /config/crontabs
+
+[[ -f /config/crontabs/root ]] || cp /etc/crontabs/root /config/crontabs/root
+replace_placeholder RESTIC_SCHEDULE "$RESTIC_SCHEDULE" /config/crontabs/root
+cp /config/crontabs/root /etc/crontabs/root
+
