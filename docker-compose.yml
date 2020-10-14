@@ -138,7 +138,7 @@ services:
     restart: always
 
   nginx:
-    image: linuxserver/letsencrypt:${LETSENCRYPT}
+    image: linuxserver/swag:${SWAG}
     container_name: nginx
     depends_on:
       - nextcloud
@@ -164,7 +164,7 @@ services:
     #  - STAGING=true
     volumes:
       - ./volumes/nginx:/config
-      - ./configs/www:/config/www:ro
+      - ./configs/www:/config/www
       - ./secrets/cloudflare:/config/dns-conf/cloudflare.ini:ro
     restart: always
 
