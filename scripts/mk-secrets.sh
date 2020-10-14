@@ -4,6 +4,9 @@
 . ./scripts/util/secret.sh
 . ./scripts/util/var.sh
 
+create_secret secrets/authelia_db "$(rnd_pw 20)"
+create_secret secrets/authelia_jwt "$(rnd_pw 20)"
+create_secret secrets/authelia_session "$(rnd_pw 20)"
 create_secret secrets/ldap_auth "$(rnd_pw 20)"
 create_secret secrets/ldap_db "$(rnd_pw 20)"
 create_secret secrets/nextcloud_db "$(rnd_pw 20)"

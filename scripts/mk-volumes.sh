@@ -2,6 +2,8 @@
 
 . ./scripts/util/volume.sh
 
+create_volume volumes/authelia
+create_volume volumes/authelia_db
 create_volume volumes/ldap
 create_volume volumes/nginx
 create_volume volumes/nextcloud
