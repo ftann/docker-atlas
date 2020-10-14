@@ -32,3 +32,11 @@ get_cloudflare_id() {
 get_cloudflare_key() {
   get_var CLOUDFLARE_KEY
 }
+
+get_volume_root() {
+  get_var VOLUME_ROOT
+}
+
+get_selinux_label() {
+  get_var SELINUX_OBJ_LABEL
+}

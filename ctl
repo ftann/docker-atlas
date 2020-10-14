@@ -9,6 +9,7 @@ install() {
   ./scripts/mk-secrets.sh
   ./scripts/mk-volumes.sh
   ./scripts/own-volumes.sh
+  ./scripts/mk-selinux.sh
 }
 
 up() {
