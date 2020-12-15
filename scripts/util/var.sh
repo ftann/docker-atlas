@@ -33,6 +33,10 @@ get_cloudflare_key() {
   get_var CLOUDFLARE_KEY
 }
 
+get_maxmind_key() {
+  get_var MAXMIND_KEY
+}
+
 get_volume_root() {
   get_var VOLUME_ROOT
 }

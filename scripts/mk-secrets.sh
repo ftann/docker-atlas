@@ -22,3 +22,5 @@ EOF
 
 create_secret secrets/backblaze_id "$(get_b2_id)"
 create_secret secrets/backblaze_key "$(get_b2_key)"
+
+create_secret secrets/maxmind "$(get_maxmind_key)"

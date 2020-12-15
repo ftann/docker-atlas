@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
 . ./scripts/util/ask.sh
+. ./scripts/util/root.sh
 . ./scripts/util/run.sh
 
 install() {
+  check_root
   ./scripts/mk-fwrules.sh
   ./scripts/mk-networks.sh
   ./scripts/mk-secrets.sh

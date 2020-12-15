@@ -6,20 +6,20 @@ version: '3.7'
 
 services:
 
-  #  adminer:
-  #    image: adminer
-  #    container_name: adminer
-  #    depends_on:
-  #      - authelia_db
-  #      - nextcloud_db
-  #      - teamspeak_db
-  #    networks:
-  #      - authelia_db
-  #      - nextcloud_db
-  #      - teamspeak_db
-  #    ports:
-  #      - 8080:8080
-  #    restart: always
+#  adminer:
+#    image: adminer
+#    container_name: adminer
+#    depends_on:
+#      - authelia_db
+#      - nextcloud_db
+#      - teamspeak_db
+#    networks:
+#      - authelia_db
+#      - nextcloud_db
+#      - teamspeak_db
+#    ports:
+#      - 8080:8080
+#    restart: always
 
   authelia:
     image: authelia/authelia:${AUTHELIA}
@@ -30,14 +30,16 @@ services:
       - auth
       - authelia_db
     environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_auth
       - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt
       - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/authelia_db
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session
     volumes:
-      - ./volumes/authelia:/config
-      - ./configs/authelia/configuration.yml:/config/configuration.yml:ro
+      - ./volumes/authelia:/config:z
+      - ./configs/authelia/configuration.yml:/config/configuration.yml:z
     secrets:
       - authelia_jwt
       - authelia_session
@@ -58,7 +60,7 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/authelia_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/authelia_db
     volumes:
-      - ./volumes/authelia_db:/config
+      - ./volumes/authelia_db:/config:z
     secrets:
       - authelia_db
     restart: always
@@ -70,9 +72,6 @@ services:
     networks:
       - ipv6
       - auth
-    ports:
-      #  - 389:389
-      - 636:636
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -85,9 +84,9 @@ services:
       - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
     volumes:
-      - ./volumes/ldap:/config
-      - ./configs/ldap:/config/initdb.d:ro
-      - ./volumes/nginx/etc/letsencrypt:/config/certs:ro
+      - ./volumes/ldap:/config:z
+      - ./configs/ldap:/config/initdb.d:ro,z
+      - ./volumes/swag/etc/letsencrypt:/config/certs:ro,z
     secrets:
       - ldap_auth
       - ldap_db
@@ -111,11 +110,11 @@ services:
       - TZ=${TZ}
       - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/nextcloud:/config
-      - ${VOLUME_NEXTCLOUD}:/data
-      - ${VOLUME_MEDIA}:/media
-      - ${VOLUME_POOL}:/pool
-      - ${VOLUME_SYNC}:/sync
+      - ./volumes/nextcloud:/config:z
+      - ${VOLUME_NEXTCLOUD}:/data:z
+      - ${VOLUME_MEDIA}:/media:z
+      - ${VOLUME_POOL}:/pool:z
+      - ${VOLUME_SYNC}:/sync:z
     restart: always
 
   nextcloud_db:
@@ -132,40 +131,9 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/nextcloud_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/nextcloud_db
     volumes:
-      - ./volumes/nextcloud_db:/config
+      - ./volumes/nextcloud_db:/config:z
     secrets:
       - nextcloud_db
-    restart: always
-
-  nginx:
-    image: linuxserver/swag:${SWAG}
-    container_name: nginx
-    depends_on:
-      - nextcloud
-      - plex
-      - syncthing
-    cap_add:
-      - NET_ADMIN
-    networks:
-      - ipv6
-      - auth
-      - proxy
-    ports:
-      - 80:80
-      - 443:443
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - URL=<domain>
-      - SUBDOMAINS=wildcard
-      - VALIDATION=dns
-      - DNSPLUGIN=cloudflare
-    #  - STAGING=true
-    volumes:
-      - ./volumes/nginx:/config
-      - ./configs/www:/config/www
-      - ./secrets/cloudflare:/config/dns-conf/cloudflare.ini:ro
     restart: always
 
   plex:
@@ -187,7 +155,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK_SET={UMASK}
+      - UMASK_SET=${UMASK}
       - VERSION=docker
     # - PLEX_CLAIM=
     deploy:
@@ -195,8 +163,8 @@ services:
         limits:
           memory: 4G
     volumes:
-      - ./volumes/plex:/config
-      - ${VOLUME_MEDIA}:/data
+      - ./volumes/plex:/config:z
+      - ${VOLUME_MEDIA}:/data:z
     restart: always
 
   restic_data:
@@ -215,13 +183,13 @@ services:
       - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
       - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
     volumes:
-      - ./volumes/restic_data:/config
+      - ./volumes/restic_data:/config:z
       # Backup sources.
-      - /mnt/data/backup:/data/backup:ro
-      - /mnt/data/media:/data/media:ro
-      - /mnt/data/nextcloud:/data/nextcloud:ro
-      - /mnt/data/pool:/data/pool:ro
-      - /mnt/data/syncthing:/data/syncthing:ro
+      - /mnt/data/backup:/data/backup:ro,z
+      - /mnt/data/media:/data/media:ro,z
+      - /mnt/data/nextcloud:/data/nextcloud:ro,z
+      - /mnt/data/pool:/data/pool:ro,z
+      - /mnt/data/syncthing:/data/syncthing:ro,z
     secrets:
       - backblaze_id
       - backblaze_key
@@ -244,19 +212,55 @@ services:
       - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
       - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
     volumes:
-      - ./volumes/restic_volumes:/config
+      - ./volumes/restic_volumes:/config:z
       # Backup sources.
-      - ./volumes/ldap:/data/ldap:ro
-      - ./volumes/nginx:/data/nginx:ro
-      - ./volumes/nextcloud:/data/nextcloud:ro
-      - ./volumes/nextcloud_db:/data/nextcloud_db:ro
-      - ./volumes/syncthing:/data/syncthing:ro
-      - ./volumes/teamspeak:/data/teamspeak:ro
-      - ./volumes/teamspeak_db:/data/teamspeak_db:ro
+      - ./volumes/authelia:/data/authelia:ro,z
+      - ./volumes/authelia_db:/data/authelia_db:ro,z
+      - ./volumes/ldap:/data/ldap:ro,z
+      - ./volumes/nextcloud:/data/nextcloud:ro,z
+      - ./volumes/nextcloud_db:/data/nextcloud_db:ro,z
+      - ./volumes/swag:/data/swag:ro,z
+      - ./volumes/syncthing:/data/syncthing:ro,z
+      - ./volumes/teamspeak:/data/teamspeak:ro,z
+      - ./volumes/teamspeak_db:/data/teamspeak_db:ro,z
     secrets:
       - backblaze_id
       - backblaze_key
       - restic_volumes
+    restart: always
+
+  swag:
+    image: linuxserver/swag:${SWAG}
+    container_name: swag
+    depends_on:
+      - nextcloud
+      - plex
+      - syncthing
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - ipv6
+      - auth
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - URL=<domain>
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+      - FILE__MAXMINDDB_LICENSE_KEY=/run/secrets/maxmind
+    #  - STAGING=true
+    volumes:
+      - ./volumes/swag:/config:z
+      - ./configs/blog:/config/www:z
+    secrets:
+      - cloudflare
+      - maxmind
     restart: always
 
   syncthing:
@@ -275,8 +279,8 @@ services:
       - TZ=${TZ}
       - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/syncthing:/config
-      - ${VOLUME_SYNC}:/data1
+      - ./volumes/syncthing:/config:z
+      - ${VOLUME_SYNC}:/data1:z
     restart: always
 
   teamspeak:
@@ -297,14 +301,12 @@ services:
       - TS3SERVER_DB_SQLCREATEPATH=create_mariadb
       - TS3SERVER_DB_HOST=teamspeak_db
       - TS3SERVER_DB_USER=teamspeak
-      - TS3SERVER_DB_PASSWORD=<empty>
-      # Wait for fix
-      # - TS3SERVER_DB_PASSWORD_FILE=/run/secrets/teamspeak_db
+      - TS3SERVER_DB_PASSWORD_FILE=/run/secrets/teamspeak_db
       - TS3SERVER_DB_NAME=teamspeak
       - TS3SERVER_DB_WAITUNTILREADY=30
       - TS3SERVER_LICENSE=accept
     volumes:
-      - ./volumes/teamspeak:/var/ts3server
+      - ./volumes/teamspeak:/var/ts3server:z
     secrets:
       - teamspeak_db
     restart: always
@@ -323,7 +325,7 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/teamspeak_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/teamspeak_db
     volumes:
-      - ./volumes/teamspeak_db:/config
+      - ./volumes/teamspeak_db:/config:z
     secrets:
       - teamspeak_db
     restart: always
@@ -345,7 +347,7 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
     security_opt:
       - label:disable
     restart: always
@@ -371,6 +373,8 @@ secrets:
     file: ./secrets/backblaze_key
   cloudflare:
     file: ./secrets/cloudflare
+  maxmind:
+    file: ./secrets/maxmind
   restic_data:
     file: ./secrets/restic_data
   restic_volumes:
