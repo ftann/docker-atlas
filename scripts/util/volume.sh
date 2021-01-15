@@ -7,13 +7,13 @@ exists_volume() {
 create_volume() {
   local volume="$1"
   if ! exists_volume "$volume"; then
-    mkdir -p "$volume"
+     mkdir -p "$volume"
   fi
 }
 
 own_volume() {
   local volume="$1"
   if exists_volume "$volume"; then
-    chown -R "$2:$3" "$volume"
+     chown -R "$2:$3" "$volume"
   fi
 }

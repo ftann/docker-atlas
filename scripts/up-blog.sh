@@ -5,5 +5,6 @@ curl -OL https://github.com/ftann/ctor-blog/releases/latest/download/release.zip
 rm -rf ./blog
 unzip release.zip
 mv public blog
+rm release.zip
 chown 2000.2000 -R blog
 docker restart swag

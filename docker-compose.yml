@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 #
 # ATLAS
@@ -9,11 +9,8 @@ services:
 #  adminer:
 #    image: adminer
 #    container_name: adminer
-#    depends_on:
-#      - authelia_db
-#      - nextcloud_db
-#      - teamspeak_db
 #    networks:
+#      - outside
 #      - authelia_db
 #      - nextcloud_db
 #      - teamspeak_db
@@ -70,7 +67,6 @@ services:
     container_name: ldap
     build: ./images/ldap
     networks:
-      - ipv6
       - auth
     environment:
       - PUID=${PUID}
@@ -171,6 +167,8 @@ services:
     image: ctor/restic:${RESTIC}
     container_name: restic_data
     build: ./images/restic
+    networks:
+      - outside
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -200,6 +198,8 @@ services:
     image: ctor/restic:${RESTIC}
     container_name: restic_volumes
     build: ./images/restic
+    networks:
+      - outside
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -239,7 +239,7 @@ services:
     cap_add:
       - NET_ADMIN
     networks:
-      - ipv6
+      - outside
       - auth
       - proxy
     ports:
@@ -267,7 +267,7 @@ services:
     image: linuxserver/syncthing:${SYNCTHING}
     container_name: syncthing
     networks:
-      - ipv6
+      - outside
       - proxy
     ports:
       # - 8384:8384
@@ -289,7 +289,7 @@ services:
     depends_on:
       - teamspeak_db
     networks:
-      - ipv6
+      - outside
       - teamspeak_db
     ports:
       - 9987:9987/udp
@@ -339,23 +339,9 @@ services:
       - 4022:4022
     restart: always
 
-  ipv6_nat:
-    image: robbertkl/ipv6nat:${IPV6NAT}
-    container_name: ipv6_nat
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro,z
-    security_opt:
-      - label:disable
-    restart: always
-
 networks:
-  # IPv6 NAT network
-  ipv6:
-    name: ipv6
+  outside:
+    name: outside
   auth:
   proxy:
   authelia_db:

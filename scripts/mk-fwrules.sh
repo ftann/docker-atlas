@@ -2,7 +2,6 @@
 
 . ./scripts/util/fw.sh
 
-add_service_fw plex
 add_service_fw syncthing
 add_service_fw udpxy
 add_service_fw iptv
