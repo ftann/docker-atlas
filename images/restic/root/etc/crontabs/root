@@ -1,2 +1,2 @@
 {{ RESTIC_SCHEDULE }} /app/restic-backup.sh >> /config/log/restic/restic.log 2>&1
-30 5 1 * * /app/restic-check.sh >> /config/log/restic/restic.log 2>&1
+30 8 1 * * /app/restic-check.sh >> /config/log/restic/restic.log 2>&1
