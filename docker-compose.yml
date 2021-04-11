@@ -6,17 +6,17 @@ version: '3.8'
 
 services:
 
-#  adminer:
-#    image: adminer
-#    container_name: adminer
-#    networks:
-#      - outside
-#      - authelia_db
-#      - nextcloud_db
-#      - teamspeak_db
-#    ports:
-#      - "8080:8080"
-#    restart: always
+  #  adminer:
+  #    image: adminer
+  #    container_name: adminer
+  #    networks:
+  #      - outside
+  #      - authelia_db
+  #      - nextcloud_db
+  #      - teamspeak_db
+  #    ports:
+  #      - "8080:8080"
+  #    restart: always
 
   authelia:
     image: authelia/authelia:${AUTHELIA}
@@ -162,6 +162,26 @@ services:
     volumes:
       - ./volumes/plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
+    restart: always
+
+  protonmail-bridge:
+    image: ctor/protonmail-bridge:${PROTONMAIL_BRIDGE}
+    container_name: protonmail-bridge
+    build: ./images/protonmail-bridge
+    networks:
+      - outside
+    ports:
+      - "25:1025"
+      - "143:1143"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Zurich
+      - PROTONMAIL_ADDRESS=<email>
+      - PROTONMAIL_PASSWORD=<password>
+      - PROTONMAIL_PASSWORD_MAILBOX=<mailbox-password>
+    volumes:
+      - ./volumes/protonmail-bridge:/config:z
     restart: always
 
   restic_data:

@@ -1,0 +1,36 @@
+#!/usr/bin/with-contenv bash
+
+[[ -e /config/.installed ]] && exit 0
+
+export HOME=/config
+cd /config || exit 1
+
+cat >gpgparams <<EOF
+%no-protection
+%echo Generating a basic OpenPGP key
+Key-Type: RSA
+Key-Length: 4096
+Name-Real: pass-key
+Expire-Date: 0
+%commit
+%echo done
+EOF
+
+s6-setuidgid abc /usr/bin/gpg --generate-key --batch gpgparams
+rm gpgparams
+s6-setuidgid abc /usr/bin/pass init pass-key
+
+s6-setuidgid abc /protonmail/bridge --cli <<EOF
+login
+${PROTONMAIL_ADDRESS}
+${PROTONMAIL_PASSWORD}
+${PROTONMAIL_PASSWORD_MAILBOX}
+EOF
+
+s6-setuidgid abc /protonmail/bridge --cli <<EOF | grep -E '(Username|Password)' | sort -ru
+info
+EOF
+
+chown abc:abc -R /config
+
+touch /config/.installed
