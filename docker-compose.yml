@@ -99,6 +99,7 @@ services:
       - nextcloud_db
     networks:
       - auth
+      - mail
       - nextcloud_db
       - proxy
     environment:
@@ -170,6 +171,7 @@ services:
     build: ./images/protonmail-bridge
     networks:
       - outside
+      - mail
     ports:
       - "25:1025"
       - "143:1143"
@@ -366,6 +368,7 @@ networks:
   outside:
     name: outside
   auth:
+  mail:
   proxy:
   authelia_db:
   nextcloud_db:
