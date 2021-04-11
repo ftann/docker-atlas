@@ -1,21 +1,17 @@
 FROM lsiobase/alpine:3.13
 
-RUN \
-    apk \
-        update && \
-    apk \
-        add bash openldap openldap-backend-all openldap-overlay-all openldap-clients openssl && \
-    mkdir -p \
-        /run/openldap && \
-    chown abc:abc \
-        /run/openldap && \
-    rm -rf \
-        /var/cache/apk/*
+EXPOSE 389 636
 
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
-COPY root/ /
+RUN \
+    apk add --no-cache \
+        bash openldap openldap-backend-all openldap-overlay-all openldap-clients openssl && \
+    mkdir -p \
+        /run/openldap && \
+    chown abc:abc \
+        /run/openldap
 
-EXPOSE 389 636
+COPY root/ /
 
 VOLUME /config

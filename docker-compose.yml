@@ -6,17 +6,17 @@ version: '3.8'
 
 services:
 
-#  adminer:
-#    image: adminer
-#    container_name: adminer
-#    networks:
-#      - outside
-#      - authelia_db
-#      - nextcloud_db
-#      - teamspeak_db
-#    ports:
-#      - 8080:8080
-#    restart: always
+  #  adminer:
+  #    image: adminer
+  #    container_name: adminer
+  #    networks:
+  #      - outside
+  #      - authelia_db
+  #      - nextcloud_db
+  #      - teamspeak_db
+  #    ports:
+  #      - "8080:8080"
+  #    restart: always
 
   authelia:
     image: authelia/authelia:${AUTHELIA}
@@ -43,6 +43,7 @@ services:
       - ldap_auth
       - authelia_db
     restart: always
+
   authelia_db:
     image: linuxserver/mariadb:${MARIADB}
     container_name: authelia_db
@@ -138,15 +139,15 @@ services:
     networks:
       - proxy
     #ports:
-    # - 32400:32400/tcp
-    # - 3005:3005/tcp
-    # - 8324:8324/tcp
-    # - 32469:32469/tcp
-    # - 1900:1900/udp
-    # - 32410:32410/udp
-    # - 32412:32412/udp
-    # - 32413:32413/udp
-    # - 32414:32414/udp
+    # - "32400:32400/tcp"
+    # - "3005:3005/tcp"
+    # - "8324:8324/tcp"
+    # - "32469:32469/tcp"
+    # - "1900:1900/udp"
+    # - "32410:32410/udp"
+    # - "32412:32412/udp"
+    # - "32413:32413/udp"
+    # - "32414:32414/udp"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -161,6 +162,26 @@ services:
     volumes:
       - ./volumes/plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
+    restart: always
+
+  protonmail-bridge:
+    image: ctor/protonmail-bridge:${PROTONMAIL_BRIDGE}
+    container_name: protonmail-bridge
+    build: ./images/protonmail-bridge
+    networks:
+      - outside
+    ports:
+      - "25:1025"
+      - "143:1143"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=Europe/Zurich
+      - PROTONMAIL_ADDRESS=<email>
+      - PROTONMAIL_PASSWORD=<password>
+      - PROTONMAIL_PASSWORD_MAILBOX=<mailbox-password>
+    volumes:
+      - ./volumes/protonmail-bridge:/config:z
     restart: always
 
   restic_data:
@@ -243,8 +264,8 @@ services:
       - auth
       - proxy
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -270,9 +291,9 @@ services:
       - outside
       - proxy
     ports:
-      # - 8384:8384
-      - 22000:22000
-      - 21027:21027/udp
+      # - "8384:8384"
+      - "22000:22000"
+      - "21027:21027/udp"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -292,9 +313,9 @@ services:
       - outside
       - teamspeak_db
     ports:
-      - 9987:9987/udp
-      - 10011:10011
-      - 30033:30033
+      - "9987:9987/udp"
+      - "10011:10011"
+      - "30033:30033"
     environment:
       - TZ=${TZ}
       - TS3SERVER_DB_PLUGIN=ts3db_mariadb
@@ -336,7 +357,9 @@ services:
     build: ./images/udpxy
     network_mode: "host"
     ports:
-      - 4022:4022
+      - "4022:4022"
+    environment:
+      - TZ=${TZ}
     restart: always
 
 networks:

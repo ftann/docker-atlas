@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bash
+
+export HOME=/config
+
+rm -f faketty
+mkfifo faketty
+
+# Fake a terminal, so it does not quit because of EOF.
+# shellcheck disable=SC2002
+cat faketty | exec s6-setuidgid abc /protonmail/bridge --cli
