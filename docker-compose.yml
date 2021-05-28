@@ -153,13 +153,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK_SET=${UMASK}
+      - UMASK=${UMASK}
       - VERSION=docker
     # - PLEX_CLAIM=
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 8G
     volumes:
       - ./volumes/plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
