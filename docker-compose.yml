@@ -358,8 +358,6 @@ services:
     container_name: udpxy
     build: ./images/udpxy
     network_mode: "host"
-    ports:
-      - "4022:4022"
     environment:
       - TZ=${TZ}
     restart: always
