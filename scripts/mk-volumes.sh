@@ -4,6 +4,7 @@
 
 create_volume volumes/authelia
 create_volume volumes/authelia_db
+create_volume volumes/inadyn
 create_volume volumes/ldap
 create_volume volumes/nextcloud
 create_volume volumes/nextcloud_db

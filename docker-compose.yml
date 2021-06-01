@@ -63,6 +63,19 @@ services:
       - authelia_db
     restart: always
 
+  inadyn:
+    image: ctor/inadyn:${INADYN}
+    container_name: inadyn
+    build: ./images/inadyn
+    networks:
+      - outside
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./volumes/inadyn:/config:z
+      - ./configs/inadyn/inadyn.conf:/config/inadyn.conf:z
+    restart: always
+
   ldap:
     image: ctor/ldap:${LDAP}
     container_name: ldap
