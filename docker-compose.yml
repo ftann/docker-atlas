@@ -243,7 +243,7 @@ services:
       - RESTIC_REPOSITORY=<empty>
       - RESTIC_SCHEDULE=30 3 * * *
       - RESTIC_BACKUP_TAGS=volumes
-      - RESTIC_FORGET_ARGS=--prune --keep-daily 4 --keep-weekly 2 --keep-monthly 2
+      - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
       - FILE__RESTIC_PASSWORD=/run/secrets/restic_volumes
       - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
       - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
