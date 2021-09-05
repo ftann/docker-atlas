@@ -43,6 +43,8 @@ services:
       - ldap_auth
       - authelia_db
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   authelia_db:
     image: linuxserver/mariadb:${MARIADB}
@@ -62,6 +64,8 @@ services:
     secrets:
       - authelia_db
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   inadyn:
     image: ctor/inadyn:${INADYN}
@@ -127,6 +131,8 @@ services:
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   nextcloud_db:
     image: linuxserver/mariadb:${MARIADB}
@@ -146,6 +152,8 @@ services:
     secrets:
       - nextcloud_db
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   plex:
     image: linuxserver/plex:${PLEX}
@@ -177,6 +185,8 @@ services:
       - ./volumes/plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   protonmail-bridge:
     image: ctor/protonmail-bridge:${PROTONMAIL_BRIDGE}
@@ -298,6 +308,8 @@ services:
       - cloudflare
       - maxmind
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   syncthing:
     image: linuxserver/syncthing:${SYNCTHING}
@@ -318,6 +330,8 @@ services:
       - ./volumes/syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   teamspeak:
     image: teamspeak:${TEAMSPEAK}
@@ -346,6 +360,8 @@ services:
     secrets:
       - teamspeak_db
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   teamspeak_db:
     image: linuxserver/mariadb:${MARIADB}
@@ -365,6 +381,8 @@ services:
     secrets:
       - teamspeak_db
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
   udpxy:
     image: ctor/udpxy:${UDPXY}
@@ -374,6 +392,22 @@ services:
     environment:
       - TZ=${TZ}
     restart: always
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=${TZ}
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=error
+      - WATCHTOWER_SCHEDULE=0 0 6 * * *
+    restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
 
 networks:
   outside:
