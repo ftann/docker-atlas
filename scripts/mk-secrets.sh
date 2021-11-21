@@ -15,8 +15,7 @@ create_secret secrets/restic_volumes "$(rnd_pw 20)"
 create_secret secrets/teamspeak_db "$(rnd_pw 20)"
 
 create_secret secrets/cloudflare "$(cat <<-EOF
-dns_cloudflare_email=$(get_cloudflare_id)
-dns_cloudflare_api_key=$(get_cloudflare_key)
+dns_cloudflare_api_token=$(get_cloudflare_token)
 EOF
 )"
 

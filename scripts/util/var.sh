@@ -25,12 +25,8 @@ get_b2_key() {
   get_var BACKBLAZE_KEY
 }
 
-get_cloudflare_id() {
-  get_var CLOUDFLARE_ID
-}
-
-get_cloudflare_key() {
-  get_var CLOUDFLARE_KEY
+get_cloudflare_token() {
+  get_var CLOUDFLARE_TOKEN
 }
 
 get_maxmind_key() {
