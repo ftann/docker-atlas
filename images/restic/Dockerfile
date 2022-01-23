@@ -1,4 +1,4 @@
-FROM lsiobase/alpine:3.14
+FROM lsiobase/alpine:3.15
 
 RUN apk add --no-cache bash restic
 

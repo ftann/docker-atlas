@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine AS builder
+FROM golang:1.15-alpine3.14 AS builder
 
 RUN apk add --no-cache bash gcc git make musl-dev libsecret-dev
 
@@ -12,7 +12,7 @@ RUN git clone ${BRIDGE_URL} proton-bridge && \
     git checkout ${BRIDGE_VERSION} && \
     make build-nogui
 
-FROM lsiobase/alpine:3.14
+FROM lsiobase/alpine:3.15
 
 EXPOSE 25 143
 
