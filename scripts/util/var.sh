@@ -9,13 +9,17 @@ get_var() {
   eval "echo \${$1}"
 }
 
-get_uid() {
-  get_var PUID
+#
+# Getters for specific keys.
+#
+
+# Domains
+
+get_domain() {
+  get_var DOMAIN
 }
 
-get_gid() {
-  get_var PGID
-}
+# Secrets
 
 get_b2_id() {
   get_var BACKBLAZE_ID
@@ -33,10 +37,34 @@ get_maxmind_key() {
   get_var MAXMIND_KEY
 }
 
-get_volume_root() {
-  get_var VOLUME_ROOT
+get_protonmail_address() {
+  get_var PROTONMAIL_ADDRESS
+}
+
+get_protonmail_password() {
+  get_var PROTONMAIL_PASSWORD
+}
+
+get_protonmail_password_mailbox() {
+  get_var PROTONMAIL_PASSWORD_MAILBOX
+}
+
+# Permissions
+
+get_uid() {
+  get_var PUID
+}
+
+get_gid() {
+  get_var PGID
 }
 
 get_selinux_label() {
   get_var SELINUX_OBJ_LABEL
+}
+
+# Volumes
+
+get_volume_root() {
+  get_var VOLUME_ROOT
 }

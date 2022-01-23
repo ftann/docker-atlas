@@ -78,6 +78,8 @@ services:
     volumes:
       - ./volumes/inadyn:/config:z
       - ./configs/inadyn/inadyn.conf:/config/inadyn.conf:z
+    secrets:
+      - inadyn
     restart: always
 
   ldap:
@@ -93,7 +95,7 @@ services:
       - LDAP_DOMAIN=${LDAP_DOMAIN}
       - LDAP_ROOT=root
       - LDAP_BIND_USER=auth
-      - LDAP_CERTS=/config/certs/live/<domain>
+      - LDAP_CERTS=/config/certs/live/${DOMAIN}
       - FILE__LDAP_CONFIG_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
@@ -295,7 +297,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - URL=<domain>
+      - URL=${DOMAIN}
       - SUBDOMAINS=wildcard
       - VALIDATION=dns
       - DNSPLUGIN=cloudflare
@@ -430,6 +432,8 @@ secrets:
     file: ./secrets/backblaze_key
   cloudflare:
     file: ./secrets/cloudflare
+  inadyn:
+    file: ./secrets/inadyn
   maxmind:
     file: ./secrets/maxmind
   restic_data:
