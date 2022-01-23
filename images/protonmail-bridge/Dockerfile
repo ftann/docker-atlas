@@ -3,7 +3,7 @@ FROM golang:1.15-alpine3.14 AS builder
 RUN apk add --no-cache bash gcc git make musl-dev libsecret-dev
 
 ENV BRIDGE_URL="https://github.com/ProtonMail/proton-bridge.git" \
-    BRIDGE_VERSION="br-1.8.11"
+    BRIDGE_VERSION="br-2.1.0"
 
 WORKDIR /tmp
 
