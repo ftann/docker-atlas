@@ -8,8 +8,10 @@
 # Generated secrets.
 #
 create_secret secrets/authelia_db "$(rnd_pw 20)"
+create_secret secrets/authelia_identity_hmac "$(rnd_pw 32)"
 create_secret secrets/authelia_jwt "$(rnd_pw 20)"
 create_secret secrets/authelia_session "$(rnd_pw 20)"
+create_secret secrets/authelia_storage "$(rnd_pw 64)"
 create_secret secrets/ldap_auth "$(rnd_pw 20)"
 create_secret secrets/ldap_db "$(rnd_pw 20)"
 create_secret secrets/nextcloud_db "$(rnd_pw 20)"

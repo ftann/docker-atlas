@@ -26,22 +26,29 @@ services:
     networks:
       - auth
       - authelia_db
+      - mail
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_auth
+      - AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE=/run/secrets/authelia_identity_hmac
       - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/protonmail_password_bridge
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage
       - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/authelia_db
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session
     volumes:
       - ./volumes/authelia:/config:z
       - ./configs/authelia/configuration.yml:/config/configuration.yml:z
     secrets:
+      - authelia_db
+      - authelia_identity_hmac
       - authelia_jwt
       - authelia_session
+      - authelia_storage
       - ldap_auth
-      - authelia_db
+      - protonmail_password_bridge
     restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
@@ -426,10 +433,14 @@ networks:
   teamspeak_db:
 
 secrets:
+  authelia_identity_hmac:
+    file: ./secrets/authelia_identity_hmac
   authelia_jwt:
     file: ./secrets/authelia_jwt
   authelia_session:
     file: ./secrets/authelia_session
+  authelia_storage:
+    file: ./secrets/authelia_storage
   backblaze_id:
     file: ./secrets/backblaze_id
   backblaze_key:
