@@ -203,12 +203,16 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Zurich
-      - PROTONMAIL_ADDRESS=<email>
-      - PROTONMAIL_PASSWORD=<password>
-      - PROTONMAIL_PASSWORD_MAILBOX=<mailbox-password>
+      - TZ=${TZ}
+      - FILE__PROTONMAIL_ADDRESS=/run/secrets/protonmail_address
+      - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
+      - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
     volumes:
       - ./volumes/protonmail-bridge:/config:z
+    secrets:
+      - protonmail_address
+      - protonmail_password
+      - protonmail_password_mailbox
     restart: always
 
   restic_data:
@@ -436,6 +440,14 @@ secrets:
     file: ./secrets/inadyn
   maxmind:
     file: ./secrets/maxmind
+  protonmail_address:
+    file: ./secrets/protonmail_address
+  protonmail_password:
+    file: ./secrets/protonmail_password
+  protonmail_password_bridge:
+    file: ./secrets/protonmail_password_bridge
+  protonmail_password_mailbox:
+    file: ./secrets/protonmail_password_mailbox
   restic_data:
     file: ./secrets/restic_data
   restic_volumes:
