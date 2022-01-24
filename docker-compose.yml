@@ -409,6 +409,8 @@ services:
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
+    networks:
+      - outside
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
