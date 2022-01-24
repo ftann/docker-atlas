@@ -212,70 +212,31 @@ services:
       - protonmail_password_mailbox
     restart: always
 
-  restic_data:
+  restic:
     image: ctor/restic:${RESTIC}
-    container_name: restic_data
+    container_name: restic
     build: ./images/restic
     networks:
       - outside
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Zurich
-      - RESTIC_REPOSITORY=<empty>
-      - RESTIC_SCHEDULE=30 4 * * *
-      - RESTIC_BACKUP_TAGS=data
-      - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      - FILE__RESTIC_PASSWORD=/run/secrets/restic_data
-      - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
-      - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
-    volumes:
-      - ./volumes/restic_data:/config:z
-      # Backup sources.
-      - /mnt/data/backup:/data/backup:ro,z
-      - /mnt/data/media:/data/media:ro,z
-      - /mnt/data/nextcloud:/data/nextcloud:ro,z
-      - /mnt/data/pool:/data/pool:ro,z
-      - /mnt/data/syncthing:/data/syncthing:ro,z
-    secrets:
-      - backblaze_id
-      - backblaze_key
-      - restic_data
-    restart: always
-
-  restic_volumes:
-    image: ctor/restic:${RESTIC}
-    container_name: restic_volumes
-    build: ./images/restic
-    networks:
-      - outside
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=Europe/Zurich
+      - TZ=${TZ}
       - RESTIC_REPOSITORY=<empty>
       - RESTIC_SCHEDULE=30 3 * * *
-      - RESTIC_BACKUP_TAGS=volumes
+      - RESTIC_BACKUP_TAGS=auto
       - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      - FILE__RESTIC_PASSWORD=/run/secrets/restic_volumes
       - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
       - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
+      - FILE__RESTIC_PASSWORD=/run/secrets/restic
     volumes:
-      - ./volumes/restic_volumes:/config:z
-      # Backup sources.
-      - ./volumes/authelia:/data/authelia:ro,z
-      - ./volumes/authelia_db:/data/authelia_db:ro,z
-      - ./volumes/ldap:/data/ldap:ro,z
-      - ./volumes/nextcloud:/data/nextcloud:ro,z
-      - ./volumes/nextcloud_db:/data/nextcloud_db:ro,z
-      - ./volumes/swag:/data/swag:ro,z
-      - ./volumes/syncthing:/data/syncthing:ro,z
-      - ./volumes/teamspeak:/data/teamspeak:ro,z
-      - ./volumes/teamspeak_db:/data/teamspeak_db:ro,z
+      - ./volumes/restic:/config:z
+      - ./volumes:/data/volumes:ro,z
+      - ${VOLUME_ROOT}:/data/data:ro,z
     secrets:
       - backblaze_id
       - backblaze_key
-      - restic_volumes
+      - restic
     restart: always
 
   swag:
@@ -451,10 +412,8 @@ secrets:
     file: ./secrets/protonmail_password_bridge
   protonmail_password_mailbox:
     file: ./secrets/protonmail_password_mailbox
-  restic_data:
-    file: ./secrets/restic_data
-  restic_volumes:
-    file: ./secrets/restic_volumes
+  restic:
+    file: ./secrets/restic
   # Users
   ldap_auth:
     file: ./secrets/ldap_auth
