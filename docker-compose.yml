@@ -26,22 +26,29 @@ services:
     networks:
       - auth
       - authelia_db
+      - mail
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_auth
+      - AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE=/run/secrets/authelia_identity_hmac
       - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/protonmail_password_bridge
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage
       - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/authelia_db
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session
     volumes:
       - ./volumes/authelia:/config:z
       - ./configs/authelia/configuration.yml:/config/configuration.yml:z
     secrets:
+      - authelia_db
+      - authelia_identity_hmac
       - authelia_jwt
       - authelia_session
+      - authelia_storage
       - ldap_auth
-      - authelia_db
+      - protonmail_password_bridge
     restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
@@ -78,6 +85,8 @@ services:
     volumes:
       - ./volumes/inadyn:/config:z
       - ./configs/inadyn/inadyn.conf:/config/inadyn.conf:z
+    secrets:
+      - inadyn
     restart: always
 
   ldap:
@@ -93,7 +102,7 @@ services:
       - LDAP_DOMAIN=${LDAP_DOMAIN}
       - LDAP_ROOT=root
       - LDAP_BIND_USER=auth
-      - LDAP_CERTS=/config/certs/live/<domain>
+      - LDAP_CERTS=/config/certs/live/${DOMAIN}
       - FILE__LDAP_CONFIG_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
@@ -201,12 +210,16 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=Europe/Zurich
-      - PROTONMAIL_ADDRESS=<email>
-      - PROTONMAIL_PASSWORD=<password>
-      - PROTONMAIL_PASSWORD_MAILBOX=<mailbox-password>
+      - TZ=${TZ}
+      - FILE__PROTONMAIL_ADDRESS=/run/secrets/protonmail_address
+      - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
+      - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
     volumes:
       - ./volumes/protonmail-bridge:/config:z
+    secrets:
+      - protonmail_address
+      - protonmail_password
+      - protonmail_password_mailbox
     restart: always
 
   restic_data:
@@ -295,7 +308,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - URL=<domain>
+      - URL=${DOMAIN}
       - SUBDOMAINS=wildcard
       - VALIDATION=dns
       - DNSPLUGIN=cloudflare
@@ -420,18 +433,32 @@ networks:
   teamspeak_db:
 
 secrets:
+  authelia_identity_hmac:
+    file: ./secrets/authelia_identity_hmac
   authelia_jwt:
     file: ./secrets/authelia_jwt
   authelia_session:
     file: ./secrets/authelia_session
+  authelia_storage:
+    file: ./secrets/authelia_storage
   backblaze_id:
     file: ./secrets/backblaze_id
   backblaze_key:
     file: ./secrets/backblaze_key
   cloudflare:
     file: ./secrets/cloudflare
+  inadyn:
+    file: ./secrets/inadyn
   maxmind:
     file: ./secrets/maxmind
+  protonmail_address:
+    file: ./secrets/protonmail_address
+  protonmail_password:
+    file: ./secrets/protonmail_password
+  protonmail_password_bridge:
+    file: ./secrets/protonmail_password_bridge
+  protonmail_password_mailbox:
+    file: ./secrets/protonmail_password_mailbox
   restic_data:
     file: ./secrets/restic_data
   restic_volumes:

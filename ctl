@@ -18,7 +18,7 @@ up() {
   ./scripts/mk-networks.sh
   run_compose build
   run_compose pull
-  run_compose up -d
+  run_compose up -d --remove-orphans
 }
 
 down() {
@@ -42,7 +42,7 @@ clean() {
 }
 
 status() {
-  docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
+  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 }
 
 run_if_defined "$@"

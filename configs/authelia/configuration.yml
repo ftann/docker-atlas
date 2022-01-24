@@ -1,41 +1,76 @@
-host: 0.0.0.0
-port: 9091
-log_level: debug
-jwt_secret: a_very_important_secret
-default_redirection_url: https://public.example.com
+theme: auto
+
+server:
+  host: 0.0.0.0
+  port: 9091
+  read_buffer_size: 4096
+  write_buffer_size: 4096
+  path: authelia
+
+log:
+  level: error
+
 totp:
-  issuer: authelia.com
+  issuer: doamin.com
 
 authentication_backend:
-  file:
-    path: /config/users_database.yml
+  disable_reset_password: true
+  refresh_interval: 5m
+
+  ldap:
+    url: ldaps://ldap
+    user: cn=auth,dc=domain,dc=com
+    base_dn: dc=domain,dc=com
+
+    tls:
+      skip_verify: true
+
+    additional_groups_dn: ou=groups
+    additional_users_dn: ou=users
+    groups_filter: (&(member={dn})(objectclass=groupOfNames))
+    users_filter: (&({username_attribute}={input})(objectClass=person))
+
+    display_name_attribute: cn
+    mail_attribute: mail
+    group_name_attribute: cn
+    username_attribute: uid
 
 access_control:
   default_policy: deny
   rules:
-    - domain: public.example.com
+    - domain:
+        - domain.com
       policy: bypass
-    - domain: traefik.example.com
-      policy: one_factor
-    - domain: secure.example.com
-      policy: two_factor
 
 session:
   name: authelia_session
-  secret: unsecure_session_secret
-  expiration: 3600 # 1 hour
-  inactivity: 300 # 5 minutes
-  domain: example.com # Should match whatever your root protected domain is
+  expiration: 1h
+  inactivity: 5m
+  remember_me_duration: 1M
+  domain: domain.com
 
 regulation:
   max_retries: 3
-  find_time: 120
-  ban_time: 300
+  find_time: 2m
+  ban_time: 5m
 
 storage:
-  local:
-    path: /config/db.sqlite3
+  mysql:
+    host: authelia_db
+    port: 3306
+    database: authelia
+    username: authelia
 
 notifier:
-  filesystem:
-    filename: /config/notification.txt
+  disable_startup_check: false
+  smtp:
+    username: "admin@domain.com"
+    # Set by env var.
+    # password: "xxx"
+    host: protonmail-bridge
+    port: 25
+    sender: "Authelia <admin@domain.com>"
+    tls:
+      server_name: protonmail-bridge
+      skip_verify: true
+      minimum_version: TLS1.3

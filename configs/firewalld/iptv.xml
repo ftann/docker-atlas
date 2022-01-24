@@ -2,7 +2,6 @@
 <service>
   <short>iptv</short>
   <description>IPTV via multicast.</description>
-  <protocol value="icmp"/>
   <protocol value="igmp"/>
   <port protocol="udp" port="5000"/>
 </service>
