@@ -4,10 +4,10 @@
 
 CONFIG=/config/databases/slapd.d
 CONFIG_INIT=/config/config.ldif
-DATABASE=/config/databases/openldap-data
 DATABASE_INIT=/config/database.ldif
 
 create_password_hash() {
+  # shellcheck disable=SC1083
   slappasswd -n -h {SSHA} -s "$1"
 }
 
@@ -18,9 +18,6 @@ replace_placeholder() {
 get_domain() {
   echo "$1" | cut -d, -f1 | cut -d= -f2
 }
-
-mkdir -p "$CONFIG"
-mkdir -p "$DATABASE"
 
 {
   for file in /defaults/openldap/config/*.ldif; do
@@ -58,14 +55,16 @@ replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$CONFIG_INIT"
 replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$CONFIG_INIT"
 replace_placeholder LDAP_ROOT_PASSWORD "$ROOT_PASSWORD" "$CONFIG_INIT"
 
-slapadd -n 0 -F "$CONFIG" -l "$CONFIG_INIT"
+s6-setuidgid abc slapadd -n 0 -F "$CONFIG" -l "$CONFIG_INIT"
+
+DOMAIN=$(get_domain "$LDAP_DOMAIN")
 
 replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$DATABASE_INIT"
 replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$DATABASE_INIT"
 replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$DATABASE_INIT"
 replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$DATABASE_INIT"
-replace_placeholder DOMAIN "$(get_domain "$LDAP_DOMAIN")" "$DATABASE_INIT"
+replace_placeholder DOMAIN "$DOMAIN" "$DATABASE_INIT"
 
-slapadd -n 1 -F "$CONFIG" -l "$DATABASE_INIT"
+s6-setuidgid abc slapadd -n 1 -F "$CONFIG" -l "$DATABASE_INIT"
 
 rm "$CONFIG_INIT" "$DATABASE_INIT"

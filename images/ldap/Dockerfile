@@ -4,6 +4,14 @@ EXPOSE 389 636
 
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
+ENV LDAP_BIND_USER=auth \
+    LDAP_BIND_PASSWORD=auth \
+    LDAP_CERTS=/etc/ssl/certs \
+    LDAP_CONFIG_PASSWORD=config \
+    LDAP_DOMAIN="dc=atlas" \
+    LDAP_ROOT=root \
+    LDAP_ROOT_PASSWORD=root
+
 RUN \
     apk add --no-cache \
         bash openldap openldap-backend-all openldap-overlay-all openldap-clients openssl && \
@@ -11,6 +19,11 @@ RUN \
         /run/openldap && \
     chown abc:abc \
         /run/openldap
+
+RUN mkdir -p \
+        /config/databases/openldap-data \
+        /config/databases/slapd.d && \
+    chown -R abc:abc /config
 
 COPY root/ /
 

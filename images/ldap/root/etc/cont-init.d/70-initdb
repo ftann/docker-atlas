@@ -19,4 +19,4 @@ if [ -d /config/initdb.d ]; then
   while [ -e "/proc/$PID" ]; do sleep 0.1; done
 fi
 
-touch /config/.installed
+s6-setuidgid abc touch /config/.installed
