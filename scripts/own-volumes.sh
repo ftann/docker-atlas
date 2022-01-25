@@ -8,7 +8,6 @@ PGID=$(get_gid)
 
 own_volume volumes/authelia "$PUID" "$PGID"
 own_volume volumes/authelia_db "$PUID" "$PGID"
-own_volume volumes/inadyn "$PUID" "$PGID"
 own_volume volumes/ldap "$PUID" "$PGID"
 own_volume volumes/nextcloud "$PUID" "$PGID"
 own_volume volumes/nextcloud_db "$PUID" "$PGID"

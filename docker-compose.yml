@@ -82,9 +82,6 @@ services:
       - outside
     environment:
       - TZ=${TZ}
-    volumes:
-      - ./volumes/inadyn:/config:z
-      - ./configs/inadyn/inadyn.conf:/config/inadyn.conf:z
     secrets:
       - inadyn
     restart: always
