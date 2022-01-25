@@ -123,7 +123,7 @@ services:
     networks:
       - auth
       - mail
-      - nextcloud-db
+      - nextcloud_db
       - proxy
     environment:
       - PUID=${PUID}
