@@ -15,8 +15,7 @@ create_secret secrets/authelia_storage "$(rnd_pw 64)"
 create_secret secrets/ldap_auth "$(rnd_pw 20)"
 create_secret secrets/ldap_db "$(rnd_pw 20)"
 create_secret secrets/nextcloud_db "$(rnd_pw 20)"
-create_secret secrets/restic_data "$(rnd_pw 20)"
-create_secret secrets/restic_volumes "$(rnd_pw 20)"
+create_secret secrets/restic "$(rnd_pw 20)"
 create_secret secrets/teamspeak_db "$(rnd_pw 20)"
 
 #
