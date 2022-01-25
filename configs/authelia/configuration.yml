@@ -56,7 +56,7 @@ regulation:
 
 storage:
   mysql:
-    host: authelia_db
+    host: authelia-db
     port: 3306
     database: authelia
     username: authelia
