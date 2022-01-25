@@ -1,6 +1,6 @@
 dn: {{ LDAP_DOMAIN }}
-dc: ctor
-o: ctor
+dc: {{ DOMAIN }}
+o: {{ DOMAIN }}
 objectClass: dcObject
 objectClass: organization
 

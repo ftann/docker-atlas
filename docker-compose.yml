@@ -75,7 +75,7 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 
   inadyn:
-    image: ctor/inadyn:${INADYN}
+    image: atlas/inadyn:${INADYN}
     container_name: inadyn
     build: ./images/inadyn
     networks:
@@ -90,7 +90,7 @@ services:
     restart: always
 
   ldap:
-    image: ctor/ldap:${LDAP}
+    image: atlas/ldap:${LDAP}
     container_name: ldap
     build: ./images/ldap
     networks:
@@ -188,7 +188,7 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 
   protonmail-bridge:
-    image: ctor/protonmail-bridge:${PROTONMAIL_BRIDGE}
+    image: atlas/protonmail-bridge:${PROTONMAIL_BRIDGE}
     container_name: protonmail-bridge
     build: ./images/protonmail-bridge
     networks:
@@ -213,7 +213,7 @@ services:
     restart: always
 
   restic:
-    image: ctor/restic:${RESTIC}
+    image: atlas/restic:${RESTIC}
     container_name: restic
     build: ./images/restic
     networks:
@@ -349,7 +349,7 @@ services:
       - com.centurylinklabs.watchtower.enable=true
 
   udpxy:
-    image: ctor/udpxy:${UDPXY}
+    image: atlas/udpxy:${UDPXY}
     container_name: udpxy
     build: ./images/udpxy
     network_mode: "host"

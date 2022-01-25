@@ -15,6 +15,10 @@ replace_placeholder() {
   sed -i "s|{{ $1 }}|$2|g" "$3"
 }
 
+get_domain() {
+  echo "$1" | cut -d, -f1 | cut -d= -f2
+}
+
 mkdir -p "$CONFIG"
 mkdir -p "$DATABASE"
 
@@ -60,6 +64,7 @@ replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$DATABASE_INIT"
 replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$DATABASE_INIT"
 replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$DATABASE_INIT"
 replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$DATABASE_INIT"
+replace_placeholder DOMAIN "$(get_domain "$LDAP_DOMAIN")" "$DATABASE_INIT"
 
 slapadd -n 1 -F "$CONFIG" -l "$DATABASE_INIT"
 
