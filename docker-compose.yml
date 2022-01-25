@@ -228,8 +228,20 @@ services:
       - FILE__RESTIC_PASSWORD=/run/secrets/restic
     volumes:
       - ./volumes/restic:/config:z
-      - ./volumes:/data/volumes:ro,z
-      - ${VOLUME_ROOT}:/data/data:ro,z
+      # Volumes
+      - ./volumes/authelia:/data/authelia:z
+      - ./volumes/authelia_db:/data/authelia_db:z
+      - ./volumes/ldap:/data/ldap:z
+      - ./volumes/nextcloud:/data/nextcloud:z
+      - ./volumes/nextcloud_db:/data/nextcloud_db:z
+      - ./volumes/plex/Library/Application\ Support/Plex\ Media\ Server:/data/plex/Library/Application\ Support/Plex\ Media\ Server:z
+      - ./volumes/proton-bridge:/data/proton-bridge:z
+      - ./volumes/swag:/data/swag:z
+      - ./volumes/syncthing:/data/syncthing:z
+      - ./volumes/teamspeak:/data/teamspeak:z
+      - ./volumes/teamspeak_db:/data/teamspeak_db:z
+      # Data
+      - ${VOLUME_ROOT}:/data/data:z
     secrets:
       - backblaze_id
       - backblaze_key
