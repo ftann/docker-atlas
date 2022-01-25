@@ -2,14 +2,6 @@
 
 set -e
 
-mkdir -p /config/restic
-mkdir -p /config/log/restic
-
 if ! restic snapshots >>/dev/null 2>&1; then
-  restic init >>/config/log/restic/restic.log 2>&1
-  chown abc:abc -R /config/restic
-fi
-
-if [ ! -f /config/restic/options ]; then
-  echo "RESTIC_OPTIONS=(-o b2.connections=50)" >>/config/restic/options
+  s6-setuidgid abc restic init >>/config/log/restic/restic.log 2>&1
 fi

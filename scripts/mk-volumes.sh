@@ -4,12 +4,11 @@
 
 create_volume volumes/authelia
 create_volume volumes/authelia_db
-create_volume volumes/inadyn
 create_volume volumes/ldap
 create_volume volumes/nextcloud
 create_volume volumes/nextcloud_db
 create_volume volumes/plex
-create_volume volumes/protonmail-bridge
+create_volume volumes/proton-bridge
 create_volume volumes/restic
 create_volume volumes/swag
 create_volume volumes/syncthing

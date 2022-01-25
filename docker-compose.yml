@@ -22,7 +22,7 @@ services:
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
     depends_on:
-      - authelia_db
+      - authelia-db
     networks:
       - auth
       - authelia_db
@@ -53,9 +53,9 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  authelia_db:
+  authelia-db:
     image: linuxserver/mariadb:${MARIADB}
-    container_name: authelia_db
+    container_name: authelia-db
     networks:
       - authelia_db
     environment:
@@ -82,9 +82,6 @@ services:
       - outside
     environment:
       - TZ=${TZ}
-    volumes:
-      - ./volumes/inadyn:/config:z
-      - ./configs/inadyn/inadyn.conf:/config/inadyn.conf:z
     secrets:
       - inadyn
     restart: always
@@ -122,11 +119,11 @@ services:
     container_name: nextcloud
     depends_on:
       - ldap
-      - nextcloud_db
+      - nextcloud-db
     networks:
       - auth
       - mail
-      - nextcloud_db
+      - nextcloud-db
       - proxy
     environment:
       - PUID=${PUID}
@@ -143,9 +140,9 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  nextcloud_db:
+  nextcloud-db:
     image: linuxserver/mariadb:${MARIADB}
-    container_name: nextcloud_db
+    container_name: nextcloud-db
     networks:
       - nextcloud_db
     environment:
@@ -187,10 +184,10 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  protonmail-bridge:
-    image: atlas/protonmail-bridge:${PROTONMAIL_BRIDGE}
-    container_name: protonmail-bridge
-    build: ./images/protonmail-bridge
+  proton-bridge:
+    image: atlas/proton-bridge:${PROTON_BRIDGE}
+    container_name: proton-bridge
+    build: ./images/proton-bridge
     networks:
       - outside
       - mail
@@ -205,7 +202,7 @@ services:
       - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
       - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
     volumes:
-      - ./volumes/protonmail-bridge:/config:z
+      - ./volumes/proton-bridge:/config:z
     secrets:
       - protonmail_address
       - protonmail_password
@@ -231,8 +228,20 @@ services:
       - FILE__RESTIC_PASSWORD=/run/secrets/restic
     volumes:
       - ./volumes/restic:/config:z
-      - ./volumes:/data/volumes:ro,z
-      - ${VOLUME_ROOT}:/data/data:ro,z
+      # Volumes
+      - ./volumes/authelia:/data/authelia:z
+      - ./volumes/authelia_db:/data/authelia_db:z
+      - ./volumes/ldap:/data/ldap:z
+      - ./volumes/nextcloud:/data/nextcloud:z
+      - ./volumes/nextcloud_db:/data/nextcloud_db:z
+      - ./volumes/plex/Library/Application\ Support/Plex\ Media\ Server:/data/plex/Library/Application\ Support/Plex\ Media\ Server:z
+      - ./volumes/proton-bridge:/data/proton-bridge:z
+      - ./volumes/swag:/data/swag:z
+      - ./volumes/syncthing:/data/syncthing:z
+      - ./volumes/teamspeak:/data/teamspeak:z
+      - ./volumes/teamspeak_db:/data/teamspeak_db:z
+      # Data
+      - ${VOLUME_ROOT}:/data/data:z
     secrets:
       - backblaze_id
       - backblaze_key
@@ -301,7 +310,7 @@ services:
     image: teamspeak:${TEAMSPEAK}
     container_name: teamspeak
     depends_on:
-      - teamspeak_db
+      - teamspeak-db
     networks:
       - outside
       - teamspeak_db
@@ -313,7 +322,7 @@ services:
       - TZ=${TZ}
       - TS3SERVER_DB_PLUGIN=ts3db_mariadb
       - TS3SERVER_DB_SQLCREATEPATH=create_mariadb
-      - TS3SERVER_DB_HOST=teamspeak_db
+      - TS3SERVER_DB_HOST=teamspeak-db
       - TS3SERVER_DB_USER=teamspeak
       - TS3SERVER_DB_PASSWORD_FILE=/run/secrets/teamspeak_db
       - TS3SERVER_DB_NAME=teamspeak
@@ -327,9 +336,9 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  teamspeak_db:
+  teamspeak-db:
     image: linuxserver/mariadb:${MARIADB}
-    container_name: teamspeak_db
+    container_name: teamspeak-db
     networks:
       - teamspeak_db
     environment:
