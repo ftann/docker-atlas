@@ -67,10 +67,10 @@ notifier:
     username: "admin@domain.com"
     # Set by env var.
     # password: "xxx"
-    host: protonmail-bridge
+    host: proton-bridge
     port: 25
     sender: "Authelia <admin@domain.com>"
     tls:
-      server_name: protonmail-bridge
+      server_name: proton-bridge
       skip_verify: true
       minimum_version: TLS1.3

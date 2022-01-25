@@ -5,7 +5,7 @@ __The Atlas collection provides a collection of containers that are configured t
 Included are a LDAP backend and OIDC provider for SSO and user management.<br/>
 Nextcloud for file management, Syncthing as file synchronization service and Plex to serve media content.<br/>
 Nginx proxy in front of web services with automatic renewal of certificates.<br/>
-Protonmail-bridge that allows for sending mails to the admin or registered users.
+Proton-bridge that allows for sending mails to the admin or registered users.
 
 Automatic update of the running containers and automatic backup of both the container state and the data.
 
@@ -55,7 +55,7 @@ Make sure that the used network in `fixed-cidr-v6` matches the range used in `./
 1. Adjust the configuration sections where the versions of the conainer images are set, the domain names, credentials,
    storage locations, timezone, default file permissions and ownership.
     - Database credentials are setup automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
-    - The protonmail-bridge mailbox password must be read from the stdout when the protonmail-bridge container starts
+    - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts
       for the first time.
 
 3. Run the installation command of the `ctl` script

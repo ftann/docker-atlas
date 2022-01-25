@@ -184,10 +184,10 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
-  protonmail-bridge:
-    image: atlas/protonmail-bridge:${PROTONMAIL_BRIDGE}
-    container_name: protonmail-bridge
-    build: ./images/protonmail-bridge
+  proton-bridge:
+    image: atlas/proton-bridge:${PROTON_BRIDGE}
+    container_name: proton-bridge
+    build: ./images/proton-bridge
     networks:
       - outside
       - mail
@@ -202,7 +202,7 @@ services:
       - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
       - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
     volumes:
-      - ./volumes/protonmail-bridge:/config:z
+      - ./volumes/proton-bridge:/config:z
     secrets:
       - protonmail_address
       - protonmail_password
