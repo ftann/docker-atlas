@@ -6,6 +6,7 @@
 . /opt/util/file.sh
 . /opt/util/ldap.sh
 . /opt/util/placeholder.sh
+. /opt/util/string.sh
 
 CONFIG_INIT=/tmp/openldap.ldif
 
@@ -14,6 +15,9 @@ merge_files "/defaults/openldap/config/*.ldif" "$CONFIG_INIT"
 BIND_PASSWORD=$(create_password_hash "$LDAP_BIND_PASSWORD")
 CONFIG_PASSWORD=$(create_password_hash "$LDAP_CONFIG_PASSWORD")
 ROOT_PASSWORD=$(create_password_hash "$LDAP_ROOT_PASSWORD")
+
+# shellcheck disable=SC2046
+LDAP_DOMAIN="$(join_by "," $(prepend_each "dc=" $(split "$DOMAIN")))"
 
 replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$CONFIG_INIT"
 replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$CONFIG_INIT"

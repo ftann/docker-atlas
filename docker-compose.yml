@@ -95,7 +95,7 @@ services:
       - auth
     environment:
       <<: *default_environment
-      LDAP_DOMAIN: dc=domain,dc=com
+      DOMAIN: ${DOMAIN}
       LDAP_ROOT: root
       LDAP_BIND_USER: auth
       FILE__LDAP_CONFIG_PASSWORD: /run/secrets/ldap_db

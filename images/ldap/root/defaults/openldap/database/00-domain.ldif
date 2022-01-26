@@ -1,6 +1,6 @@
 dn: {{ LDAP_DOMAIN }}
-dc: {{ DOMAIN }}
-o: {{ DOMAIN }}
+dc: {{ ORGANIZATION }}
+o: {{ ORGANIZATION }}
 objectClass: dcObject
 objectClass: organization
 

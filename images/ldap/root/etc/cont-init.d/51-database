@@ -5,19 +5,23 @@
 . /opt/util/file.sh
 . /opt/util/ldap.sh
 . /opt/util/placeholder.sh
+. /opt/util/string.sh
 
 DATABASE_INIT=/tmp/database.ldif
 
 merge_files "/defaults/openldap/database/*.ldif" "$DATABASE_INIT"
 
 BIND_PASSWORD=$(create_password_hash "$LDAP_BIND_PASSWORD")
-DOMAIN=$(get_domain "$LDAP_DOMAIN")
+
+# shellcheck disable=SC2046
+LDAP_DOMAIN="$(join_by "," $(prepend_each "dc=" $(split "$DOMAIN")))"
+ORGANIZATION=$(get_organization "$LDAP_DOMAIN")
 
 replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$DATABASE_INIT"
 replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$DATABASE_INIT"
 replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$DATABASE_INIT"
 replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$DATABASE_INIT"
-replace_placeholder DOMAIN "$DOMAIN" "$DATABASE_INIT"
+replace_placeholder ORGANIZATION "$ORGANIZATION" "$DATABASE_INIT"
 
 s6-setuidgid abc slapadd -n 1 -F /config/databases/slapd.d -l "$DATABASE_INIT"
 

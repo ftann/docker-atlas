@@ -5,6 +5,6 @@ create_password_hash() {
   slappasswd -n -h {SSHA} -s "$1"
 }
 
-get_domain() {
+get_organization() {
   echo "$1" | cut -d, -f1 | cut -d= -f2
 }
