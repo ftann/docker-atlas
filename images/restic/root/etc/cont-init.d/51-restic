@@ -2,6 +2,6 @@
 
 set -e
 
-if ! restic snapshots >>/dev/null 2>&1; then
+if ! s6-setuidgid abc restic snapshots >>/dev/null 2>&1; then
   s6-setuidgid abc restic init >>/config/log/restic/restic.log 2>&1
 fi

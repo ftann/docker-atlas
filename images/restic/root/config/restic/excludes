@@ -3,4 +3,15 @@ cache
 .git
 *.lock
 log
+logs
 *.log
+
+plex/Library/Application\ Support/Plex\ Media\ Server/Cache
+plex/Library/Application\ Support/Plex\ Media\ Server/Codecs
+plex/Library/Application\ Support/Plex\ Media\ Server/Crash\ Reports
+plex/Library/Application\ Support/Plex\ Media\ Server/Diagnostics
+plex/Library/Application\ Support/Plex\ Media\ Server/Media
+plex/Library/Application\ Support/Plex\ Media\ Server/Metadata
+plex/Library/Application\ Support/Plex\ Media\ Server/Plug-ins
+plex/Library/Application\ Support/Plex\ Media\ Server/Plug-in\ Support
+plex/Library/Application\ Support/Plex\ Media\ Server/Scripts
