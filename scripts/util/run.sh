@@ -15,3 +15,7 @@ run_if_defined() {
     exit 1
   fi
 }
+
+check_compose() {
+  run_compose config -q
+}
