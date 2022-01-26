@@ -23,6 +23,7 @@ services:
     container_name: authelia
     depends_on:
       - authelia-db
+      - ldap
     networks:
       - auth
       - authelia_db
@@ -39,7 +40,6 @@ services:
       - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/authelia_db
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session
     volumes:
-      - ./volumes/authelia:/config:z
       - ./configs/authelia/configuration.yml:/config/configuration.yml:z
     secrets:
       - authelia_db
@@ -67,7 +67,7 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/authelia_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/authelia_db
     volumes:
-      - ./volumes/authelia_db:/config:z
+      - authelia_db:/config:z
     secrets:
       - authelia_db
     restart: always
@@ -103,7 +103,7 @@ services:
       - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
     volumes:
-      - ./volumes/ldap:/config:z
+      - ldap:/config:z
       - ./configs/ldap:/config/initdb.d:ro,z
     secrets:
       - ldap_auth
@@ -129,7 +129,7 @@ services:
       - TZ=${TZ}
       - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/nextcloud:/config:z
+      - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
       - ${VOLUME_MEDIA}:/media:z
       - ${VOLUME_POOL}:/pool:z
@@ -152,7 +152,7 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/nextcloud_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/nextcloud_db
     volumes:
-      - ./volumes/nextcloud_db:/config:z
+      - nextcloud_db:/config:z
     secrets:
       - nextcloud_db
     restart: always
@@ -176,7 +176,7 @@ services:
         limits:
           memory: 8G
     volumes:
-      - ./volumes/plex:/config:z
+      - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
     restart: always
     labels:
@@ -200,7 +200,7 @@ services:
       - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
       - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
     volumes:
-      - ./volumes/proton-bridge:/config:z
+      - proton-bridge:/config:z
     secrets:
       - protonmail_address
       - protonmail_password
@@ -225,19 +225,18 @@ services:
       - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
       - FILE__RESTIC_PASSWORD=/run/secrets/restic
     volumes:
-      - ./volumes/restic:/config:z
+      - restic:/config:z
       # Volumes
-      - ./volumes/authelia:/data/authelia:z
-      - ./volumes/authelia_db:/data/authelia_db:z
-      - ./volumes/ldap:/data/ldap:z
-      - ./volumes/nextcloud:/data/nextcloud:z
-      - ./volumes/nextcloud_db:/data/nextcloud_db:z
-      - ./volumes/plex/Library/Application\ Support/Plex\ Media\ Server:/data/plex/Library/Application\ Support/Plex\ Media\ Server:z
-      - ./volumes/proton-bridge:/data/proton-bridge:z
-      - ./volumes/swag:/data/swag:z
-      - ./volumes/syncthing:/data/syncthing:z
-      - ./volumes/teamspeak:/data/teamspeak:z
-      - ./volumes/teamspeak_db:/data/teamspeak_db:z
+      - authelia_db:/data/authelia_db:z
+      - ldap:/data/ldap:z
+      - nextcloud:/data/nextcloud:z
+      - nextcloud_db:/data/nextcloud_db:z
+      - plex:/data/plex:z
+      - proton-bridge:/data/proton-bridge:z
+      - swag:/data/swag:z
+      - syncthing:/data/syncthing:z
+      - teamspeak:/data/teamspeak:z
+      - teamspeak_db:/data/teamspeak_db:z
       # Data
       - ${VOLUME_ROOT}:/data/data:z
     secrets:
@@ -250,6 +249,7 @@ services:
     image: linuxserver/swag:${SWAG}
     container_name: swag
     depends_on:
+      - authelia
       - nextcloud
       - plex
       - syncthing
@@ -273,8 +273,7 @@ services:
       - FILE__MAXMINDDB_LICENSE_KEY=/run/secrets/maxmind
     #  - STAGING=true
     volumes:
-      - ./volumes/swag:/config:z
-      - ./configs/blog:/config/www:z
+      - swag:/config:z
     secrets:
       - cloudflare
       - maxmind
@@ -298,7 +297,7 @@ services:
       - TZ=${TZ}
       - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/syncthing:/config:z
+      - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
     restart: always
     labels:
@@ -327,7 +326,7 @@ services:
       - TS3SERVER_DB_WAITUNTILREADY=30
       - TS3SERVER_LICENSE=accept
     volumes:
-      - ./volumes/teamspeak:/var/ts3server:z
+      - teamspeak:/var/ts3server:z
     secrets:
       - teamspeak_db
     restart: always
@@ -348,7 +347,7 @@ services:
       - FILE__MYSQL_PASSWORD=/run/secrets/teamspeak_db
       - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/teamspeak_db
     volumes:
-      - ./volumes/teamspeak_db:/config:z
+      - teamspeak_db:/config:z
     secrets:
       - teamspeak_db
     restart: always
@@ -369,8 +368,6 @@ services:
     container_name: watchtower
     networks:
       - outside
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=${TZ}
       - WATCHTOWER_CLEANUP=true
@@ -378,9 +375,24 @@ services:
       - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_NOTIFICATIONS_LEVEL=error
       - WATCHTOWER_SCHEDULE=0 0 6 * * *
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
+
+volumes:
+  authelia_db:
+  ldap:
+  nextcloud:
+  nextcloud_db:
+  plex:
+  proton-bridge:
+  restic:
+  swag:
+  syncthing:
+  teamspeak:
+  teamspeak_db:
 
 networks:
   outside:

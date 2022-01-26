@@ -9,8 +9,6 @@ install() {
   ./scripts/mk-fwrules.sh
   ./scripts/mk-networks.sh
   ./scripts/mk-secrets.sh
-  ./scripts/mk-volumes.sh
-  ./scripts/own-volumes.sh
   ./scripts/mk-selinux.sh
 }
 
