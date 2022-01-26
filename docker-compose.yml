@@ -395,6 +395,8 @@ networks:
   teamspeak_db:
 
 secrets:
+  authelia_db:
+    file: ./secrets/authelia_db
   authelia_identity_hmac:
     file: ./secrets/authelia_identity_hmac
   authelia_jwt:
@@ -411,8 +413,14 @@ secrets:
     file: ./secrets/cloudflare
   inadyn:
     file: ./secrets/inadyn
+  ldap_auth:
+    file: ./secrets/ldap_auth
+  ldap_db:
+    file: ./secrets/ldap_db
   maxmind:
     file: ./secrets/maxmind
+  nextcloud_db:
+    file: ./secrets/nextcloud_db
   protonmail_address:
     file: ./secrets/protonmail_address
   protonmail_password:
@@ -423,15 +431,5 @@ secrets:
     file: ./secrets/protonmail_password_mailbox
   restic:
     file: ./secrets/restic
-  # Users
-  ldap_auth:
-    file: ./secrets/ldap_auth
-  # Databases
-  authelia_db:
-    file: ./secrets/authelia_db
-  ldap_db:
-    file: ./secrets/ldap_db
-  nextcloud_db:
-    file: ./secrets/nextcloud_db
   teamspeak_db:
     file: ./secrets/teamspeak_db
