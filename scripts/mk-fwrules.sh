@@ -5,6 +5,7 @@
 add_service_fw imap
 add_service_fw smtp
 add_service_fw syncthing
+add_service_fw teamspeak
 add_service_fw udpxy
 
 add_service_fw iptv
