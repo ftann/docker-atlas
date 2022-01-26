@@ -52,9 +52,9 @@ Make sure that the used network in `fixed-cidr-v6` matches the range used in `./
 
 ### Settings
 
-1. Adjust the configuration sections where the versions of the conainer images are set, the domain names, credentials,
+1. Adjust the configuration sections where the versions of the container images are set, the domain names, credentials,
    storage locations, timezone, default file permissions and ownership.
-    - Database credentials are setup automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
+    - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
     - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts
       for the first time.
 
@@ -76,7 +76,7 @@ install     creates networks and firewall rules, volumes and secrets
 up          builds and starts the containers
 down        stops the containers
 remove      stops and removes the containers and volumes
-clean       removes unneeded containers, images, networks and volumes
+uninstall   removes unneeded containers, images, networks and volumes
 status      displays current container status
 ```
 

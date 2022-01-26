@@ -22,10 +22,10 @@ up() {
 }
 
 down() {
-  run_compose down
+  run_compose down --remove-orphans
 }
 
-remove() {
+uninstall() {
   if ask; then
     run_compose down -v
     run_compose rm -v
