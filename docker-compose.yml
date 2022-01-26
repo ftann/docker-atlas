@@ -99,14 +99,12 @@ services:
       - LDAP_DOMAIN=${LDAP_DOMAIN}
       - LDAP_ROOT=root
       - LDAP_BIND_USER=auth
-      - LDAP_CERTS=/config/certs/live/${DOMAIN}
       - FILE__LDAP_CONFIG_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
       - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
     volumes:
       - ./volumes/ldap:/config:z
       - ./configs/ldap:/config/initdb.d:ro,z
-      - ./volumes/swag/etc/letsencrypt:/config/certs:ro,z
     secrets:
       - ldap_auth
       - ldap_db

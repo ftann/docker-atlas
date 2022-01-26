@@ -6,7 +6,6 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
 ENV LDAP_BIND_USER=auth \
     LDAP_BIND_PASSWORD=auth \
-    LDAP_CERTS=/etc/ssl/certs \
     LDAP_CONFIG_PASSWORD=config \
     LDAP_DOMAIN="dc=atlas" \
     LDAP_ROOT=root \
@@ -21,6 +20,7 @@ RUN \
         /run/openldap
 
 RUN mkdir -p \
+        /config/keys \
         /config/databases/openldap-data \
         /config/databases/slapd.d && \
     chown -R abc:abc /config
