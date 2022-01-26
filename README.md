@@ -35,6 +35,29 @@ A working server installation is required (preferably fedora due to selinux). Th
 
 ## Installation
 
+It's recommended to create a separate user that has access to docker only. Clone the repository and create a new local
+branch. That branch contains all changes to the configuration including usernames and passwords. Commit those changes
+and __DO NOT PUSH__ (ofc unless forked no permission).
+
+### User
+
+```shell
+useradd -r -U -m -d /atlas -G docker atlas
+```
+
+### Repository
+
+```shell
+sudo su atlas # login as atlas user
+cd # ensure working dir is the user home
+git clone git@github.com:ftann/docker-atlas.git atlas # clone
+cd atlas
+git switch -c config # create new branch
+# Add secrets and other configs.
+git add . # add changes
+git commit -m "config" # commit changes
+```
+
 ### Docker
 
 Configure docker to allow ipv6 addresses. Set the following keys in the docker configuration `/etc/docker/daemon.json`:
@@ -50,18 +73,32 @@ Configure docker to allow ipv6 addresses. Set the following keys in the docker c
 
 Make sure that the used network in `fixed-cidr-v6` matches the range used in `./scripts/mk-networks.sh`.
 
+### Firewall
+
+Copy the non-standard firewall rules to firewalld's configuration directory. The installation script applies the rules.
+
+```shell
+cp atlas/configs/firewall/* /etc/firewalld/services
+```
+
 ### Settings
 
 1. Adjust the configuration sections where the versions of the container images are set, the domain names, credentials,
    storage locations, timezone, default file permissions and ownership.
     - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
-    - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts
-      for the first time.
+    - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts for the
+      first time.
 
-3. Run the installation command of the `ctl` script
-    ```shell
-    ./ctl install
-    ```
+2. Run the installation command of the `ctl` script
+```shell
+./ctl install
+```
+
+3. Find the proton-bridge mailbox password.
+   Look for the generated password for the provided user. Copy to `.env`.
+```shell
+docker logs proton-bridge
+```
 
 ## Usage
 
@@ -80,6 +117,18 @@ uninstall   removes unneeded containers, images, networks and volumes
 status      displays current container status
 ```
 
+### Update
+
+To update the repository first stop the running services. Ensure that all local changes are committed then switch to the
+main branch. Fetch all changes from upstream and rebase onto upstream master.
+
+It may be necessary to resolve merge conflicts if extensive changes were made to container configurations.
+
+```shell
+git fetch --all --prune # Fetch upstream changes
+git rebase -i origin/master # Rebase local changes aka update
+```
+
 ## FAQ
 
 ### Permission denied
@@ -89,7 +138,8 @@ correct `./scripts/mk-selinux.sh`.
 
 ## Disclaimer
 
-This collection serves my purposes only. Feel free to adjust to your needs. If you found this repo useful you can always
-buy me a beer. （ ^_^）o自自o（^_^ ）
+This collection is made to serve my needs. Feel free to adjust to yours.
+
+If you found this repo useful you can always buy me a beer. （ ^_^）o自自o（^_^ ）
 
 [xmr](https://getmonero.org): `473WTZ1gWFdjdEyioCQfbGQKRurZQoPDJLhuFJyubCrk4TRogKCtRum63bFMx2dP2y4AN1vf2fN6La7V7eB2cZ4vNJgMAcG`
