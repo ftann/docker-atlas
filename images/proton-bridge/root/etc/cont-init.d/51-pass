@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv bash
+
+[[ -d /config/.password-store ]] && exit 0
+
+s6-setuidgid abc /usr/bin/pass init pass-key

@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+[[ -d /config/.config/protonmail ]] && exit 0
+
+s6-setuidgid abc /app/proton-bridge --cli <<EOF
+login
+${PROTONMAIL_ADDRESS}
+${PROTONMAIL_PASSWORD}
+${PROTONMAIL_PASSWORD_MAILBOX}
+EOF
+
+s6-setuidgid abc /app/proton-bridge --cli <<EOF | grep -E '(Username|Password)' | sort -ru
+info
+EOF
