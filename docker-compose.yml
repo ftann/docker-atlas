@@ -345,7 +345,8 @@ volumes:
 
 networks:
   outside:
-    name: outside
+    external: true
+    name: atlas_outside
   auth:
   mail:
   proxy:

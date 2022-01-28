@@ -14,9 +14,8 @@ install() {
 
 up() {
   check_compose
-  ./scripts/mk-networks.sh
-  run_compose build
-  run_compose pull
+  run_compose build --pull --parallel
+  run_compose pull --include-deps
   run_compose up -d --remove-orphans
 }
 
