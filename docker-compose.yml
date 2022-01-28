@@ -110,7 +110,6 @@ services:
     <<: *default_service
     image: linuxserver/nextcloud:${NEXTCLOUD}
     depends_on:
-      - ldap
       - nextcloud-db
     networks:
       - auth
@@ -310,7 +309,7 @@ services:
     <<: *default_service
     image: atlas/udpxy:${UDPXY}
     build: ./images/udpxy
-    network_mode: "host"
+    network_mode: host
 
   watchtower:
     <<: *default_service
