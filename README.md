@@ -19,7 +19,7 @@ A working server installation is required (preferably fedora due to selinux). Th
 ### Software
 
 - Docker
-- Docker-compose
+- Docker-compose >= 1.29
 - Firewalld
 
 ### Credentials
@@ -88,17 +88,18 @@ cp atlas/configs/firewall/* /etc/firewalld/services
     - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
     - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts for the
       first time.
-
-2. Run the installation command of the `ctl` script
-```shell
-./ctl install
-```
-
-3. Find the proton-bridge mailbox password.
-   Look for the generated password for the provided user. Copy to `.env`.
-```shell
-docker logs proton-bridge
-```
+2. Change the configuration in the volume init containers
+    - `./images/authelia-init` Configure the SSO settings
+    - `./images/ldap-init` Add users and group ldif files
+    - `./images/swag-init` Add a default landing page
+3. Run the installation command of the `ctl` script
+   ```shell
+   ./ctl install
+   ```
+4. Find the proton-bridge mailbox password. Look for the generated password for the provided user. Copy to `.env`.
+   ```shell
+   docker logs proton-bridge
+   ```
 
 ## Usage
 

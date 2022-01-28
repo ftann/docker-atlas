@@ -1,31 +1,8 @@
 #!/usr/bin/with-contenv bash
 
-# shellcheck disable=SC1001
-[[ -d /config/databases/slapd.d/cn\=config ]] && exit 0
+mkdir -p \
+  /config/keys \
+  /config/databases/openldap-data \
+  /config/databases/slapd.d
 
-. /opt/util/file.sh
-. /opt/util/ldap.sh
-. /opt/util/placeholder.sh
-. /opt/util/string.sh
-
-CONFIG_INIT=/tmp/openldap.ldif
-
-merge_files "/defaults/openldap/config/*.ldif" "$CONFIG_INIT"
-
-BIND_PASSWORD=$(create_password_hash "$LDAP_BIND_PASSWORD")
-CONFIG_PASSWORD=$(create_password_hash "$LDAP_CONFIG_PASSWORD")
-ROOT_PASSWORD=$(create_password_hash "$LDAP_ROOT_PASSWORD")
-
-# shellcheck disable=SC2046
-LDAP_DOMAIN="$(join_by "," $(prepend_each "dc=" $(split "$DOMAIN")))"
-
-replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$CONFIG_INIT"
-replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$CONFIG_INIT"
-replace_placeholder LDAP_CONFIG_PASSWORD "$CONFIG_PASSWORD" "$CONFIG_INIT"
-replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$CONFIG_INIT"
-replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$CONFIG_INIT"
-replace_placeholder LDAP_ROOT_PASSWORD "$ROOT_PASSWORD" "$CONFIG_INIT"
-
-s6-setuidgid abc slapadd -n 0 -F /config/databases/slapd.d -l "$CONFIG_INIT"
-
-rm "$CONFIG_INIT"
+chown -R abc:abc /config

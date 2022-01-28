@@ -14,7 +14,7 @@ install() {
 
 up() {
   check_compose
-  run_compose build --pull --parallel
+  run_compose build --parallel
   run_compose pull --include-deps
   run_compose up -d --remove-orphans
 }
