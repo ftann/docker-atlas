@@ -27,7 +27,6 @@ services:
   authelia:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
-    container_name: authelia
     depends_on:
       - authelia-db
       - ldap
@@ -60,7 +59,6 @@ services:
   authelia-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: authelia-db
     networks:
       - authelia_db
     environment:
@@ -79,7 +77,6 @@ services:
   inadyn:
     <<: *default_service
     image: atlas/inadyn:${INADYN}
-    container_name: inadyn
     build: ./images/inadyn
     networks:
       - outside
@@ -89,7 +86,6 @@ services:
   ldap:
     <<: *default_service
     image: atlas/ldap:${LDAP}
-    container_name: ldap
     build: ./images/ldap
     networks:
       - auth
@@ -113,7 +109,6 @@ services:
   nextcloud:
     <<: *default_service
     image: linuxserver/nextcloud:${NEXTCLOUD}
-    container_name: nextcloud
     depends_on:
       - ldap
       - nextcloud-db
@@ -134,7 +129,6 @@ services:
   nextcloud-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: nextcloud-db
     networks:
       - nextcloud_db
     environment:
@@ -153,7 +147,6 @@ services:
   plex:
     <<: *default_service
     image: linuxserver/plex:${PLEX}
-    container_name: plex
     networks:
       - proxy
     deploy:
@@ -169,7 +162,6 @@ services:
   proton-bridge:
     <<: *default_service
     image: atlas/proton-bridge:${PROTON_BRIDGE}
-    container_name: proton-bridge
     build: ./images/proton-bridge
     networks:
       - mail
@@ -188,7 +180,6 @@ services:
   restic:
     <<: *default_service
     image: atlas/restic:${RESTIC}
-    container_name: restic
     build: ./images/restic
     networks:
       - outside
@@ -224,7 +215,6 @@ services:
   swag:
     <<: *default_service
     image: linuxserver/swag:${SWAG}
-    container_name: swag
     depends_on:
       - authelia
       - nextcloud
@@ -257,7 +247,6 @@ services:
   syncthing:
     <<: *default_service
     image: linuxserver/syncthing:${SYNCTHING}
-    container_name: syncthing
     networks:
       - outside
       - proxy
@@ -273,7 +262,6 @@ services:
   teamspeak:
     <<: *default_service
     image: teamspeak:${TEAMSPEAK}
-    container_name: teamspeak
     depends_on:
       - teamspeak-db
     networks:
@@ -303,7 +291,6 @@ services:
   teamspeak-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: teamspeak-db
     networks:
       - teamspeak_db
     environment:
@@ -322,14 +309,12 @@ services:
   udpxy:
     <<: *default_service
     image: atlas/udpxy:${UDPXY}
-    container_name: udpxy
     build: ./images/udpxy
     network_mode: "host"
 
   watchtower:
     <<: *default_service
     image: containrrr/watchtower
-    container_name: watchtower
     networks:
       - outside
     environment:
