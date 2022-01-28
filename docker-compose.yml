@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.9"
 
 #
 # ATLAS
@@ -172,11 +172,7 @@ services:
     container_name: proton-bridge
     build: ./images/proton-bridge
     networks:
-      - outside
       - mail
-    ports:
-      - "25:1025"
-      - "143:1143"
     environment:
       <<: *default_environment
       FILE__PROTONMAIL_ADDRESS: /run/secrets/protonmail_address
