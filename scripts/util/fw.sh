@@ -5,7 +5,7 @@ add_fw() {
 }
 
 add_service_fw() {
-  firewall-cmd --add-service="$1" --permanent
+  add_fw --add-service="$1"
 }
 
 reload_fw() {
