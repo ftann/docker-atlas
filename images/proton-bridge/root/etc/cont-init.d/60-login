@@ -2,6 +2,9 @@
 
 [[ -d /config/.config/protonmail ]] && exit 0
 
+HOME=~abc
+export HOME
+
 s6-setuidgid abc /app/proton-bridge --cli <<EOF
 login
 ${PROTONMAIL_ADDRESS}

@@ -2,6 +2,9 @@
 
 [[ -d /config/.gnupg ]] && exit 0
 
+HOME=~abc
+export HOME
+
 s6-setuidgid abc /usr/bin/gpg --quiet --generate-key --batch <<EOF
   %no-protection
   Key-Type: RSA
