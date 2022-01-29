@@ -1,70 +1,7 @@
 #!/usr/bin/with-contenv bash
 
-[[ -e /config/.installed ]] && exit 0
+mkdir -p \
+  /config/{databases/{openldap-data,slapd.d},keys,log/ldap} \
+  /run/openldap
 
-CONFIG=/config/databases/slapd.d
-CONFIG_INIT=/config/config.ldif
-DATABASE_INIT=/config/database.ldif
-
-create_password_hash() {
-  # shellcheck disable=SC1083
-  slappasswd -n -h {SSHA} -s "$1"
-}
-
-replace_placeholder() {
-  sed -i "s|{{ $1 }}|$2|g" "$3"
-}
-
-get_domain() {
-  echo "$1" | cut -d, -f1 | cut -d= -f2
-}
-
-{
-  for file in /defaults/openldap/config/*.ldif; do
-    [ -e "$file" ] || continue
-    cat "$file"
-    echo
-  done
-} >>"$CONFIG_INIT"
-
-{
-  for file in /defaults/openldap/db/*.ldif; do
-    [ -e "$file" ] || continue
-    cat "$file"
-    echo
-  done
-} >>"$CONFIG_INIT"
-
-{
-  for file in /defaults/openldap/init/*.ldif; do
-    [ -e "$file" ] || continue
-    cat "$file"
-    echo
-  done
-} >>"$DATABASE_INIT"
-
-BIND_PASSWORD=$(create_password_hash "$LDAP_BIND_PASSWORD")
-CONFIG_PASSWORD=$(create_password_hash "$LDAP_CONFIG_PASSWORD")
-ROOT_PASSWORD=$(create_password_hash "$LDAP_ROOT_PASSWORD")
-
-replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$CONFIG_INIT"
-replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$CONFIG_INIT"
-replace_placeholder LDAP_CERTS "$LDAP_CERTS" "$CONFIG_INIT"
-replace_placeholder LDAP_CONFIG_PASSWORD "$CONFIG_PASSWORD" "$CONFIG_INIT"
-replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$CONFIG_INIT"
-replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$CONFIG_INIT"
-replace_placeholder LDAP_ROOT_PASSWORD "$ROOT_PASSWORD" "$CONFIG_INIT"
-
-s6-setuidgid abc slapadd -n 0 -F "$CONFIG" -l "$CONFIG_INIT"
-
-DOMAIN=$(get_domain "$LDAP_DOMAIN")
-
-replace_placeholder LDAP_BIND_USER "$LDAP_BIND_USER" "$DATABASE_INIT"
-replace_placeholder LDAP_BIND_PASSWORD "$BIND_PASSWORD" "$DATABASE_INIT"
-replace_placeholder LDAP_DOMAIN "$LDAP_DOMAIN" "$DATABASE_INIT"
-replace_placeholder LDAP_ROOT "$LDAP_ROOT" "$DATABASE_INIT"
-replace_placeholder DOMAIN "$DOMAIN" "$DATABASE_INIT"
-
-s6-setuidgid abc slapadd -n 1 -F "$CONFIG" -l "$DATABASE_INIT"
-
-rm "$CONFIG_INIT" "$DATABASE_INIT"
+chown -R abc:abc /config /run/openldap

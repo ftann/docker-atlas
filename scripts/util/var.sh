@@ -51,16 +51,12 @@ get_protonmail_password_mailbox() {
 
 # Permissions
 
-get_uid() {
-  get_var PUID
-}
-
-get_gid() {
-  get_var PGID
-}
-
 get_selinux_label() {
   get_var SELINUX_OBJ_LABEL
+}
+
+get_selinux_level() {
+  get_var SELINUX_OBJ_LEVEL
 }
 
 # Volumes

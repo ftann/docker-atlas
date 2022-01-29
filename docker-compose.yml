@@ -1,14 +1,30 @@
-version: '3.8'
+version: "3.9"
 
 #
 # ATLAS
 #
 
+x-default-environment: &default_environment
+  TZ: ${TZ}
+  PUID: ${PUID}
+  PGID: ${PGID}
+
+x-default-init: &default_init
+  environment:
+    <<: *default_environment
+  network_mode: none
+  restart: "no"
+
+x-default-service: &default_service
+  environment: &default_service_environment
+    <<: *default_environment
+    UMASK: ${UMASK}
+  restart: always
+
 services:
 
   #  adminer:
   #    image: adminer
-  #    container_name: adminer
   #    networks:
   #      - outside
   #      - authelia_db
@@ -16,31 +32,37 @@ services:
   #      - teamspeak_db
   #    ports:
   #      - "8080:8080"
-  #    restart: always
+
+  authelia-init:
+    <<: *default_init
+    image: atlas/authelia-init
+    build: ./images/authelia-init
+    volumes:
+      - authelia:/config:z
 
   authelia:
+    <<: *default_service
     image: authelia/authelia:${AUTHELIA}
-    container_name: authelia
     depends_on:
-      - authelia-db
+      authelia-init:
+        condition: service_completed_successfully
+      authelia-db:
+        condition: service_started
     networks:
       - auth
       - authelia_db
       - mail
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE=/run/secrets/ldap_auth
-      - AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE=/run/secrets/authelia_identity_hmac
-      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt
-      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/protonmail_password_bridge
-      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage
-      - AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE=/run/secrets/authelia_db
-      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session
+      <<: *default_service_environment
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_auth
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_hmac
+      AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage
+      AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE: /run/secrets/authelia_db
     volumes:
-      - ./volumes/authelia:/config:z
-      - ./configs/authelia/configuration.yml:/config/configuration.yml:z
+      - authelia:/config:z
     secrets:
       - authelia_db
       - authelia_identity_hmac
@@ -49,212 +71,185 @@ services:
       - authelia_storage
       - ldap_auth
       - protonmail_password_bridge
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   authelia-db:
+    <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: authelia-db
     networks:
       - authelia_db
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - MYSQL_DATABASE=authelia
-      - MYSQL_USER=authelia
-      - FILE__MYSQL_PASSWORD=/run/secrets/authelia_db
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/authelia_db
+      <<: *default_service_environment
+      MYSQL_DATABASE: authelia
+      MYSQL_USER: authelia
+      FILE__MYSQL_PASSWORD: /run/secrets/authelia_db
+      FILE__MYSQL_ROOT_PASSWORD: /run/secrets/authelia_db
     volumes:
-      - ./volumes/authelia_db:/config:z
+      - authelia_db:/config:z
     secrets:
       - authelia_db
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   inadyn:
+    <<: *default_service
     image: atlas/inadyn:${INADYN}
-    container_name: inadyn
     build: ./images/inadyn
     networks:
       - outside
-    environment:
-      - TZ=${TZ}
     secrets:
       - inadyn
-    restart: always
+
+  ldap-init:
+    <<: *default_init
+    image: atlas/ldap-init
+    build: ./images/ldap-init
+    volumes:
+      - ldap:/config:z
 
   ldap:
+    <<: *default_service
     image: atlas/ldap:${LDAP}
-    container_name: ldap
     build: ./images/ldap
+    depends_on:
+      ldap-init:
+        condition: service_completed_successfully
     networks:
       - auth
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - LDAP_DOMAIN=${LDAP_DOMAIN}
-      - LDAP_ROOT=root
-      - LDAP_BIND_USER=auth
-      - LDAP_CERTS=/config/certs/live/${DOMAIN}
-      - FILE__LDAP_CONFIG_PASSWORD=/run/secrets/ldap_db
-      - FILE__LDAP_ROOT_PASSWORD=/run/secrets/ldap_db
-      - FILE__LDAP_BIND_PASSWORD=/run/secrets/ldap_auth
+      <<: *default_service_environment
+      DOMAIN: ${DOMAIN}
+      LDAP_ROOT: root
+      LDAP_BIND_USER: auth
+      FILE__LDAP_CONFIG_PASSWORD: /run/secrets/ldap_db
+      FILE__LDAP_ROOT_PASSWORD: /run/secrets/ldap_db
+      FILE__LDAP_BIND_PASSWORD: /run/secrets/ldap_auth
     volumes:
-      - ./volumes/ldap:/config:z
-      - ./configs/ldap:/config/initdb.d:ro,z
-      - ./volumes/swag/etc/letsencrypt:/config/certs:ro,z
+      - ldap:/config:z
     secrets:
       - ldap_auth
       - ldap_db
     ulimits:
       nofile: 1024
-    restart: always
 
   nextcloud:
+    <<: *default_service
     image: linuxserver/nextcloud:${NEXTCLOUD}
-    container_name: nextcloud
     depends_on:
-      - ldap
       - nextcloud-db
     networks:
       - auth
       - mail
       - nextcloud_db
       - proxy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/nextcloud:/config:z
+      - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
       - ${VOLUME_MEDIA}:/media:z
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   nextcloud-db:
+    <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: nextcloud-db
     networks:
       - nextcloud_db
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-      - FILE__MYSQL_PASSWORD=/run/secrets/nextcloud_db
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/nextcloud_db
+      <<: *default_service_environment
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      FILE__MYSQL_PASSWORD: /run/secrets/nextcloud_db
+      FILE__MYSQL_ROOT_PASSWORD: /run/secrets/nextcloud_db
     volumes:
-      - ./volumes/nextcloud_db:/config:z
+      - nextcloud_db:/config:z
     secrets:
       - nextcloud_db
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   plex:
+    <<: *default_service
     image: linuxserver/plex:${PLEX}
-    container_name: plex
     networks:
       - proxy
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK=${UMASK}
-      - VERSION=docker
-    # - PLEX_CLAIM=
     deploy:
       resources:
         limits:
           memory: 8G
     volumes:
-      - ./volumes/plex:/config:z
+      - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   proton-bridge:
+    <<: *default_service
     image: atlas/proton-bridge:${PROTON_BRIDGE}
-    container_name: proton-bridge
     build: ./images/proton-bridge
     networks:
-      - outside
       - mail
-    ports:
-      - "25:1025"
-      - "143:1143"
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - FILE__PROTONMAIL_ADDRESS=/run/secrets/protonmail_address
-      - FILE__PROTONMAIL_PASSWORD=/run/secrets/protonmail_password
-      - FILE__PROTONMAIL_PASSWORD_MAILBOX=/run/secrets/protonmail_password_mailbox
+      <<: *default_service_environment
+      FILE__PROTONMAIL_ADDRESS: /run/secrets/protonmail_address
+      FILE__PROTONMAIL_PASSWORD: /run/secrets/protonmail_password
+      FILE__PROTONMAIL_PASSWORD_MAILBOX: /run/secrets/protonmail_password_mailbox
     volumes:
-      - ./volumes/proton-bridge:/config:z
+      - proton-bridge:/config:z
     secrets:
       - protonmail_address
       - protonmail_password
       - protonmail_password_mailbox
-    restart: always
 
   restic:
+    <<: *default_service
     image: atlas/restic:${RESTIC}
-    container_name: restic
     build: ./images/restic
     networks:
       - outside
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - RESTIC_REPOSITORY=<empty>
-      - RESTIC_SCHEDULE=30 3 * * *
-      - RESTIC_BACKUP_TAGS=auto
-      - RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      - FILE__B2_ACCOUNT_ID=/run/secrets/backblaze_id
-      - FILE__B2_ACCOUNT_KEY=/run/secrets/backblaze_key
-      - FILE__RESTIC_PASSWORD=/run/secrets/restic
+      <<: *default_service_environment
+      RESTIC_REPOSITORY: <empty>
+      RESTIC_SCHEDULE: 30 3 * * *
+      RESTIC_BACKUP_TAGS: auto
+      RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
+      FILE__B2_ACCOUNT_ID: /run/secrets/backblaze_id
+      FILE__B2_ACCOUNT_KEY: /run/secrets/backblaze_key
+      FILE__RESTIC_PASSWORD: /run/secrets/restic
     volumes:
-      - ./volumes/restic:/config:z
+      - restic:/config:z
       # Volumes
-      - ./volumes/authelia:/data/authelia:z
-      - ./volumes/authelia_db:/data/authelia_db:z
-      - ./volumes/ldap:/data/ldap:z
-      - ./volumes/nextcloud:/data/nextcloud:z
-      - ./volumes/nextcloud_db:/data/nextcloud_db:z
-      - ./volumes/plex/Library/Application\ Support/Plex\ Media\ Server:/data/plex/Library/Application\ Support/Plex\ Media\ Server:z
-      - ./volumes/proton-bridge:/data/proton-bridge:z
-      - ./volumes/swag:/data/swag:z
-      - ./volumes/syncthing:/data/syncthing:z
-      - ./volumes/teamspeak:/data/teamspeak:z
-      - ./volumes/teamspeak_db:/data/teamspeak_db:z
+      - authelia_db:/data/authelia_db:z
+      - nextcloud:/data/nextcloud:z
+      - nextcloud_db:/data/nextcloud_db:z
+      - plex:/data/plex:z
+      - proton-bridge:/data/proton-bridge:z
+      - swag:/data/swag:z
+      - syncthing:/data/syncthing:z
+      - teamspeak:/data/teamspeak:z
+      - teamspeak_db:/data/teamspeak_db:z
       # Data
       - ${VOLUME_ROOT}:/data/data:z
     secrets:
       - backblaze_id
       - backblaze_key
       - restic
-    restart: always
+
+  swag-init:
+    <<: *default_init
+    image: atlas/swag-init
+    build: ./images/swag-init
+    volumes:
+      - swag:/config:z
 
   swag:
+    <<: *default_service
     image: linuxserver/swag:${SWAG}
-    container_name: swag
     depends_on:
-      - nextcloud
-      - plex
-      - syncthing
+      swag-init:
+        condition: service_completed_successfully
     cap_add:
       - NET_ADMIN
     networks:
@@ -265,50 +260,38 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - URL=${DOMAIN}
-      - SUBDOMAINS=wildcard
-      - VALIDATION=dns
-      - DNSPLUGIN=cloudflare
-      - FILE__MAXMINDDB_LICENSE_KEY=/run/secrets/maxmind
-    #  - STAGING=true
+      <<: *default_service_environment
+      URL: ${DOMAIN}
+      SUBDOMAINS: wildcard
+      VALIDATION: dns
+      DNSPLUGIN: cloudflare
+      FILE__MAXMINDDB_LICENSE_KEY: /run/secrets/maxmind
     volumes:
-      - ./volumes/swag:/config:z
-      - ./configs/blog:/config/www:z
+      - swag:/config:z
     secrets:
       - cloudflare
       - maxmind
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   syncthing:
+    <<: *default_service
     image: linuxserver/syncthing:${SYNCTHING}
-    container_name: syncthing
     networks:
       - outside
       - proxy
     ports:
-      # - "8384:8384"
       - "22000:22000"
       - "21027:21027/udp"
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK_SET=${UMASK}
     volumes:
-      - ./volumes/syncthing:/config:z
+      - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   teamspeak:
+    <<: *default_service
     image: teamspeak:${TEAMSPEAK}
-    container_name: teamspeak
     depends_on:
       - teamspeak-db
     networks:
@@ -319,74 +302,82 @@ services:
       - "10011:10011"
       - "30033:30033"
     environment:
-      - TZ=${TZ}
-      - TS3SERVER_DB_PLUGIN=ts3db_mariadb
-      - TS3SERVER_DB_SQLCREATEPATH=create_mariadb
-      - TS3SERVER_DB_HOST=teamspeak-db
-      - TS3SERVER_DB_USER=teamspeak
-      - TS3SERVER_DB_PASSWORD_FILE=/run/secrets/teamspeak_db
-      - TS3SERVER_DB_NAME=teamspeak
-      - TS3SERVER_DB_WAITUNTILREADY=30
-      - TS3SERVER_LICENSE=accept
+      <<: *default_service_environment
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeak-db
+      TS3SERVER_DB_USER: teamspeak
+      TS3SERVER_DB_PASSWORD_FILE: /run/secrets/teamspeak_db
+      TS3SERVER_DB_NAME: teamspeak
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
     volumes:
-      - ./volumes/teamspeak:/var/ts3server:z
+      - teamspeak:/var/ts3server:z
     secrets:
       - teamspeak_db
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   teamspeak-db:
+    <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
-    container_name: teamspeak-db
     networks:
       - teamspeak_db
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - MYSQL_DATABASE=teamspeak
-      - MYSQL_USER=teamspeak
-      - FILE__MYSQL_PASSWORD=/run/secrets/teamspeak_db
-      - FILE__MYSQL_ROOT_PASSWORD=/run/secrets/teamspeak_db
+      <<: *default_service_environment
+      MYSQL_DATABASE: teamspeak
+      MYSQL_USER: teamspeak
+      FILE__MYSQL_PASSWORD: /run/secrets/teamspeak_db
+      FILE__MYSQL_ROOT_PASSWORD: /run/secrets/teamspeak_db
     volumes:
-      - ./volumes/teamspeak_db:/config:z
+      - teamspeak_db:/config:z
     secrets:
       - teamspeak_db
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
   udpxy:
+    <<: *default_service
     image: atlas/udpxy:${UDPXY}
-    container_name: udpxy
     build: ./images/udpxy
-    network_mode: "host"
-    environment:
-      - TZ=${TZ}
-    restart: always
+    network_mode: host
 
   watchtower:
+    <<: *default_service
     image: containrrr/watchtower
-    container_name: watchtower
     networks:
       - outside
+    environment:
+      <<: *default_service_environment
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_NOTIFICATIONS_LEVEL: error
+      WATCHTOWER_SCHEDULE: 0 0 6 * * *
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - TZ=${TZ}
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_RESTARTING=true
-      - WATCHTOWER_LABEL_ENABLE=true
-      - WATCHTOWER_NOTIFICATIONS_LEVEL=error
-      - WATCHTOWER_SCHEDULE=0 0 6 * * *
-    restart: always
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
+volumes:
+  authelia:
+  authelia_db:
+  ldap:
+  nextcloud:
+  nextcloud_db:
+  plex:
+  proton-bridge:
+  restic:
+  swag:
+  syncthing:
+  teamspeak:
+  teamspeak_db:
+
 networks:
   outside:
-    name: outside
+    external: true
+    name: atlas_outside
   auth:
   mail:
   proxy:
@@ -395,6 +386,8 @@ networks:
   teamspeak_db:
 
 secrets:
+  authelia_db:
+    file: ./secrets/authelia_db
   authelia_identity_hmac:
     file: ./secrets/authelia_identity_hmac
   authelia_jwt:
@@ -411,8 +404,14 @@ secrets:
     file: ./secrets/cloudflare
   inadyn:
     file: ./secrets/inadyn
+  ldap_auth:
+    file: ./secrets/ldap_auth
+  ldap_db:
+    file: ./secrets/ldap_db
   maxmind:
     file: ./secrets/maxmind
+  nextcloud_db:
+    file: ./secrets/nextcloud_db
   protonmail_address:
     file: ./secrets/protonmail_address
   protonmail_password:
@@ -423,15 +422,5 @@ secrets:
     file: ./secrets/protonmail_password_mailbox
   restic:
     file: ./secrets/restic
-  # Users
-  ldap_auth:
-    file: ./secrets/ldap_auth
-  # Databases
-  authelia_db:
-    file: ./secrets/authelia_db
-  ldap_db:
-    file: ./secrets/ldap_db
-  nextcloud_db:
-    file: ./secrets/nextcloud_db
   teamspeak_db:
     file: ./secrets/teamspeak_db

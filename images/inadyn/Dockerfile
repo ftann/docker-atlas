@@ -1,9 +1,11 @@
 FROM alpine:3.15
 
-RUN apk add --no-cache bash inadyn
+RUN apk add --no-cache inadyn
 
-COPY inadyn.conf /etc/inadyn/inadyn.conf
+COPY root/ /
+
+USER inadyn:inadyn
 
 ENTRYPOINT ["/usr/sbin/inadyn"]
 
-CMD ["--foreground", "-t", "20", "-l", "err"]
+CMD ["--foreground", "--no-pidfile", "--drop-privs=inadyn:inadyn", "-t", "20", "-l", "err"]

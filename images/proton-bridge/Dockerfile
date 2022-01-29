@@ -21,17 +21,12 @@ EXPOSE 25 143
 
 RUN apk add --no-cache gnupg libsecret pass socat
 
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
-
-ENV PROTONMAIL_ADDRESS="admin@atlas.com" \
-    PROTONMAIL_PASSWORD=atlas \
-    PROTONMAIL_PASSWORD_MAILBOX=secure
-
-RUN mkdir -p \
-        /config && \
-    chown -R abc:abc /config
-
 COPY --from=builder /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
 COPY root/ /
+
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
+    PROTONMAIL_ADDRESS="admin@atlas.com" \
+    PROTONMAIL_PASSWORD=atlas \
+    PROTONMAIL_PASSWORD_MAILBOX=secure
 
 VOLUME /config

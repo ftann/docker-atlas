@@ -4,10 +4,9 @@ is_selinux_enabled() {
   selinuxenabled
 }
 
-selinux_chcon_obj() {
-  chcon -R -t "$1" "$2"
-}
-
-selinux_chcon_lvl() {
-  chcon -R -l s0 "$1"
+selinux_chcon() {
+  local label="$1"
+  local level="$2"
+  shift 2
+  chcon -R -t "$label" -l "$level" "$@"
 }

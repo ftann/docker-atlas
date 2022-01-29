@@ -9,23 +9,21 @@ install() {
   ./scripts/mk-fwrules.sh
   ./scripts/mk-networks.sh
   ./scripts/mk-secrets.sh
-  ./scripts/mk-volumes.sh
-  ./scripts/own-volumes.sh
   ./scripts/mk-selinux.sh
 }
 
 up() {
-  ./scripts/mk-networks.sh
-  run_compose build
-  run_compose pull
+  check_compose
+  run_compose build --parallel
+  run_compose pull --include-deps
   run_compose up -d --remove-orphans
 }
 
 down() {
-  run_compose down
+  run_compose down --remove-orphans
 }
 
-remove() {
+uninstall() {
   if ask; then
     run_compose down -v
     run_compose rm -v
