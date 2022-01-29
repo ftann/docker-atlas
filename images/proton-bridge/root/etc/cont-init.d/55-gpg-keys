@@ -13,3 +13,5 @@ s6-setuidgid abc /usr/bin/gpg --quiet --generate-key --batch <<EOF
   Expire-Date: 0
   %commit
 EOF
+
+echo "atlas :: proton-bridge :: created gpg key"

@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bash
+
+mkdir -p \
+  /config/{crontabs,log/restic,restic}
+
+chown -R abc:abc /config
+chown -R root:root /config/crontabs

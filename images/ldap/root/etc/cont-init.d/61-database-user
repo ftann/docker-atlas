@@ -27,13 +27,15 @@ s6-setuidgid abc slapadd -n 1 -F /config/databases/slapd.d -l "$DATABASE_INIT"
 
 rm "$DATABASE_INIT"
 
+echo "atlas :: ldap :: created user database"
+
 [[ ! -d /config/ldap ]] && exit 0
 
 CUSTOM_INIT=/tmp/custom.ldif
 
 merge_files "/config/ldap/*.ldif" "$CUSTOM_INIT"
 
-slapd -h "ldapi://%2Frun%2Fopenldap%2Fldapi" -F "$CONFIG" -u abc -g abc &
+slapd -h "ldapi://%2Frun%2Fopenldap%2Fldapi" -F /config/databases/slapd.d -u abc -g abc &
 while [ ! -e /run/openldap/slapd.pid ]; do sleep 0.1; done
 
 ldapadd -c -Y EXTERNAL -Q -H "ldapi://%2Frun%2Fopenldap%2Fldapi" -f "$CUSTOM_INIT" >/dev/null 2>&1
@@ -43,3 +45,5 @@ kill -SIGTERM "$PID"
 while [ -e "/proc/$PID" ]; do sleep 0.1; done
 
 rm "$CUSTOM_INIT"
+
+echo "atlas :: ldap :: applied custom entries"

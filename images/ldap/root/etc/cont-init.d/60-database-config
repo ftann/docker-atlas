@@ -29,3 +29,5 @@ replace_placeholder LDAP_ROOT_PASSWORD "$ROOT_PASSWORD" "$CONFIG_INIT"
 s6-setuidgid abc slapadd -n 0 -F /config/databases/slapd.d -l "$CONFIG_INIT"
 
 rm "$CONFIG_INIT"
+
+echo "atlas :: ldap :: created config database"

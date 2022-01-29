@@ -15,3 +15,5 @@ EOF
 s6-setuidgid abc /app/proton-bridge --cli <<EOF | grep -E '(Username|Password)' | sort -ru
 info
 EOF
+
+echo "atlas :: proton-bridge :: logged in"

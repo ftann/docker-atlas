@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bash
 
-export HOME=/config
+HOME=~abc
+export HOME
 
 rm -f faketty
 mkfifo faketty

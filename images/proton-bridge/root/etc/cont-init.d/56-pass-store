@@ -6,3 +6,5 @@ HOME=~abc
 export HOME
 
 s6-setuidgid abc /usr/bin/pass init pass-key
+
+echo "atlas :: proton-bridge :: created credential store"
