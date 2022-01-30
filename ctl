@@ -13,20 +13,24 @@ install() {
 }
 
 up() {
-  check_compose
-  run_compose build --parallel
-  run_compose pull --include-deps
-  run_compose up -d --remove-orphans
+  docker-compose config -q
+  docker-compose build --parallel
+  docker-compose pull
+  docker-compose up -d --remove-orphans
 }
 
 down() {
-  run_compose down --remove-orphans
+  docker-compose down --remove-orphans
 }
 
 uninstall() {
+  check_root
   if ask; then
-    run_compose down -v
-    run_compose rm -v
+    # Don't remove volumes and secrets!
+    docker-compose down --rmi all
+    docker-compose rm
+    ./scripts/rm-fwrules.sh
+    ./scripts/rm-networks.sh
   fi
 }
 

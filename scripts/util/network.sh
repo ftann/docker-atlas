@@ -15,3 +15,10 @@ create_network() {
       "$network"
   fi
 }
+
+delete_network() {
+  local network=$1
+  if exists_network "$network"; then
+    docker network rm "$network"
+  fi
+}
