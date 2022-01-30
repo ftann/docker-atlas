@@ -29,11 +29,11 @@ rm "$DATABASE_INIT"
 
 echo "atlas :: ldap :: created user database"
 
-[[ ! -d /config/ldap ]] && exit 0
+[[ ! -d /config/initdb.d ]] && exit 0
 
 CUSTOM_INIT=/tmp/custom.ldif
 
-merge_files "/config/ldap/*.ldif" "$CUSTOM_INIT"
+merge_files "/config/initdb.d/*.ldif" "$CUSTOM_INIT"
 
 slapd -h "ldapi://%2Frun%2Fopenldap%2Fldapi" -F /config/databases/slapd.d -u abc -g abc &
 while [ ! -e /run/openldap/slapd.pid ]; do sleep 0.1; done

@@ -1,6 +1,6 @@
 FROM alpine:3.15
 
-RUN apk add --no-cache inadyn
+RUN apk add --no-cache inadyn tzdata
 
 COPY root/ /
 
