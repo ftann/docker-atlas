@@ -25,6 +25,7 @@ services:
 
   #  adminer:
   #    image: adminer
+  #    container_name: adminer
   #    networks:
   #      - outside
   #      - authelia_db
@@ -37,12 +38,14 @@ services:
     <<: *default_init
     image: atlas/authelia-init
     build: ./images/authelia-init
+    container_name: authelia-init
     volumes:
       - authelia:/config:z
 
   authelia:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
+    container_name: authelia
     depends_on:
       authelia-init:
         condition: service_completed_successfully
@@ -77,6 +80,7 @@ services:
   authelia-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
+    container_name: authelia-db
     networks:
       - authelia_db
     environment:
@@ -96,6 +100,7 @@ services:
     <<: *default_service
     image: atlas/inadyn:${INADYN}
     build: ./images/inadyn
+    container_name: inadyn
     networks:
       - outside
     secrets:
@@ -105,6 +110,7 @@ services:
     <<: *default_init
     image: atlas/ldap-init
     build: ./images/ldap-init
+    container_name: ldap-init
     volumes:
       - ldap:/config:z
 
@@ -112,6 +118,7 @@ services:
     <<: *default_service
     image: atlas/ldap:${LDAP}
     build: ./images/ldap
+    container_name: ldap
     depends_on:
       ldap-init:
         condition: service_completed_successfully
@@ -136,6 +143,7 @@ services:
   nextcloud:
     <<: *default_service
     image: linuxserver/nextcloud:${NEXTCLOUD}
+    container_name: nextcloud
     depends_on:
       - nextcloud-db
     networks:
@@ -155,6 +163,7 @@ services:
   nextcloud-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
+    container_name: nextcloud-db
     networks:
       - nextcloud_db
     environment:
@@ -173,6 +182,7 @@ services:
   plex:
     <<: *default_service
     image: linuxserver/plex:${PLEX}
+    container_name: plex
     networks:
       - proxy
     deploy:
@@ -189,6 +199,7 @@ services:
     <<: *default_service
     image: atlas/proton-bridge:${PROTON_BRIDGE}
     build: ./images/proton-bridge
+    container_name: proton-bridge
     networks:
       - mail
     environment:
@@ -207,6 +218,7 @@ services:
     <<: *default_service
     image: atlas/restic:${RESTIC}
     build: ./images/restic
+    container_name: restic
     networks:
       - outside
     environment:
@@ -224,6 +236,7 @@ services:
       - authelia_db:/data/authelia_db:z
       - nextcloud:/data/nextcloud:z
       - nextcloud_db:/data/nextcloud_db:z
+      - ldap:/data/ldap:z
       - plex:/data/plex:z
       - proton-bridge:/data/proton-bridge:z
       - swag:/data/swag:z
@@ -241,12 +254,14 @@ services:
     <<: *default_init
     image: atlas/swag-init
     build: ./images/swag-init
+    container_name: swag-init
     volumes:
       - swag:/config:z
 
   swag:
     <<: *default_service
     image: linuxserver/swag:${SWAG}
+    container_name: swag
     depends_on:
       swag-init:
         condition: service_completed_successfully
@@ -277,6 +292,7 @@ services:
   syncthing:
     <<: *default_service
     image: linuxserver/syncthing:${SYNCTHING}
+    container_name: syncthing
     networks:
       - outside
       - proxy
@@ -292,6 +308,7 @@ services:
   teamspeak:
     <<: *default_service
     image: teamspeak:${TEAMSPEAK}
+    container_name: teamspeak
     depends_on:
       - teamspeak-db
     networks:
@@ -321,6 +338,7 @@ services:
   teamspeak-db:
     <<: *default_service
     image: linuxserver/mariadb:${MARIADB}
+    container_name: teamspeak-db
     networks:
       - teamspeak_db
     environment:
@@ -340,11 +358,13 @@ services:
     <<: *default_service
     image: atlas/udpxy:${UDPXY}
     build: ./images/udpxy
+    container_name: udpxy
     network_mode: host
 
   watchtower:
     <<: *default_service
     image: containrrr/watchtower
+    container_name: watchtower
     networks:
       - outside
     environment:
