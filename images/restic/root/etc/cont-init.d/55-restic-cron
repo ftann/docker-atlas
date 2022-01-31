@@ -1,8 +1,0 @@
-#!/usr/bin/with-contenv bash
-
-[[ -z "$RESTIC_SCHEDULE" ]] && exit 1
-[[ -f /config/crontabs/root ]] || cp /defaults/crontabs/root /config/crontabs/root
-
-sed -i "s|{{ RESTIC_SCHEDULE }}|$RESTIC_SCHEDULE|g" /config/crontabs/root
-
-echo "atlas :: restic :: set schedule"
