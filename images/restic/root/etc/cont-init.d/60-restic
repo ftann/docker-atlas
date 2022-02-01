@@ -8,7 +8,7 @@ sed -i "s|{{ RESTIC_SCHEDULE }}|$RESTIC_SCHEDULE|g" /config/crontabs/root
 [[ -f /config/restic/excludes ]] || s6-setuidgid abc cp /defaults/restic/excludes /config/restic/excludes
 [[ -f /config/restic/options ]] || s6-setuidgid abc cp /defaults/restic/options /config/restic/options
 
-if ! restic cat config >/dev/null 2>&1; then
+if ! s6-setuidgid abc restic cat config >/dev/null 2>&1; then
   s6-setuidgid abc restic init >>/config/log/restic/restic.log 2>&1
   echo "atlas :: restic :: repository initialized"
 fi
