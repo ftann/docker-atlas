@@ -1,1 +1,1 @@
-RESTIC_OPTIONS=(-o b2.connections=50 --iexclude-file=/config/restic/excludes)
+RESTIC_OPTIONS=(-o b2.connections=50)

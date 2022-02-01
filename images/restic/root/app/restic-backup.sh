@@ -15,7 +15,7 @@ mk_tag_args() {
 TAGS="$(mk_tag_args "${RESTIC_BACKUP_TAGS}")"
 
 # shellcheck disable=SC2086
-s6-setuidgid abc restic backup $TAGS "${RESTIC_OPTIONS[@]}" "$RESTIC_BACKUP_SOURCES"
+s6-setuidgid abc restic backup $TAGS "${RESTIC_OPTIONS[@]}" --iexclude-file=/config/restic/excludes
 
 [[ -z "$RESTIC_FORGET_ARGS" ]] && exit 0
 
