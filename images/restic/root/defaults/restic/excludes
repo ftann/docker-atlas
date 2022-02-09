@@ -1,5 +1,6 @@
 .cache
 cache
+databases/*.err
 .git
 *.lock
 log
