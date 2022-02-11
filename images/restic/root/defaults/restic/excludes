@@ -7,6 +7,8 @@ log
 logs
 *.log
 
+swag/fail2ban/fail2ban.sqlite3
+
 plex/Library/Application\ Support/Plex\ Media\ Server/Cache
 plex/Library/Application\ Support/Plex\ Media\ Server/Codecs
 plex/Library/Application\ Support/Plex\ Media\ Server/Crash\ Reports
