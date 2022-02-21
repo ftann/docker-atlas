@@ -391,6 +391,7 @@ services:
   authelia-db-backup:
     <<: *default_service
     image: ctor/db-backup:${DB_BACKUP}
+    build: ./images/db-backup
     container_name: authelia-db-backup
     networks:
       - authelia_db
@@ -410,6 +411,7 @@ services:
   nextcloud-db-backup:
     <<: *default_service
     image: ctor/db-backup:${DB_BACKUP}
+    build: ./images/db-backup
     container_name: nextcloud-db-backup
     networks:
       - nextcloud_db
@@ -429,6 +431,7 @@ services:
   teamspeak-db-backup:
     <<: *default_service
     image: ctor/db-backup:${DB_BACKUP}
+    build: ./images/db-backup
     container_name: teamspeak-db-backup
     networks:
       - teamspeak_db
