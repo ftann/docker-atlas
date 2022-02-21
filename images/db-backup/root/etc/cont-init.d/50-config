@@ -18,5 +18,5 @@ if [ -z "$DB_NAME" ]; then
   exit 1
 fi
 
-chown -R abc:abc /config /data
+chown -R abc:abc /config
 chown -R root:root /config/crontabs
