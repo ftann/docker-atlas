@@ -1,0 +1,22 @@
+#!/usr/bin/with-contenv bash
+
+set -euo pipefail
+
+mkdir -p /config/crontabs /data
+
+if [ ! -f /config/crontabs/root ]; then
+  cp /defaults/crontabs/root /config/crontabs/root
+fi
+
+if [ -z "$DB_BACKUP_SCHEDULE" ]; then
+  exit 1
+fi
+
+sed -i "s|{{ DB_BACKUP_SCHEDULE }}|$DB_BACKUP_SCHEDULE|g" /config/crontabs/root
+
+if [ -z "$DB_NAME" ]; then
+  exit 1
+fi
+
+chown -R abc:abc /config /data
+chown -R root:root /config/crontabs

@@ -9,7 +9,7 @@ x-default-environment: &default_environment
   PUID: ${PUID}
   PGID: ${PGID}
 
-x-default-init: &default_init
+x-default-task: &default_task
   environment:
     <<: *default_environment
   network_mode: none
@@ -23,6 +23,10 @@ x-default-service: &default_service
 
 services:
 
+  #
+  # Services.
+  #
+
   #  adminer:
   #    image: adminer
   #    container_name: adminer
@@ -35,7 +39,7 @@ services:
   #      - "8080:8080"
 
   authelia-init:
-    <<: *default_init
+    <<: *default_task
     image: atlas/authelia-init
     build: ./images/authelia-init
     container_name: authelia-init
@@ -107,7 +111,7 @@ services:
       - inadyn
 
   ldap-init:
-    <<: *default_init
+    <<: *default_task
     image: atlas/ldap-init
     build: ./images/ldap-init
     container_name: ldap-init
@@ -214,44 +218,8 @@ services:
       - protonmail_password
       - protonmail_password_mailbox
 
-  restic:
-    <<: *default_service
-    image: atlas/restic:${RESTIC}
-    build: ./images/restic
-    container_name: restic
-    networks:
-      - outside
-    environment:
-      <<: *default_service_environment
-      RESTIC_REPOSITORY: <empty>
-      RESTIC_SCHEDULE: 30 3 * * *
-      RESTIC_BACKUP_TAGS: auto
-      RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      FILE__B2_ACCOUNT_ID: /run/secrets/backblaze_id
-      FILE__B2_ACCOUNT_KEY: /run/secrets/backblaze_key
-      FILE__RESTIC_PASSWORD: /run/secrets/restic
-    volumes:
-      - restic:/config:z
-      # Volumes
-      - authelia_db:/data/authelia_db:z
-      - nextcloud:/data/nextcloud:z
-      - nextcloud_db:/data/nextcloud_db:z
-      - ldap:/data/ldap:z
-      - plex:/data/plex:z
-      - proton-bridge:/data/proton-bridge:z
-      - swag:/data/swag:z
-      - syncthing:/data/syncthing:z
-      - teamspeak:/data/teamspeak:z
-      - teamspeak_db:/data/teamspeak_db:z
-      # Data
-      - ${VOLUME_ROOT}:/data/data:z
-    secrets:
-      - backblaze_id
-      - backblaze_key
-      - restic
-
   swag-init:
-    <<: *default_init
+    <<: *default_task
     image: atlas/swag-init
     build: ./images/swag-init
     container_name: swag-init
@@ -380,12 +348,111 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
 
+  #
+  # Backup.
+  #
+
+  restic:
+    <<: *default_service
+    image: atlas/restic:${RESTIC}
+    build: ./images/restic
+    container_name: restic
+    networks:
+      - outside
+    environment:
+      <<: *default_service_environment
+      RESTIC_REPOSITORY: <empty>
+      RESTIC_SCHEDULE: 30 3 * * *
+      RESTIC_BACKUP_TAGS: auto
+      RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
+      FILE__B2_ACCOUNT_ID: /run/secrets/backblaze_id
+      FILE__B2_ACCOUNT_KEY: /run/secrets/backblaze_key
+      FILE__RESTIC_PASSWORD: /run/secrets/restic
+    volumes:
+      - restic:/config:z
+      # Volumes
+      - authelia_db_backup:/data/authelia_db:z
+      - nextcloud:/data/nextcloud:z
+      - nextcloud_db_backup:/data/nextcloud_db:z
+      - ldap:/data/ldap:z
+      - plex:/data/plex:z
+      - proton-bridge:/data/proton-bridge:z
+      - swag:/data/swag:z
+      - syncthing:/data/syncthing:z
+      - teamspeak:/data/teamspeak:z
+      - teamspeak_db_backup:/data/teamspeak_db:z
+      # Data
+      - ${VOLUME_ROOT}:/data/data:z
+    secrets:
+      - backblaze_id
+      - backblaze_key
+      - restic
+
+  authelia-db-backup:
+    <<: *default_service
+    image: ctor/db-backup:${DB_BACKUP}
+    container_name: authelia-db-backup
+    networks:
+      - authelia_db
+    environment:
+      <<: *default_service_environment
+      DB_BACKUP_SCHEDULE: 00 2 * * *
+      DB_HOST: authelia-db
+      DB_USER: authelia
+      DB_NAME: authelia
+      FILE__DB_PASSWORD: /run/secrets/authelia_db
+    volumes:
+      - authelia_db:/data:ro,z
+      - authelia_db_backup:/config:z
+    secrets:
+      - authelia_db
+
+  nextcloud-db-backup:
+    <<: *default_service
+    image: ctor/db-backup:${DB_BACKUP}
+    container_name: nextcloud-db-backup
+    networks:
+      - nextcloud_db
+    environment:
+      <<: *default_service_environment
+      DB_BACKUP_SCHEDULE: 00 2 * * *
+      DB_HOST: nextcloud-db
+      DB_USER: nextcloud
+      DB_NAME: nextcloud
+      FILE__DB_PASSWORD: /run/secrets/nextcloud_db
+    volumes:
+      - nextcloud_db:/data:ro,z
+      - nextcloud_db_backup:/config:z
+    secrets:
+      - nextcloud_db
+
+  teamspeak-db-backup:
+    <<: *default_service
+    image: ctor/db-backup:${DB_BACKUP}
+    container_name: teamspeak-db-backup
+    networks:
+      - teamspeak_db
+    environment:
+      <<: *default_service_environment
+      DB_BACKUP_SCHEDULE: 00 2 * * *
+      DB_HOST: teamspeak-db
+      DB_USER: teamspeak
+      DB_NAME: teamspeak
+      FILE__DB_PASSWORD: /run/secrets/teamspeak_db
+    volumes:
+      - teamspeak_db:/data:ro,z
+      - teamspeak_db_backup:/config:z
+    secrets:
+      - teamspeak_db
+
 volumes:
   authelia:
   authelia_db:
+  authelia_db_backup:
   ldap:
   nextcloud:
   nextcloud_db:
+  nextcloud_db_backup:
   plex:
   proton-bridge:
   restic:
@@ -393,6 +460,7 @@ volumes:
   syncthing:
   teamspeak:
   teamspeak_db:
+  teamspeak_db_backup:
 
 networks:
   outside:
