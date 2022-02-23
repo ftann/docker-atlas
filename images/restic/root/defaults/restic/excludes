@@ -9,6 +9,8 @@ logs
 .rnd
 .stversions
 
+nextcloud/**/files_trashbin
+
 plex/Library/Application Support/Plex Media Server/Cache
 plex/Library/Application Support/Plex Media Server/Codecs
 plex/Library/Application Support/Plex Media Server/Crash Reports
