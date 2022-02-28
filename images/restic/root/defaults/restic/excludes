@@ -20,5 +20,8 @@ plex/Library/Application Support/Plex Media Server/Metadata
 plex/Library/Application Support/Plex Media Server/Plug-ins
 plex/Library/Application Support/Plex Media Server/Plug-in Support
 plex/Library/Application Support/Plex Media Server/Scripts
+plex/Library/Application Support/Plex Media Server/plexmediaserver.pid
 
 swag/fail2ban/fail2ban.sqlite3
+
+syncthing/index-*.db
