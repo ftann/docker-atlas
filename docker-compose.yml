@@ -374,7 +374,7 @@ services:
       - authelia_db_backup:/data/authelia_db:z
       - nextcloud:/data/nextcloud:z
       - nextcloud_db_backup:/data/nextcloud_db:z
-      - ldap:/data/ldap:z
+      - ldap_backup:/data/ldap:z
       - plex:/data/plex:z
       - proton-bridge:/data/proton-bridge:z
       - swag:/data/swag:z
@@ -403,7 +403,6 @@ services:
       DB_NAME: authelia
       FILE__DB_PASSWORD: /run/secrets/authelia_db
     volumes:
-      - authelia_db:/data:ro,z
       - authelia_db_backup:/config:z
     secrets:
       - authelia_db
@@ -423,7 +422,6 @@ services:
       DB_NAME: nextcloud
       FILE__DB_PASSWORD: /run/secrets/nextcloud_db
     volumes:
-      - nextcloud_db:/data:ro,z
       - nextcloud_db_backup:/config:z
     secrets:
       - nextcloud_db
@@ -443,16 +441,36 @@ services:
       DB_NAME: teamspeak
       FILE__DB_PASSWORD: /run/secrets/teamspeak_db
     volumes:
-      - teamspeak_db:/data:ro,z
       - teamspeak_db_backup:/config:z
     secrets:
       - teamspeak_db
+
+  ldap-backup:
+    <<: *default_service
+    image: ctor/ldap-backup:${LDAP_BACKUP}
+    build: ./images/ldap-backup
+    container_name: ldap-backup
+    networks:
+      - auth
+    environment:
+      <<: *default_service_environment
+      LDAP_BACKUP_SCHEDULE: 30 2 * * *
+      DOMAIN: ${DOMAIN}
+      LDAP_HOST: ldap
+      LDAP_NAME: ldap
+      LDAP_BIND_USER: auth
+      FILE__LDAP_BIND_PASSWORD: /run/secrets/ldap_auth
+    volumes:
+      - ldap_backup:/config:z
+    secrets:
+      - ldap_auth
 
 volumes:
   authelia:
   authelia_db:
   authelia_db_backup:
   ldap:
+  ldap_backup:
   nextcloud:
   nextcloud_db:
   nextcloud_db_backup:

@@ -12,4 +12,4 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
     DB_PASSWORD=db \
     DB_NAME=db
 
-VOLUME /data
+VOLUME /config

@@ -8,13 +8,13 @@ if [ ! -f /config/crontabs/root ]; then
   cp /defaults/crontabs/root /config/crontabs/root
 fi
 
-if [ -z "$DB_BACKUP_SCHEDULE" ]; then
+if [ -z "$LDAP_BACKUP_SCHEDULE" ]; then
   exit 1
 fi
 
-sed -i "s|{{ DB_BACKUP_SCHEDULE }}|$DB_BACKUP_SCHEDULE|g" /config/crontabs/root
+sed -i "s|{{ LDAP_BACKUP_SCHEDULE }}|$LDAP_BACKUP_SCHEDULE|g" /config/crontabs/root
 
-if [ -z "$DB_NAME" ]; then
+if [ -z "$LDAP_NAME" ]; then
   exit 1
 fi
 
