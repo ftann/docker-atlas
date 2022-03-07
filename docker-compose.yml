@@ -403,7 +403,6 @@ services:
       DB_NAME: authelia
       FILE__DB_PASSWORD: /run/secrets/authelia_db
     volumes:
-      - authelia_db:/data:ro,z
       - authelia_db_backup:/config:z
     secrets:
       - authelia_db
@@ -423,7 +422,6 @@ services:
       DB_NAME: nextcloud
       FILE__DB_PASSWORD: /run/secrets/nextcloud_db
     volumes:
-      - nextcloud_db:/data:ro,z
       - nextcloud_db_backup:/config:z
     secrets:
       - nextcloud_db
@@ -443,7 +441,6 @@ services:
       DB_NAME: teamspeak
       FILE__DB_PASSWORD: /run/secrets/teamspeak_db
     volumes:
-      - teamspeak_db:/data:ro,z
       - teamspeak_db_backup:/config:z
     secrets:
       - teamspeak_db

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-mkdir -p /config/{crontabs,db} /data
+mkdir -p /config/{crontabs,db}
 
 if [ ! -f /config/crontabs/root ]; then
   cp /defaults/crontabs/root /config/crontabs/root
