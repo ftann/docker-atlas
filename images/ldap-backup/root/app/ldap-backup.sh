@@ -11,7 +11,7 @@ LDAPTLS_REQCERT=never
 export LDAPTLS_REQCERT
 
 s6-setuidgid abc ldapsearch \
-    -h "${LDAP_HOST}" -p "${LDAP_PORT}" \
+    -H "ldap://${LDAP_HOST}:${LDAP_PORT}" \
     -D "${LDAP_BIND_USER}" -w "${LDAP_BIND_PASSWORD}" \
     -Z -LLL \
     -b "${LDAP_DOMAIN}" > /config/ldap/"${LDAP_NAME}".ldif
