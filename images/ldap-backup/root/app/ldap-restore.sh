@@ -12,6 +12,6 @@ export LDAPTLS_REQCERT
 
 s6-setuidgid abc ldapadd \
     -H "ldap://${LDAP_HOST}:${LDAP_PORT}" \
-    -D "${LDAP_BIND_USER}" -w "${LDAP_BIND_PASSWORD}" \
+    -D "cn=${LDAP_BIND_USER},${LDAP_DOMAIN}" -w "${LDAP_BIND_PASSWORD}" \
     -Z -c \
     -b "${LDAP_DOMAIN}" -f /config/ldap/"${LDAP_NAME}".ldif
