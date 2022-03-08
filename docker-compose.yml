@@ -390,7 +390,7 @@ services:
 
   authelia-db-backup:
     <<: *default_service
-    image: ctor/db-backup:${DB_BACKUP}
+    image: atlas/db-backup:${DB_BACKUP}
     build: ./images/db-backup
     container_name: authelia-db-backup
     networks:
@@ -409,7 +409,7 @@ services:
 
   nextcloud-db-backup:
     <<: *default_service
-    image: ctor/db-backup:${DB_BACKUP}
+    image: atlas/db-backup:${DB_BACKUP}
     build: ./images/db-backup
     container_name: nextcloud-db-backup
     networks:
@@ -428,7 +428,7 @@ services:
 
   teamspeak-db-backup:
     <<: *default_service
-    image: ctor/db-backup:${DB_BACKUP}
+    image: atlas/db-backup:${DB_BACKUP}
     build: ./images/db-backup
     container_name: teamspeak-db-backup
     networks:
@@ -447,7 +447,7 @@ services:
 
   ldap-backup:
     <<: *default_service
-    image: ctor/ldap-backup:${LDAP_BACKUP}
+    image: atlas/ldap-backup:${LDAP_BACKUP}
     build: ./images/ldap-backup
     container_name: ldap-backup
     networks:
