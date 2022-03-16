@@ -12,7 +12,7 @@ logs
 nextcloud/appdata*/**/appstore
 nextcloud/appdata*/**/files_trashbin
 nextcloud/appdata*/**/preview
-nextcloud/updater*
+nextcloud/updater-*
 
 plex/Library/Application Support/Plex Media Server/Cache
 plex/Library/Application Support/Plex Media Server/Codecs
