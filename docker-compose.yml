@@ -206,6 +206,8 @@ services:
     container_name: proton-bridge
     networks:
       - mail
+    ports:
+      - "25:25"
     environment:
       <<: *default_service_environment
       FILE__PROTONMAIL_ADDRESS: /run/secrets/protonmail_address

@@ -2,6 +2,7 @@
 
 . ./scripts/util/fw.sh
 
+del_service_fw smtp
 del_service_fw syncthing
 del_service_fw teamspeak
 del_service_fw udpxy
