@@ -1,4 +1,4 @@
-FROM lsiobase/alpine:3.15
+FROM lsiobase/alpine:3.16
 
 EXPOSE 389 636
 

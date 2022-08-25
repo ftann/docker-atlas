@@ -15,7 +15,7 @@ RUN wget \
     cd proton-bridge-* && \
     make build-nogui
 
-FROM lsiobase/alpine:3.15
+FROM lsiobase/alpine:3.16
 
 EXPOSE 25 143
 

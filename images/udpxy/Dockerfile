@@ -1,4 +1,4 @@
-FROM alpine:3.15 as builder
+FROM alpine:3.16 as builder
 
 RUN apk add --no-cache gcc make musl-dev
 
@@ -17,7 +17,7 @@ RUN \
     make && \
     make install
 
-FROM alpine:3.15
+FROM alpine:3.16
 
 EXPOSE 4022
 
