@@ -2,8 +2,8 @@ FROM golang:1.15-alpine3.14 AS builder
 
 RUN apk add --no-cache bash gcc make musl-dev libsecret-dev
 
-ENV BRIDGE_URL="https://github.com/ProtonMail/proton-bridge/archive/refs/tags/v2.2.0.tar.gz" \
-    BRIDGE_CHECKSUM=82957b49f34725d4be48e8e0657fbf007c93ffb45cccecf86baa721c56d757bf
+ENV BRIDGE_URL="https://github.com/ProtonMail/proton-bridge/archive/refs/tags/v2.2.2.tar.gz" \
+    BRIDGE_CHECKSUM=3b53834cbe730547472e936a300cf5124ff97789eeb07d3961aa5a43480f28af
 
 WORKDIR /tmp
 
