@@ -3,9 +3,10 @@ theme: auto
 server:
   host: 0.0.0.0
   port: 9091
-  read_buffer_size: 4096
-  write_buffer_size: 4096
   path: authelia
+  buffers:
+    read: 4096
+    write: 4096
 
 log:
   level: error
@@ -14,8 +15,9 @@ totp:
   issuer: doamin.com
 
 authentication_backend:
-  disable_reset_password: true
   refresh_interval: 5m
+  password_reset:
+    disable: true
 
   ldap:
     url: ldaps://ldap
