@@ -58,6 +58,7 @@ services:
     networks:
       - auth
       - authelia_db
+      - ingress
       - mail
     environment:
       <<: *default_service_environment
@@ -79,7 +80,12 @@ services:
       - ldap_auth
       - protonmail_password_bridge
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`sso.${DOMAIN}`)"
+      - "traefik.http.routers.authelia.entryPoints=https"
+      - "traefik.http.routers.authelia.middlewares=secured"
+      - "traefik.http.services.authelia.loadBalancer.server.port=9091"
 
   authelia-db:
     <<: *default_service
@@ -98,7 +104,7 @@ services:
     secrets:
       - authelia_db
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
 
   inadyn:
     <<: *default_service
@@ -154,7 +160,7 @@ services:
       - auth
       - mail
       - nextcloud_db
-      - proxy
+      - ingress
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -162,7 +168,15 @@ services:
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`cloud.${DOMAIN}`)"
+      - "traefik.http.routers.nextcloud.entryPoints=https"
+      - "traefik.http.routers.nextcloud.middlewares=secured,nextcloud"
+      - "traefik.http.services.nextcloud.loadBalancer.server.port=443"
+      - "traefik.http.services.nextcloud.loadBalancer.server.scheme=https"
+      - "traefik.http.middlewares.nextcloud.redirectRegex.regex=https://(.*)/.well-known/(card|cal)dav"
+      - "traefik.http.middlewares.nextcloud.redirectRegex.replacement=https://$$1/remote.php/dav/"
 
   nextcloud-db:
     <<: *default_service
@@ -181,14 +195,14 @@ services:
     secrets:
       - nextcloud_db
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
 
   plex:
     <<: *default_service
     image: linuxserver/plex:${PLEX}
     container_name: plex
     networks:
-      - proxy
+      - ingress
     deploy:
       resources:
         limits:
@@ -197,7 +211,12 @@ services:
       - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.plex.rule=Host(`media.${DOMAIN}`)"
+      - "traefik.http.routers.plex.entryPoints=https"
+      - "traefik.http.routers.plex.middlewares=secured"
+      - "traefik.http.services.plex.loadBalancer.server.port=32400"
 
   proton-bridge:
     <<: *default_service
@@ -220,44 +239,98 @@ services:
       - protonmail_password
       - protonmail_password_mailbox
 
-  swag-init:
+  traefik-init:
     <<: *default_task
-    image: atlas/swag-init
-    build: ./images/swag-init
-    container_name: swag-init
+    image: atlas/traefik-init
+    build: ./images/traefik-init
+    container_name: traefik-init
     volumes:
-      - swag:/config:z
+      - traefik:/config:z
 
-  swag:
+  traefik:
     <<: *default_service
-    image: linuxserver/swag:${SWAG}
-    container_name: swag
+    image: traefik:${TRAEFIK}
+    container_name: traefik
     depends_on:
-      swag-init:
+      traefik-init:
         condition: service_completed_successfully
-    cap_add:
-      - NET_ADMIN
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      # Network name must be prefixed with current folder because of compose.
+      - "--providers.docker.network=atlas_ingress"
+      - "--providers.file.directory=/config"
+      - "--providers.file.watch=true"
+      - "--entryPoints.http=true"
+      - "--entryPoints.http.address=:8080"
+      - "--entryPoints.http.forwardedHeaders.insecure=false"
+      - "--entryPoints.http.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.https=true"
+      - "--entryPoints.https.address=:8443"
+      - "--entryPoints.https.http.tls=true"
+      - "--entryPoints.https.http.tls.certResolver=le"
+      - "--entryPoints.https.http.tls.domains[0].main=${DOMAIN}"
+      - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
+      - "--entryPoints.https.forwardedHeaders.insecure=false"
+      - "--entryPoints.https.proxyProtocol.insecure=true" # TODO false
+      - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.le.acme.storage=/config/acme.json"
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entrypoint=http"
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
     networks:
       - outside
-      - auth
-      - proxy
+      - ingress
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:8080"
+      - "443:8443"
     environment:
       <<: *default_service_environment
-      URL: ${DOMAIN}
-      SUBDOMAINS: wildcard
-      VALIDATION: dns
-      DNSPLUGIN: cloudflare
-      FILE__MAXMINDDB_LICENSE_KEY: /run/secrets/maxmind
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
     volumes:
-      - swag:/config:z
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik:/config:z
     secrets:
       - cloudflare
-      - maxmind
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      # Middlewares.
+      # Https only.
+      - "traefik.http.middlewares.httpsOnly.redirectScheme.scheme=https"
+      - "traefik.http.middlewares.httpsOnly.redirectScheme.permanent=true"
+      # Rate limit.
+      - "traefik.http.middlewares.rateLimit.rateLimit.average=100"
+      - "traefik.http.middlewares.rateLimit.rateLimit.burst=50"
+      # Secure headers.
+      - "traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods=GET,OPTIONS,PUT"
+      - "traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList=https://${DOMAIN}"
+      - "traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge=100"
+      - "traefik.http.middlewares.secureHeaders.headers.addVaryHeader=true"
+      # - "traefik.http.middlewares.secureHeaders.headers.allowedHosts=traefik.${DOMAIN}"
+      - "traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders=X-Forwarded-Host"
+      - "traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.secureHeaders.headers.stsSeconds=63072000"
+      - "traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.secureHeaders.headers.stsPreload=true"
+      - "traefik.http.middlewares.secureHeaders.headers.forceSTSHeader=true"
+      # - "traefik.http.middlewares.secureHeaders.headers.frameDeny=true"
+      - "traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue=SAMEORIGIN"
+      - "traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.secureHeaders.headers.browserXssFilter=true"
+      # - "traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy=frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
+      - "traefik.http.middlewares.secureHeaders.headers.referrerPolicy=same-origin"
+      - "traefik.http.middlewares.secureHeaders.headers.permissionsPolicy=camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+      - "traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag=none,noarchive,nosnippet,notranslate,noimageindex,"
+      # SSO.
+      - "traefik.http.middlewares.sso.forwardAuth.address=http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
+      - "traefik.http.middlewares.sso.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      - "traefik.http.middlewares.sso.forwardAuth.trustForwardHeader=true"
+      # Chains.
+      - "traefik.http.middlewares.secured.chain.middlewares=rateLimit,httpsOnly,secureHeaders"
+      - "traefik.http.middlewares.securedAuth.chain.middlewares=secured,sso"
 
   syncthing:
     <<: *default_service
@@ -265,7 +338,7 @@ services:
     container_name: syncthing
     networks:
       - outside
-      - proxy
+      - ingress
     ports:
       - "22000:22000"
       - "21027:21027/udp"
@@ -273,7 +346,12 @@ services:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.syncthing.rule=Host(`syncthing.${DOMAIN}`)"
+      - "traefik.http.routers.syncthing.entryPoints=https"
+      - "traefik.http.routers.syncthing.middlewares=securedAuth"
+      - "traefik.http.services.syncthing.loadBalancer.server.port=8384"
 
   teamspeak:
     <<: *default_service
@@ -303,7 +381,7 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
 
   teamspeak-db:
     <<: *default_service
@@ -322,7 +400,7 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
 
   udpxy:
     <<: *default_service
@@ -348,7 +426,25 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
-      - com.centurylinklabs.watchtower.enable=true
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  www:
+    <<: *default_service
+    image: atlas/www:${WWW}
+    build: ./images/www
+    container_name: www
+    networks:
+      - ingress
+    environment:
+      <<: *default_service_environment
+      NGINX_ENTRYPOINT_QUIET_LOGS: "true"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.www.rule=Host(`${DOMAIN}`, `www.${DOMAIN}`)"
+      - "traefik.http.routers.www.entryPoints=https"
+      - "traefik.http.routers.www.middlewares=secured"
+      - "traefik.http.services.www.loadBalancer.server.port=8080"
 
   #
   # Backup.
@@ -383,7 +479,6 @@ services:
       - ldap_backup:/data/ldap:z
       - plex:/data/plex:z
       - proton-bridge:/data/proton-bridge:z
-      - swag:/data/swag:z
       - syncthing:/data/syncthing:z
       - teamspeak:/data/teamspeak:z
       - teamspeak_db_backup:/data/teamspeak_db:z
@@ -483,19 +578,19 @@ volumes:
   plex:
   proton-bridge:
   restic:
-  swag:
   syncthing:
   teamspeak:
   teamspeak_db:
   teamspeak_db_backup:
+  traefik:
 
 networks:
   outside:
     external: true
     name: atlas_outside
   auth:
+  ingress:
   mail:
-  proxy:
   authelia_db:
   nextcloud_db:
   teamspeak_db:
@@ -523,8 +618,6 @@ secrets:
     file: ./secrets/ldap_auth
   ldap_db:
     file: ./secrets/ldap_db
-  maxmind:
-    file: ./secrets/maxmind
   nextcloud_db:
     file: ./secrets/nextcloud_db
   protonmail_address:
