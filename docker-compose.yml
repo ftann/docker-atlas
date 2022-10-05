@@ -359,6 +359,10 @@ services:
     image: atlas/restic:${RESTIC}
     build: ./images/restic
     container_name: restic
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     networks:
       - outside
     environment:

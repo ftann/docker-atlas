@@ -1,6 +1,6 @@
 FROM lsiobase/alpine:3.16
 
-RUN apk add --no-cache bash restic
+RUN apk add --no-cache bash fuse restic
 
 COPY root/ /
 
