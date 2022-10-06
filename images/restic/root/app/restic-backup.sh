@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
 
 [[ -f /config/restic/options ]] && . /config/restic/options
 

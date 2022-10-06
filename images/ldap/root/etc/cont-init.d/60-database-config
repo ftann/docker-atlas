@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
 
 # shellcheck disable=SC1001
 [[ -d /config/databases/slapd.d/cn\=config ]] && exit 0

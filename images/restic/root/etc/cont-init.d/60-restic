@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
 
 [[ -z "$RESTIC_SCHEDULE" ]] && exit 1
 [[ -f /config/crontabs/root ]] || cp /defaults/crontabs/root /config/crontabs/root
