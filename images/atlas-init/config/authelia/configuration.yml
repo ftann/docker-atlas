@@ -1,29 +1,22 @@
 theme: auto
 
-server:
-  host: 0.0.0.0
-  port: 9091
-  path: authelia
-  buffers:
-    read: 4096
-    write: 4096
-
 log:
   level: error
 
-totp:
-  issuer: doamin.com
+telemetry:
+  metrics:
+    enabled: true
+
+# Add OIDC clients.
+#identity_providers:
+#  oidc:
+#    clients:
 
 authentication_backend:
-  refresh_interval: 5m
   password_reset:
     disable: true
 
   ldap:
-    url: ldaps://ldap
-    user: cn=auth,dc=domain,dc=com
-    base_dn: dc=domain,dc=com
-
     tls:
       skip_verify: true
 
@@ -39,40 +32,17 @@ authentication_backend:
 
 access_control:
   default_policy: deny
-  rules:
-    - domain:
-        - domain.com
-      policy: bypass
-
-session:
-  name: authelia_session
-  expiration: 1h
-  inactivity: 5m
-  remember_me_duration: 1M
-  domain: domain.com
-
-regulation:
-  max_retries: 3
-  find_time: 2m
-  ban_time: 5m
-
-storage:
-  mysql:
-    host: authelia-db
-    port: 3306
-    database: authelia
-    username: authelia
+  # Add rules.
+#  rules:
+#    - domain:
+#        - domain.com
+#      policy: bypass
 
 notifier:
-  disable_startup_check: false
+  disable_startup_check: true
   smtp:
-    username: "admin@domain.com"
-    # Set by env var.
-    # password: "xxx"
-    host: proton-bridge
-    port: 25
-    sender: "Authelia <admin@domain.com>"
     tls:
-      server_name: proton-bridge
       skip_verify: true
+      # Required
+      server_name: proton-bridge
       minimum_version: TLS1.3

@@ -64,18 +64,32 @@ services:
       - mail
     environment:
       <<: *default_service_environment
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_URL: ldaps://ldap
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: cn=auth,dc=domain,dc=com
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: dc=domain,dc=com
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_auth
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_hmac
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /run/secrets/authelia_identity_key
       AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt
+      AUTHELIA_NOTIFIER_SMTP_HOST: proton-bridge
+      AUTHELIA_NOTIFIER_SMTP_PORT: 25
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: admin@${DOMAIN}
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
+      AUTHELIA_NOTIFIER_SMTP_SENDER: "SSO <admin@${DOMAIN}>"
+      AUTHELIA_SESSION_DOMAIN: ${DOMAIN}
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage
+      AUTHELIA_STORAGE_MYSQL_HOST: authelia-db
+      AUTHELIA_STORAGE_MYSQL_DATABASE: authelia
+      AUTHELIA_STORAGE_MYSQL_USERNAME: authelia
       AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE: /run/secrets/authelia_db
+      AUTHELIA_TOTP_ISSUER: ${DOMAIN}
     volumes:
       - authelia:/config:z
     secrets:
       - authelia_db
       - authelia_identity_hmac
+      - authelia_identity_key
       - authelia_jwt
       - authelia_session
       - authelia_storage
@@ -586,6 +600,8 @@ secrets:
     file: ./secrets/authelia_db
   authelia_identity_hmac:
     file: ./secrets/authelia_identity_hmac
+  authelia_identity_key:
+    file: ./secrets/authelia_identity_key
   authelia_jwt:
     file: ./secrets/authelia_jwt
   authelia_session:

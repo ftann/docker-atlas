@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+. ./scripts/util/openssl.sh
 . ./scripts/util/pw.sh
 . ./scripts/util/secret.sh
 . ./scripts/util/var.sh
@@ -9,6 +10,7 @@
 #
 create_secret secrets/authelia_db "$(rnd_pw 20)"
 create_secret secrets/authelia_identity_hmac "$(rnd_pw 32)"
+create_secret secrets/authelia_identity_key "$(gen_private_key)"
 create_secret secrets/authelia_jwt "$(rnd_pw 20)"
 create_secret secrets/authelia_session "$(rnd_pw 20)"
 create_secret secrets/authelia_storage "$(rnd_pw 64)"
