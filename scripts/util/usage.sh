@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 print_usage() {
   cat << EOF
 usage: ctl COMMAND

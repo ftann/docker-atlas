@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 is_answer_y() {
   [[ "$1" != "${1#[Yy]}" ]]
 }

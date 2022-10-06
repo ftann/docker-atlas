@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 . ./scripts/util/usage.sh
 
 run_if_defined() {

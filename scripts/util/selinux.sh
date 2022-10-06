@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 is_selinux_enabled() {
   selinuxenabled
 }

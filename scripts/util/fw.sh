@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 fw_perm() {
   firewall-cmd --permanent "$@"
 }
