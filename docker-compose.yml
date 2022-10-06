@@ -38,20 +38,22 @@ services:
   #    ports:
   #      - "8080:8080"
 
-  authelia-init:
+  atlas-init:
     <<: *default_task
-    image: atlas/authelia-init
-    build: ./images/authelia-init
-    container_name: authelia-init
+    image: atlas/atlas-init
+    build: ./images/atlas-init
+    container_name: atlas-init
     volumes:
-      - authelia:/config:z
+      - authelia:/config/authelia:z
+      - ldap:/config/ldap:z
+      - traefik:/config/traefik:z
 
   authelia:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
     depends_on:
-      authelia-init:
+      atlas-init:
         condition: service_completed_successfully
       authelia-db:
         condition: service_started
@@ -116,21 +118,13 @@ services:
     secrets:
       - inadyn
 
-  ldap-init:
-    <<: *default_task
-    image: atlas/ldap-init
-    build: ./images/ldap-init
-    container_name: ldap-init
-    volumes:
-      - ldap:/config:z
-
   ldap:
     <<: *default_service
     image: atlas/ldap:${LDAP}
     build: ./images/ldap
     container_name: ldap
     depends_on:
-      ldap-init:
+      atlas-init:
         condition: service_completed_successfully
     networks:
       - auth
@@ -239,20 +233,12 @@ services:
       - protonmail_password
       - protonmail_password_mailbox
 
-  traefik-init:
-    <<: *default_task
-    image: atlas/traefik-init
-    build: ./images/traefik-init
-    container_name: traefik-init
-    volumes:
-      - traefik:/config:z
-
   traefik:
     <<: *default_service
     image: traefik:${TRAEFIK}
     container_name: traefik
     depends_on:
-      traefik-init:
+      atlas-init:
         condition: service_completed_successfully
     command:
       - "--providers.docker=true"
