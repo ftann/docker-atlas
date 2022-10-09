@@ -1,5 +1,3 @@
-##!/usr/bin/env bash
-
 rnd_pw() {
   local length="${1:-16}"
   local pattern="A-Za-z0-9"

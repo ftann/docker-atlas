@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 exists_network() {
   docker network inspect "$1" >/dev/null
 }

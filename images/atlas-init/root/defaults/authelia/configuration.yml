@@ -1,0 +1,48 @@
+theme: auto
+
+log:
+  level: error
+
+telemetry:
+  metrics:
+    enabled: true
+
+# Add OIDC clients.
+#identity_providers:
+#  oidc:
+#    clients:
+
+authentication_backend:
+  password_reset:
+    disable: true
+
+  ldap:
+    tls:
+      skip_verify: true
+
+    additional_groups_dn: ou=groups
+    additional_users_dn: ou=users
+    groups_filter: (&(member={dn})(objectclass=groupOfNames))
+    users_filter: (&({username_attribute}={input})(objectClass=person))
+
+    display_name_attribute: cn
+    mail_attribute: mail
+    group_name_attribute: cn
+    username_attribute: uid
+
+access_control:
+  default_policy: deny
+  # Add rules.
+#  rules:
+#    - domain:
+#        - domain.com
+#      policy: bypass
+
+notifier:
+  disable_startup_check: true
+  smtp:
+    tls:
+      skip_verify: true
+      # Required
+      server_name: proton-bridge
+      minimum_version: TLS1.3

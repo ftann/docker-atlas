@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 is_root() {
   [[ $(id -u) = "0" ]]
 }

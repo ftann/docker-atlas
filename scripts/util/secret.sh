@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 exists_secret() {
   [[ -s "$1" ]]
 }
