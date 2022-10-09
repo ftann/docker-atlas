@@ -169,6 +169,7 @@ services:
       - mail
       - nextcloud_db
       - ingress
+      - outside
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z

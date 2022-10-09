@@ -26,10 +26,8 @@ A working server installation is required (preferably fedora due to selinux). Th
 
 - Backblaze<br/>
   To back up the whole server a Backblaze account is required.
-- Cloudflare<br/>
+- Cloudflare (or other supported providers by traefik)<br/>
   Automatic certificate renewal and dynamic dns require control of a dns zone.
-- Maxmind<br/>
-  Allows geo-blocking in the web proxy.
 - Protonmail<br/>
   Sending emails via protonmail.
 
@@ -37,7 +35,7 @@ A working server installation is required (preferably fedora due to selinux). Th
 
 It's recommended to create a separate user that has access to docker only. Clone the repository and create a new local
 branch. That branch contains all changes to the configuration including usernames and passwords. Commit those changes
-and __DO NOT PUSH__ (ofc unless forked no permission).
+and __DO NOT PUSH__ (ofc no permission unless forked).
 
 ### User
 
@@ -88,10 +86,9 @@ cp atlas/configs/firewall/* /etc/firewalld/services
     - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
     - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts for the
       first time.
-2. Change the configuration in the volume init containers
-    - `./images/authelia-init` Configure the SSO settings
-    - `./images/ldap-init` Add users and group ldif files
-    - `./images/swag-init` Add a default landing page
+2. Change the configuration in the volume init container
+    - `./images/atlas-init` Configure the authelia, ldap, traefik settings
+    - `./images/www` Add a default landing page
 3. Run the installation command of the `ctl` script
    ```shell
    ./ctl install
