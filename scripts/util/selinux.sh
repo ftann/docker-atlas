@@ -3,8 +3,8 @@ is_selinux_enabled() {
 }
 
 selinux_chcon() {
-  local label="$1"
-  local level="$2"
+  local label=$1
+  local level=$2
   shift 2
-  chcon -R -t "$label" -l "$level" "$@"
+  chcon -R -t "${label}" -l "${level}" "$@"
 }

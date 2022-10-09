@@ -9,7 +9,7 @@ split() {
 prepend_each() {
   local prefix=$1
   shift
-  printf "$prefix%s " "$@"
+  printf "${prefix}%s " "$@"
 }
 
 join_by() {

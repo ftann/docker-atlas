@@ -5,19 +5,18 @@
 mk_tag_args() {
   local tags
   local tag_args
-  tags="$(echo "$1" | tr -d " " | tr "," "\n")"
-  for tag in $tags; do
-    tag_args="$tag_args --tag $tag"
+  IFS="," read -ra tags <<<"$(echo "$1" | tr -d " ")"
+  tag_args=()
+  for tag in "${tags[@]}"; do
+    tag_args+=("--tag" "${tag}")
   done
-  echo "$tag_args"
+  echo "${tag_args[*]}"
 }
 
-TAGS="$(mk_tag_args "${RESTIC_BACKUP_TAGS}")"
+IFS=" " read -ra TAGS <<<"$(mk_tag_args "${RESTIC_BACKUP_TAGS}")"
+s6-setuidgid abc restic backup --iexclude-file=/config/restic/excludes "${TAGS[@]}" "${RESTIC_OPTIONS[@]}" "${RESTIC_BACKUP_SOURCES}"
 
-# shellcheck disable=SC2086
-s6-setuidgid abc restic backup --iexclude-file=/config/restic/excludes $TAGS "${RESTIC_OPTIONS[@]}" "$RESTIC_BACKUP_SOURCES"
+[[ -z "${RESTIC_FORGET_ARGS}" ]] && exit 0
 
-[[ -z "$RESTIC_FORGET_ARGS" ]] && exit 0
-
-# shellcheck disable=SC2086
-s6-setuidgid abc restic forget $TAGS "${RESTIC_OPTIONS[@]}" --prune --group-by "paths,tags" $RESTIC_FORGET_ARGS
+IFS=" " read -ra FORGET_ARGS <<<"${RESTIC_FORGET_ARGS}"
+s6-setuidgid abc restic forget "${TAGS[@]}" "${RESTIC_OPTIONS[@]}" --prune --group-by "paths,tags" "${FORGET_ARGS[@]}"

@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
-
 replace_placeholder() {
-  sed -i "s|{{ $1 }}|$2|g" "$3"
+  local placeholder=$1
+  local replacement=$2
+  local file=$3
+  sed -i "s|{{ ${placeholder} }|${replacement}|g" "${file}"
 }

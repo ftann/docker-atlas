@@ -1,0 +1,4 @@
+enable=require-double-brackets
+enable=require-variable-braces
+external-sources=true
+shell=bash

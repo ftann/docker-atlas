@@ -1,6 +1,4 @@
 #!/command/with-contenv bash
 
-mkdir -p \
-  /config
-
+mkdir -p /config
 chown -R abc:abc /config

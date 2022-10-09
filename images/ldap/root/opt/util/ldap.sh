@@ -1,10 +1,9 @@
-#!/usr/bin/env bash
-
 create_password_hash() {
-  # shellcheck disable=SC1083
-  slappasswd -n -h {SSHA} -s "$1"
+  local input=$1
+  slappasswd -n -h "{SSHA}" -s "${input}"
 }
 
 get_organization() {
-  echo "$1" | cut -d, -f1 | cut -d= -f2
+  local dn=$1
+  echo "${dn}" | cut -d, -f1 | cut -d= -f2
 }

@@ -1,11 +1,13 @@
 is_answer_y() {
-  [[ "$1" != "${1#[Yy]}" ]]
+  local answer=$1
+  [[ "${answer}" != "${answer#[Yy]}" ]]
 }
 
 agree_to() {
-  echo -n "$1 (y/n)? "
+  local question=$1
+  echo -n "${question} (y/n)? "
   read -r answer
-  if is_answer_y "$answer"; then
+  if is_answer_y "${answer}"; then
     return 0
   else
     return 1
