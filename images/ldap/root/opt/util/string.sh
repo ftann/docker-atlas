@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 split() {
   local IFS="."
   read -ra arr <<<"$1"
@@ -9,7 +7,7 @@ split() {
 prepend_each() {
   local prefix=$1
   shift
-  printf "$prefix%s " "$@"
+  printf "${prefix}%s " "$@"
 }
 
 join_by() {

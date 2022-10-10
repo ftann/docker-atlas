@@ -1,7 +1,5 @@
 #!/command/with-contenv bash
 
-mkdir -p \
-  /config/{crontabs,log/restic,restic/cache}
-
+mkdir -p /config/{crontabs,log/restic,restic/cache}
 chown -R abc:abc /config
 chown -R root:root /config/crontabs
