@@ -5,7 +5,7 @@ exists_network() {
 
 create_network() {
   local network=$1
-  if ! exists_network "$Ü"; then
+  if ! exists_network "${network}"; then
     docker network create --ipv6 \
       --subnet="$2" \
       --gateway="$3" \
