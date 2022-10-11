@@ -274,6 +274,9 @@ services:
       - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
       - "--entryPoints.https.forwardedHeaders.insecure=false"
       - "--entryPoints.https.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.teamspeakVoice.address=:9987/udp"
+      - "--entryPoints.teamspeakFileTransfer.address=:30033"
+      - "--entryPoints.syncthing.address=:22000"
       - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
       - "--certificatesResolvers.le.acme.storage=/config/acme.json"
       - "--serversTransport.insecureSkipVerify=true"
@@ -287,6 +290,9 @@ services:
     ports:
       - "80:8080"
       - "443:8443"
+      - "9987:9987/udp"
+      - "22000:22000"
+      - "30033:30033"
     environment:
       <<: *default_service_environment
       CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
@@ -340,9 +346,6 @@ services:
     networks:
       - outside
       - ingress
-    ports:
-      - "22000:22000"
-      - "21027:21027/udp"
     volumes:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
@@ -353,6 +356,9 @@ services:
       - "traefik.http.routers.syncthing.entryPoints=https"
       - "traefik.http.routers.syncthing.middlewares=securedAuth"
       - "traefik.http.services.syncthing.loadBalancer.server.port=8384"
+      - "traefik.tcp.routers.syncthing.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.syncthing.entryPoints=syncthing"
+      - "traefik.tcp.services.syncthing.loadBalancer.server.port=22000"
 
   teamspeak:
     <<: *default_service
@@ -361,12 +367,8 @@ services:
     depends_on:
       - teamspeak-db
     networks:
-      - outside
+      - ingress
       - teamspeak_db
-    ports:
-      - "9987:9987/udp"
-      - "10011:10011"
-      - "30033:30033"
     environment:
       <<: *default_service_environment
       TS3SERVER_DB_PLUGIN: ts3db_mariadb
@@ -383,6 +385,12 @@ services:
       - teamspeak_db
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.teamspeak.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.teamspeak.entryPoints=teamspeakFileTransfer"
+      - "traefik.tcp.services.teamspeak.loadBalancer.server.port=30033"
+      - "traefik.udp.routers.teamspeak.entryPoints=teamspeakVoice"
+      - "traefik.udp.services.teamspeak.loadBalancer.server.port=9987"
 
   teamspeak-db:
     <<: *default_service
