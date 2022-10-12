@@ -4,7 +4,7 @@ __The Atlas collection provides a collection of containers that are configured t
 
 Included are a LDAP backend and OIDC provider for SSO and user management.<br/>
 Nextcloud for file management, Syncthing as file synchronization service and Plex to serve media content.<br/>
-Nginx proxy in front of web services with automatic renewal of certificates.<br/>
+Traefik reverse proxy in front of http, tcp and udp services with automatic renewal of certificates.<br/>
 Proton-bridge that allows for sending mails to the admin or registered users.
 
 Automatic update of the running containers and automatic backup of both the container state and the data.
@@ -65,11 +65,13 @@ Configure docker to allow ipv6 addresses. Set the following keys in the docker c
   "experimental": true,
   "ipv6": true,
   "ip6tables": true,
-  "fixed-cidr-v6": "fd00:d0ce:1::/64"
+  "fixed-cidr-v6": "fd00:d0ce::/64",
+  "metrics-addr": "127.0.0.1:9323",
+  "userland-proxy": false
 }
 ```
 
-Make sure that the used network in `fixed-cidr-v6` matches the range used in `./scripts/mk-networks.sh`.
+Make sure that the used network in `fixed-cidr-v6` matches the range used for ipv6 subnets.
 
 ### Firewall
 

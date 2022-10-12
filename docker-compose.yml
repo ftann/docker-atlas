@@ -595,8 +595,11 @@ volumes:
 
 networks:
   outside:
-    external: true
-    name: atlas_outside
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "fd00:d0ce:1000::/64"
   auth:
   ingress:
   mail:

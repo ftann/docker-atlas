@@ -7,7 +7,6 @@
 install() {
   check_root
   ./scripts/mk-fwrules.sh
-  ./scripts/mk-networks.sh
   ./scripts/mk-secrets.sh
   ./scripts/mk-selinux.sh
 }
@@ -30,7 +29,6 @@ uninstall() {
     docker-compose down --rmi all
     docker-compose rm
     ./scripts/rm-fwrules.sh
-    ./scripts/rm-networks.sh
   fi
 }
 
