@@ -258,8 +258,7 @@ services:
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedByDefault=false"
-      # Network name must be prefixed with current folder because of compose.
-      - "--providers.docker.network=atlas_ingress"
+      - "--providers.docker.network=ingress"
       - "--providers.file.directory=/config"
       - "--providers.file.watch=true"
       - "--entryPoints.http=true"
@@ -602,6 +601,7 @@ networks:
         - subnet: "fd00:d0ce:1000::/64"
   auth:
   ingress:
+    name: ingress
   mail:
   authelia_db:
   nextcloud_db:
