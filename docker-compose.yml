@@ -31,7 +31,7 @@ services:
   #    image: adminer
   #    container_name: adminer
   #    networks:
-  #      - outside
+  #      - egress
   #      - authelia_db
   #      - nextcloud_db
   #      - teamspeak_db
@@ -128,7 +128,7 @@ services:
     build: ./images/inadyn
     container_name: inadyn
     networks:
-      - outside
+      - egress
     secrets:
       - inadyn
 
@@ -169,7 +169,7 @@ services:
       - mail
       - nextcloud_db
       - ingress
-      - outside
+      - egress
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -284,7 +284,6 @@ services:
       - "--global.checkNewVersion=false"
       - "--global.sendAnonymousUsage=false"
     networks:
-      - outside
       - ingress
     ports:
       - "80:8080"
@@ -343,7 +342,7 @@ services:
     image: linuxserver/syncthing:${SYNCTHING}
     container_name: syncthing
     networks:
-      - outside
+      - egress
       - ingress
     volumes:
       - syncthing:/config:z
@@ -422,7 +421,7 @@ services:
     image: containrrr/watchtower
     container_name: watchtower
     networks:
-      - outside
+      - egress
     environment:
       <<: *default_service_environment
       WATCHTOWER_CLEANUP: "true"
@@ -468,7 +467,7 @@ services:
     devices:
       - /dev/fuse
     networks:
-      - outside
+      - egress
     environment:
       <<: *default_service_environment
       RESTIC_REPOSITORY: <empty>
@@ -593,15 +592,21 @@ volumes:
   traefik:
 
 networks:
-  outside:
+  ingress:
+    name: ingress
     enable_ipv6: true
     ipam:
       driver: default
       config:
         - subnet: "fd00:d0ce:1000::/64"
+  egress:
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "fd00:d0ce:2000::/64"
+  # Internal only networks
   auth:
-  ingress:
-    name: ingress
   mail:
   authelia_db:
   nextcloud_db:
