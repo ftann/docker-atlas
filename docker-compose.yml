@@ -21,6 +21,10 @@ x-default-service: &default_service
     UMASK: ${UMASK}
   restart: always
 
+x-internal-network: &internal_network
+  driver_opts:
+    com.docker.network.bridge.enable_ip_masquerade: "false"
+
 services:
 
   #
@@ -60,8 +64,8 @@ services:
     networks:
       - auth
       - authelia_db
-      - ingress
       - mail
+      - proxy
     environment:
       <<: *default_service_environment
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_URL: ldaps://ldap
@@ -165,11 +169,11 @@ services:
     depends_on:
       - nextcloud-db
     networks:
+      - egress
       - auth
       - mail
       - nextcloud_db
-      - ingress
-      - egress
+      - proxy
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -211,7 +215,7 @@ services:
     image: linuxserver/plex:${PLEX}
     container_name: plex
     networks:
-      - ingress
+      - proxy
     deploy:
       resources:
         limits:
@@ -233,6 +237,7 @@ services:
     build: ./images/proton-bridge
     container_name: proton-bridge
     networks:
+      - egress
       - mail
     ports:
       - "25:25"
@@ -258,7 +263,7 @@ services:
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.docker.network=ingress"
+      - "--providers.docker.network=proxy"
       - "--providers.file.directory=/config"
       - "--providers.file.watch=true"
       - "--entryPoints.http=true"
@@ -285,6 +290,7 @@ services:
       - "--global.sendAnonymousUsage=false"
     networks:
       - ingress
+      - proxy
     ports:
       - "80:8080"
       - "443:8443"
@@ -343,7 +349,7 @@ services:
     container_name: syncthing
     networks:
       - egress
-      - ingress
+      - proxy
     volumes:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
@@ -365,7 +371,7 @@ services:
     depends_on:
       - teamspeak-db
     networks:
-      - ingress
+      - proxy
       - teamspeak_db
     environment:
       <<: *default_service_environment
@@ -441,7 +447,7 @@ services:
     build: ./images/www
     container_name: www
     networks:
-      - ingress
+      - proxy
     environment:
       <<: *default_service_environment
       NGINX_ENTRYPOINT_QUIET_LOGS: "true"
@@ -593,7 +599,6 @@ volumes:
 
 networks:
   ingress:
-    name: ingress
     enable_ipv6: true
     ipam:
       driver: default
@@ -605,12 +610,21 @@ networks:
       driver: default
       config:
         - subnet: "fd00:d0ce:2000::/64"
-  # Internal only networks
+  # Internal networks.
   auth:
+    <<: *internal_network
   mail:
+    <<: *internal_network
+  proxy:
+    <<: *internal_network
+    name: proxy
+  # Database networks.
   authelia_db:
+    <<: *internal_network
   nextcloud_db:
+    <<: *internal_network
   teamspeak_db:
+    <<: *internal_network
 
 secrets:
   authelia_db:
