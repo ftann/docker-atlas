@@ -25,6 +25,11 @@ x-internal-network: &internal_network
   driver_opts:
     com.docker.network.bridge.enable_ip_masquerade: "false"
 
+x-external-network: &external_network
+  enable_ipv6: true
+  driver_opts:
+    com.docker.network.bridge.enable_icc: "false"
+
 services:
 
   #
@@ -599,13 +604,13 @@ volumes:
 
 networks:
   ingress:
-    enable_ipv6: true
+    <<: *external_network
     ipam:
       driver: default
       config:
         - subnet: "fd00:d0ce:1000::/64"
   egress:
-    enable_ipv6: true
+    <<: *external_network
     ipam:
       driver: default
       config:
