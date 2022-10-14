@@ -19,7 +19,7 @@ FROM lsiobase/alpine:3.16
 
 EXPOSE 25 143
 
-RUN apk add --no-cache gnupg libsecret pass socat
+RUN apk add --no-cache dbus-x11 gnupg libsecret pass socat
 
 COPY --from=builder /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
 COPY root/ /
