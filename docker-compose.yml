@@ -220,6 +220,7 @@ services:
     image: linuxserver/plex:${PLEX}
     container_name: plex
     networks:
+      - egress
       - proxy
     deploy:
       resources:
