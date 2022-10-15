@@ -32,7 +32,10 @@ password=$(get_cloudflare_token)
 hostname={$(get_domain)}
 EOF
 )"
-create_secret secrets/protonmail_address "$(get_protonmail_address)"
 create_secret secrets/protonmail_password "$(get_protonmail_password)"
-create_secret secrets/protonmail_password_bridge "<set>"
 create_secret secrets/protonmail_password_mailbox "$(get_protonmail_password_mailbox)"
+
+#
+# Runtime secrets.
+#
+create_secret secrets/protonmail_password_bridge ""

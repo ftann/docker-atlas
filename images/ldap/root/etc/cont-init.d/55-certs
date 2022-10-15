@@ -1,9 +1,0 @@
-#!/command/with-contenv bash
-
-[[ -f /config/keys/cert.key && -f /config/keys/cert.crt ]] && exit 0
-
-SUBJECT="/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*"
-
-s6-setuidgid abc openssl req -new -x509 -days 3650 -nodes -out /config/keys/cert.crt -keyout /config/keys/cert.key -subj "${SUBJECT}"
-
-echo "atlas :: ldap :: created keys"

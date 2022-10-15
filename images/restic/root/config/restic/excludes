@@ -1,0 +1,31 @@
+.cache
+cache
+databases/*.err
+.git
+*.lock
+log
+logs
+*.log
+.rnd
+.stversions
+
+config/custom.cnf
+config/databases
+config/initdb.d
+
+nextcloud/appdata*/**/appstore
+nextcloud/appdata*/**/files_trashbin
+nextcloud/appdata*/**/preview
+nextcloud/updater-*
+
+plex/Library/Application Support/Plex Media Server/Cache
+plex/Library/Application Support/Plex Media Server/Codecs
+plex/Library/Application Support/Plex Media Server/Crash Reports
+plex/Library/Application Support/Plex Media Server/Diagnostics
+plex/Library/Application Support/Plex Media Server/Media
+plex/Library/Application Support/Plex Media Server/Metadata
+plex/Library/Application Support/Plex Media Server/Plug-ins
+plex/Library/Application Support/Plex Media Server/Scripts
+plex/Library/Application Support/Plex Media Server/plexmediaserver.pid
+
+syncthing/index-*.db

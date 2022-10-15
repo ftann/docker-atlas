@@ -4,7 +4,7 @@ cn: config
 olcReferral: ldap://root.openldap.org
 olcConfigDir: /config/databases/slapd.d/
 olcPidFile: /run/openldap/slapd.pid
-olcLogFile: /config/log/ldap/slapd.log
+olcLogFile: /config/log/slapd.log
 olcLogLevel: 0
 olcThreads: 2
 olcTLSCipherSuite: HIGH:-SSLv2:-SSLv3

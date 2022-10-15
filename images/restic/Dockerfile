@@ -1,13 +1,31 @@
-FROM lsiobase/alpine:3.16
+FROM alpine:3.16
 
-RUN apk add --no-cache bash fuse restic
+ARG USER=atlas
+ARG PUID=2000
+ARG PGID="${PUID}"
 
-COPY root/ /
+RUN addgroup -g "${PGID}" "${USER}" && \
+    adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
-    RESTIC_SCHEDULE="0 3 * * *" \
+RUN apk add --no-cache bash restic tzdata
+
+COPY --chown="${PUID}:${PGID}" root/ /
+
+ENV RESTIC_REPOSITORY=/config/repo \
     RESTIC_BACKUP_SOURCES=/data \
     RESTIC_BACKUP_TAGS="" \
-    RESTIC_CACHE_DIR=/config/restic/cache
+    RESTIC_CACHE_DIR=/config/restic/cache \
+    RESTIC_FORGET_ARGS="--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1"
+
+RUN mkdir -p \
+      /config/restic/cache && \
+    chown "${USER}:${USER}" -R \
+      /config
 
 VOLUME /config
+
+USER "${USER}"
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["backup"]

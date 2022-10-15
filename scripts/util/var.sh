@@ -31,14 +31,6 @@ get_cloudflare_token() {
   get_var CLOUDFLARE_TOKEN
 }
 
-get_maxmind_key() {
-  get_var MAXMIND_KEY
-}
-
-get_protonmail_address() {
-  get_var PROTONMAIL_ADDRESS
-}
-
 get_protonmail_password() {
   get_var PROTONMAIL_PASSWORD
 }

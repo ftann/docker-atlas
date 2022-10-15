@@ -1,6 +1,0 @@
-#!/command/with-contenv bash
-
-# s6 v3 temp fix.
-chown -R abc:abc /config
-
-exec /usr/sbin/crond -f -S -l 5 -c /config/crontabs

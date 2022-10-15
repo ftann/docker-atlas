@@ -15,18 +15,30 @@ RUN wget \
     cd proton-bridge-* && \
     make build-nogui
 
-FROM lsiobase/alpine:3.16
+FROM alpine:3.16
 
-EXPOSE 25 143
+ARG USER=atlas
+ARG PUID=2000
+ARG PGID="${PUID}"
 
-RUN apk add --no-cache dbus-x11 gnupg libsecret pass socat
+RUN addgroup -g "${PGID}" "${USER}" && \
+    adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-COPY --from=builder /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
-COPY root/ /
+RUN apk add --no-cache dbus-x11 gnupg libsecret pass tzdata
 
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
-    PROTONMAIL_ADDRESS="admin@atlas.com" \
-    PROTONMAIL_PASSWORD=atlas \
-    PROTONMAIL_PASSWORD_MAILBOX=secure
+EXPOSE 1025 1143
+
+COPY --from=builder --chown="${PUID}:${PGID}" /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
+COPY --chown="${PUID}:${PGID}" root/ /
+
+RUN mkdir -p \
+      /config && \
+    chown "${USER}:${USER}" -R \
+      /config && \
+    mkfifo /tmp/fakettyp
 
 VOLUME /config
+
+USER "${USER}"
+
+ENTRYPOINT ["/entrypoint.sh"]

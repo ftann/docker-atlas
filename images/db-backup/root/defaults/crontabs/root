@@ -1,1 +1,0 @@
-{{ DB_BACKUP_SCHEDULE }} /app/db-backup.sh

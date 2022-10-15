@@ -1,12 +1,15 @@
 FROM alpine:3.16
 
-ENV PUID=2000 \
-    PGID=2000
+ARG PUID=2000
+ARG PGID="${PUID}"
 
-COPY root/ /
+COPY --chown="${PUID}:${PGID}" root/ /
 
-RUN mkdir /config
+RUN mkdir /config && \
+    chown "${PUID}:${PGID}" /config
 
 VOLUME /config/authelia /config/ldap /config/traefik
 
-ENTRYPOINT /app/sync.sh
+USER "${PUID}:${PGID}"
+
+ENTRYPOINT ["/app/sync.sh"]

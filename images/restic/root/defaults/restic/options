@@ -1,1 +1,0 @@
-RESTIC_OPTIONS=(-o b2.connections=50)

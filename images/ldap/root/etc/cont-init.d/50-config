@@ -1,7 +1,0 @@
-#!/command/with-contenv bash
-
-mkdir -p \
-  /config/{databases/{openldap-data,slapd.d},keys,log/ldap} \
-  /run/openldap
-
-chown -R abc:abc /config /run/openldap

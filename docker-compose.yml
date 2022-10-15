@@ -61,12 +61,16 @@ services:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
+    read_only: true
     depends_on:
       atlas-init:
         condition: service_completed_successfully
       authelia-db:
         condition: service_started
+      proton-bridge:
+        condition: service_started
     networks:
+      - egress
       - auth
       - authelia_db
       - mail
@@ -130,12 +134,17 @@ services:
       - authelia_db
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.authelia-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
+      chadburn.job-exec.authelia-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.authelia-backup.user: "abc"
 
   inadyn:
     <<: *default_service
     image: atlas/inadyn:${INADYN}
     build: ./images/inadyn
     container_name: inadyn
+    read_only: true
     networks:
       - egress
     secrets:
@@ -154,11 +163,11 @@ services:
     environment:
       <<: *default_service_environment
       DOMAIN: ${DOMAIN}
-      LDAP_ROOT: root
       LDAP_BIND_USER: auth
-      FILE__LDAP_CONFIG_PASSWORD: /run/secrets/ldap_db
-      FILE__LDAP_ROOT_PASSWORD: /run/secrets/ldap_db
-      FILE__LDAP_BIND_PASSWORD: /run/secrets/ldap_auth
+      LDAP_BIND_PASSWORD_FILE: /run/secrets/ldap_auth
+      LDAP_CONFIG_PASSWORD_FILE: /run/secrets/ldap_db
+      LDAP_ROOT: root
+      LDAP_ROOT_PASSWORD_FILE: /run/secrets/ldap_db
     volumes:
       - ldap:/config:z
     secrets:
@@ -166,6 +175,11 @@ services:
       - ldap_db
     ulimits:
       nofile: 1024
+    labels:
+      chadburn.enabled: "true"
+      chadburn.job-exec.ldap-backup.command: "/bin/bash /app/ldap-backup.sh"
+      chadburn.job-exec.ldap-backup.schedule: "0 30 2 * * *"
+      chadburn.job-exec.ldap-backup.user: "atlas"
 
   nextcloud:
     <<: *default_service
@@ -214,6 +228,10 @@ services:
       - nextcloud_db
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.nextcloud-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
+      chadburn.job-exec.nextcloud-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.nextcloud-backup.user: "abc"
 
   plex:
     <<: *default_service
@@ -246,16 +264,16 @@ services:
       - egress
       - mail
     ports:
-      - "25:25"
+      - "25:1025"
     environment:
       <<: *default_service_environment
-      FILE__PROTONMAIL_ADDRESS: /run/secrets/protonmail_address
-      FILE__PROTONMAIL_PASSWORD: /run/secrets/protonmail_password
-      FILE__PROTONMAIL_PASSWORD_MAILBOX: /run/secrets/protonmail_password_mailbox
+      PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
+      PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
+      PROTONMAIL_PASSWORD_MAILBOX_FILE: /run/secrets/protonmail_password_mailbox
     volumes:
       - proton-bridge:/config:z
+      - ./secrets/protonmail_password_bridge:/config/protonmail_password_bridge:z
     secrets:
-      - protonmail_address
       - protonmail_password
       - protonmail_password_mailbox
 
@@ -330,6 +348,10 @@ services:
       - teamspeak_db
     labels:
       com.centurylinklabs.watchtower.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.teamspeak-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
+      chadburn.job-exec.teamspeak-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.teamspeak-backup.user: "abc"
 
   traefik:
     <<: *default_service
@@ -426,26 +448,8 @@ services:
     image: atlas/udpxy:${UDPXY}
     build: ./images/udpxy
     container_name: udpxy
+    read_only: true
     network_mode: host
-
-  watchtower:
-    <<: *default_service
-    image: containrrr/watchtower
-    container_name: watchtower
-    networks:
-      - egress
-    environment:
-      <<: *default_service_environment
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_INCLUDE_RESTARTING: "true"
-      WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-      WATCHTOWER_NOTIFICATIONS_LEVEL: error
-      WATCHTOWER_SCHEDULE: 0 0 6 * * *
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
 
   www:
     <<: *default_service
@@ -466,6 +470,37 @@ services:
       traefik.http.services.www.loadBalancer.server.port: "8080"
 
   #
+  # Infrastructure.
+  #
+
+  chadburn:
+    <<: *default_service
+    image: premoweb/chadburn:${CHADBURN}
+    container_name: chadburn
+    command: daemon --metrics
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  watchtower:
+    <<: *default_service
+    image: containrrr/watchtower
+    container_name: watchtower
+    networks:
+      - egress
+    environment:
+      <<: *default_service_environment
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_NOTIFICATIONS_LEVEL: error
+      WATCHTOWER_SCHEDULE: 0 0 6 * * *
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  #
   # Backup.
   #
 
@@ -480,127 +515,67 @@ services:
       - /dev/fuse
     networks:
       - egress
-    environment:
+    environment: &restic_environment
       <<: *default_service_environment
       RESTIC_REPOSITORY: <empty>
       RESTIC_SCHEDULE: 30 3 * * *
       RESTIC_BACKUP_TAGS: auto
       RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      FILE__B2_ACCOUNT_ID: /run/secrets/backblaze_id
-      FILE__B2_ACCOUNT_KEY: /run/secrets/backblaze_key
-      FILE__RESTIC_PASSWORD: /run/secrets/restic
-    volumes:
+      RESTIC_PASSWORD_FILE: /run/secrets/restic
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/backblaze_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
+    volumes: &restic_volumes
       - restic:/config:z
       # Volumes
-      - authelia_db_backup:/data/authelia_db:z
+      - authelia_db:/data/authelia_db:z
       - nextcloud:/data/nextcloud:z
-      - nextcloud_db_backup:/data/nextcloud_db:z
-      - ldap_backup:/data/ldap:z
+      - nextcloud_db:/data/nextcloud_db:z
+      - ldap:/data/ldap:z
       - plex:/data/plex:z
       - proton-bridge:/data/proton-bridge:z
       - syncthing:/data/syncthing:z
       - teamspeak:/data/teamspeak:z
-      - teamspeak_db_backup:/data/teamspeak_db:z
+      - teamspeak_db:/data/teamspeak_db:z
       # Data
       - ${VOLUME_ROOT}:/data/data:z
-    secrets:
+    secrets: &restic_secrets
       - backblaze_id
       - backblaze_key
       - restic
+    labels:
+      chadburn.enabled: "true"
+      chadburn.job-run.restic-backup.schedule: "0 30 3 * * *"
+      chadburn.job-run.restic-backup.user: "abc"
 
-  authelia-db-backup:
+  restic-check:
     <<: *default_service
-    image: atlas/db-backup:${DB_BACKUP}
-    build: ./images/db-backup
-    container_name: authelia-db-backup
+    image: atlas/restic:${RESTIC}
+    build: ./images/restic
+    container_name: restic-check
+    command: "check"
     networks:
-      - authelia_db
-    environment:
-      <<: *default_service_environment
-      DB_BACKUP_SCHEDULE: 00 2 * * *
-      DB_HOST: authelia-db
-      DB_USER: authelia
-      DB_NAME: authelia
-      FILE__DB_PASSWORD: /run/secrets/authelia_db
-    volumes:
-      - authelia_db_backup:/config:z
-    secrets:
-      - authelia_db
-
-  nextcloud-db-backup:
-    <<: *default_service
-    image: atlas/db-backup:${DB_BACKUP}
-    build: ./images/db-backup
-    container_name: nextcloud-db-backup
-    networks:
-      - nextcloud_db
-    environment:
-      <<: *default_service_environment
-      DB_BACKUP_SCHEDULE: 00 2 * * *
-      DB_HOST: nextcloud-db
-      DB_USER: nextcloud
-      DB_NAME: nextcloud
-      FILE__DB_PASSWORD: /run/secrets/nextcloud_db
-    volumes:
-      - nextcloud_db_backup:/config:z
-    secrets:
-      - nextcloud_db
-
-  teamspeak-db-backup:
-    <<: *default_service
-    image: atlas/db-backup:${DB_BACKUP}
-    build: ./images/db-backup
-    container_name: teamspeak-db-backup
-    networks:
-      - teamspeak_db
-    environment:
-      <<: *default_service_environment
-      DB_BACKUP_SCHEDULE: 00 2 * * *
-      DB_HOST: teamspeak-db
-      DB_USER: teamspeak
-      DB_NAME: teamspeak
-      FILE__DB_PASSWORD: /run/secrets/teamspeak_db
-    volumes:
-      - teamspeak_db_backup:/config:z
-    secrets:
-      - teamspeak_db
-
-  ldap-backup:
-    <<: *default_service
-    image: atlas/ldap-backup:${LDAP_BACKUP}
-    build: ./images/ldap-backup
-    container_name: ldap-backup
-    networks:
-      - auth
-    environment:
-      <<: *default_service_environment
-      LDAP_BACKUP_SCHEDULE: 30 2 * * *
-      DOMAIN: ${DOMAIN}
-      LDAP_HOST: ldap
-      LDAP_NAME: ldap
-      LDAP_BIND_USER: auth
-      FILE__LDAP_BIND_PASSWORD: /run/secrets/ldap_auth
-    volumes:
-      - ldap_backup:/config:z
-    secrets:
-      - ldap_auth
+      - egress
+    environment: *restic_environment
+    volumes: *restic_volumes
+    secrets: *restic_secrets
+    labels:
+      chadburn.enabled: "true"
+      chadburn.job-run.restic-check.schedule: "30 8 1 * * *"
+      chadburn.job-run.restic-check.container: "restic-check"
+      chadburn.job-run.restic-check.user: "abc"
 
 volumes:
   authelia:
   authelia_db:
-  authelia_db_backup:
   ldap:
-  ldap_backup:
   nextcloud:
   nextcloud_db:
-  nextcloud_db_backup:
   plex:
   proton-bridge:
   restic:
   syncthing:
   teamspeak:
   teamspeak_db:
-  teamspeak_db_backup:
   traefik:
 
 networks:
@@ -659,8 +634,6 @@ secrets:
     file: ./secrets/ldap_db
   nextcloud_db:
     file: ./secrets/nextcloud_db
-  protonmail_address:
-    file: ./secrets/protonmail_address
   protonmail_password:
     file: ./secrets/protonmail_password
   protonmail_password_bridge:
