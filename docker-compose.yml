@@ -105,12 +105,12 @@ services:
       - ldap_auth
       - protonmail_password_bridge
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`sso.${DOMAIN}`)"
-      - "traefik.http.routers.authelia.entryPoints=https"
-      - "traefik.http.routers.authelia.middlewares=secured"
-      - "traefik.http.services.authelia.loadBalancer.server.port=9091"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.http.routers.authelia.rule: "Host(`sso.${DOMAIN}`)"
+      traefik.http.routers.authelia.entryPoints: "https"
+      traefik.http.routers.authelia.middlewares: "secured"
+      traefik.http.services.authelia.loadBalancer.server.port: "9091"
 
   authelia-db:
     <<: *default_service
@@ -129,7 +129,7 @@ services:
     secrets:
       - authelia_db
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+      com.centurylinklabs.watchtower.enable: "true"
 
   inadyn:
     <<: *default_service
@@ -186,15 +186,15 @@ services:
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`cloud.${DOMAIN}`)"
-      - "traefik.http.routers.nextcloud.entryPoints=https"
-      - "traefik.http.routers.nextcloud.middlewares=secured,nextcloud"
-      - "traefik.http.services.nextcloud.loadBalancer.server.port=443"
-      - "traefik.http.services.nextcloud.loadBalancer.server.scheme=https"
-      - "traefik.http.middlewares.nextcloud.redirectRegex.regex=https://(.*)/.well-known/(card|cal)dav"
-      - "traefik.http.middlewares.nextcloud.redirectRegex.replacement=https://$$1/remote.php/dav/"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
+      traefik.http.routers.nextcloud.entryPoints: "https"
+      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
+      traefik.http.services.nextcloud.loadBalancer.server.port: "443"
+      traefik.http.services.nextcloud.loadBalancer.server.scheme: "https"
+      traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
+      traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
 
   nextcloud-db:
     <<: *default_service
@@ -213,7 +213,7 @@ services:
     secrets:
       - nextcloud_db
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+      com.centurylinklabs.watchtower.enable: "true"
 
   plex:
     <<: *default_service
@@ -230,12 +230,12 @@ services:
       - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`media.${DOMAIN}`)"
-      - "traefik.http.routers.plex.entryPoints=https"
-      - "traefik.http.routers.plex.middlewares=secured"
-      - "traefik.http.services.plex.loadBalancer.server.port=32400"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.http.routers.plex.rule: "Host(`media.${DOMAIN}`)"
+      traefik.http.routers.plex.entryPoints: "https"
+      traefik.http.routers.plex.middlewares: "secured"
+      traefik.http.services.plex.loadBalancer.server.port: "32400"
 
   proton-bridge:
     <<: *default_service
@@ -270,15 +270,15 @@ services:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.syncthing.rule=Host(`syncthing.${DOMAIN}`)"
-      - "traefik.http.routers.syncthing.entryPoints=https"
-      - "traefik.http.routers.syncthing.middlewares=securedAuth"
-      - "traefik.http.services.syncthing.loadBalancer.server.port=8384"
-      - "traefik.tcp.routers.syncthing.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.syncthing.entryPoints=syncthing"
-      - "traefik.tcp.services.syncthing.loadBalancer.server.port=22000"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
+      traefik.http.routers.syncthing.entryPoints: "https"
+      traefik.http.routers.syncthing.middlewares: "securedAuth"
+      traefik.http.services.syncthing.loadBalancer.server.port: "8384"
+      traefik.tcp.routers.syncthing.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.syncthing.entryPoints: "syncthing"
+      traefik.tcp.services.syncthing.loadBalancer.server.port: "22000"
 
   teamspeak:
     <<: *default_service
@@ -304,13 +304,13 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.tcp.routers.teamspeak.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.teamspeak.entryPoints=teamspeakFileTransfer"
-      - "traefik.tcp.services.teamspeak.loadBalancer.server.port=30033"
-      - "traefik.udp.routers.teamspeak.entryPoints=teamspeakVoice"
-      - "traefik.udp.services.teamspeak.loadBalancer.server.port=9987"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.tcp.routers.teamspeak.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.teamspeak.entryPoints: "teamspeakFileTransfer"
+      traefik.tcp.services.teamspeak.loadBalancer.server.port: "30033"
+      traefik.udp.routers.teamspeak.entryPoints: "teamspeakVoice"
+      traefik.udp.services.teamspeak.loadBalancer.server.port: "9987"
 
   teamspeak-db:
     <<: *default_service
@@ -329,7 +329,7 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+      com.centurylinklabs.watchtower.enable: "true"
 
   traefik:
     <<: *default_service
@@ -384,42 +384,42 @@ services:
     secrets:
       - cloudflare
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
       # Middlewares.
       # Https only.
-      - "traefik.http.middlewares.httpsOnly.redirectScheme.scheme=https"
-      - "traefik.http.middlewares.httpsOnly.redirectScheme.permanent=true"
+      traefik.http.middlewares.httpsOnly.redirectScheme.scheme: "https"
+      traefik.http.middlewares.httpsOnly.redirectScheme.permanent: "true"
       # Rate limit.
-      - "traefik.http.middlewares.rateLimit.rateLimit.average=100"
-      - "traefik.http.middlewares.rateLimit.rateLimit.burst=50"
+      traefik.http.middlewares.rateLimit.rateLimit.average: "100"
+      traefik.http.middlewares.rateLimit.rateLimit.burst: "50"
       # Secure headers.
-      - "traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods=GET,OPTIONS,PUT"
-      - "traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList=https://${DOMAIN}"
-      - "traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge=100"
-      - "traefik.http.middlewares.secureHeaders.headers.addVaryHeader=true"
-      # - "traefik.http.middlewares.secureHeaders.headers.allowedHosts=traefik.${DOMAIN}"
-      - "traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders=X-Forwarded-Host"
-      - "traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto=https"
-      - "traefik.http.middlewares.secureHeaders.headers.stsSeconds=63072000"
-      - "traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains=true"
-      - "traefik.http.middlewares.secureHeaders.headers.stsPreload=true"
-      - "traefik.http.middlewares.secureHeaders.headers.forceSTSHeader=true"
-      # - "traefik.http.middlewares.secureHeaders.headers.frameDeny=true"
-      - "traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue=SAMEORIGIN"
-      - "traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff=true"
-      - "traefik.http.middlewares.secureHeaders.headers.browserXssFilter=true"
-      # - "traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy=frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
-      - "traefik.http.middlewares.secureHeaders.headers.referrerPolicy=same-origin"
-      - "traefik.http.middlewares.secureHeaders.headers.permissionsPolicy=camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
-      - "traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag=none,noarchive,nosnippet,notranslate,noimageindex,"
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods: "GET,OPTIONS,PUT"
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList: "https://${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge: "100"
+      traefik.http.middlewares.secureHeaders.headers.addVaryHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.allowedHosts: "traefik.${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders: "X-Forwarded-Host"
+      traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto: "https"
+      traefik.http.middlewares.secureHeaders.headers.stsSeconds: "63072000"
+      traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains: "true"
+      traefik.http.middlewares.secureHeaders.headers.stsPreload: "true"
+      traefik.http.middlewares.secureHeaders.headers.forceSTSHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.frameDeny: "true"
+      traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue: "SAMEORIGIN"
+      traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff: "true"
+      traefik.http.middlewares.secureHeaders.headers.browserXssFilter: "true"
+      # traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy: "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
+      traefik.http.middlewares.secureHeaders.headers.referrerPolicy: "same-origin"
+      traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex,"
       # SSO.
-      - "traefik.http.middlewares.sso.forwardAuth.address=http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
-      - "traefik.http.middlewares.sso.forwardAuth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
-      - "traefik.http.middlewares.sso.forwardAuth.trustForwardHeader=true"
+      traefik.http.middlewares.sso.forwardAuth.address=http://authelia:9091/api/verify?rd: "https%3A%2F%2Fsso.${DOMAIN}%2F"
+      traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      traefik.http.middlewares.sso.forwardAuth.trustForwardHeader: "true"
       # Chains.
-      - "traefik.http.middlewares.secured.chain.middlewares=rateLimit,httpsOnly,secureHeaders"
-      - "traefik.http.middlewares.securedAuth.chain.middlewares=secured,sso"
+      traefik.http.middlewares.secured.chain.middlewares: "rateLimit,httpsOnly,secureHeaders"
+      traefik.http.middlewares.securedAuth.chain.middlewares: "secured,sso"
 
   udpxy:
     <<: *default_service
@@ -445,7 +445,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+      com.centurylinklabs.watchtower.enable: "true"
 
   www:
     <<: *default_service
@@ -458,12 +458,12 @@ services:
       <<: *default_service_environment
       NGINX_ENTRYPOINT_QUIET_LOGS: "true"
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.enable=true"
-      - "traefik.http.routers.www.rule=Host(`${DOMAIN}`, `www.${DOMAIN}`)"
-      - "traefik.http.routers.www.entryPoints=https"
-      - "traefik.http.routers.www.middlewares=secured"
-      - "traefik.http.services.www.loadBalancer.server.port=8080"
+      com.centurylinklabs.watchtower.enable: "true"
+      traefik.enable: "true"
+      traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
+      traefik.http.routers.www.entryPoints: "https"
+      traefik.http.routers.www.middlewares: "secured"
+      traefik.http.services.www.loadBalancer.server.port: "8080"
 
   #
   # Backup.
