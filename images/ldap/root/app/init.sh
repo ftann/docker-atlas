@@ -22,7 +22,7 @@ fi
 # shellcheck disable=SC2046
 LDAP_DOMAIN="$(join_by "," $(prepend_each "dc=" $(split "${DOMAIN}")))"
 
-if [[ ! -d "/config/databases/slapd.d/cn\=config" ]]; then
+if [[ ! -d "/config/databases/slapd.d/cn=config" ]]; then
 
   CONFIG_INIT=/tmp/openldap.ldif
 
