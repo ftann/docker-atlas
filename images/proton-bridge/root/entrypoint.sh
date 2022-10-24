@@ -4,7 +4,6 @@ set -euo pipefail
 
 . /app/env.sh
 
-BRIDGE_ARGS=("--cli" "--log-level" "panic")
 BRIDGE_KEY_NAME="${PROTONMAIL_ADDRESS}"
 
 file_env 'PROTONMAIL_PASSWORD'
@@ -26,18 +25,16 @@ if [[ ! -d /config/.password-store ]]; then
 fi
 
 if [[ ! -d /config/.config/protonmail ]]; then
-  /app/proton-bridge "${BRIDGE_ARGS[@]}" <<EOF >/dev/null 2>&1
+  /app/proton-bridge --cli --log-level error <<EOF
 login
 ${PROTONMAIL_ADDRESS}
 ${PROTONMAIL_PASSWORD}
 ${PROTONMAIL_PASSWORD_MAILBOX}
 EOF
 
-  /app/proton-bridge "${BRIDGE_ARGS[@]}" <<EOF | grep -E 'Password' | sort -ru | cut -d ":" -f2 | tr -d "\n " >/config/protonmail_password_bridge
+  /app/proton-bridge --cli --log-level error <<EOF | grep -E "Password" | sort -ru | cut -d ":" -f2 | tr -d "\n " >/config/protonmail_password_bridge
 info
 EOF
 fi
 
-# Fake a terminal, so it does not quit because of EOF.
-# shellcheck disable=SC2002
-cat /tmp/fakettyp | /app/proton-bridge "${BRIDGE_ARGS[@]}"
+/app/proton-bridge --noninteractive

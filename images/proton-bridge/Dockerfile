@@ -24,7 +24,7 @@ ARG PGID="${PUID}"
 RUN addgroup -g "${PGID}" "${USER}" && \
     adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-RUN apk add --no-cache dbus-x11 gnupg libsecret pass tzdata
+RUN apk add --no-cache gnupg libsecret pass tzdata
 
 EXPOSE 1025 1143
 
@@ -33,10 +33,8 @@ COPY --chown="${PUID}:${PGID}" root/ /
 
 RUN mkdir -p \
       /config && \
-    mkfifo /tmp/fakettyp && \
     chown "${USER}:${USER}" -R \
-      /config \
-      /tmp/fakettyp
+      /config
 
 VOLUME /config
 
