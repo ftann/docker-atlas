@@ -9,6 +9,11 @@ x-default-environment: &default_environment
   PUID: ${PUID}
   PGID: ${PGID}
 
+x-proxy-egress-environment: &proxy_egress_environment
+  http_proxy: "squid:3128"
+  https_proxy: "squid:3128"
+  no_proxy: "127.0.0.1,localhost"
+
 x-default-task: &default_task
   environment:
     <<: *default_environment
@@ -143,8 +148,11 @@ services:
     build: ./images/inadyn
     container_name: inadyn
     read_only: true
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
     networks:
-      - egress
+      - proxy_egress
     secrets:
       - inadyn
 
@@ -186,11 +194,14 @@ services:
     depends_on:
       - nextcloud-db
     networks:
-      - egress
       - auth
       - mail
       - nextcloud_db
       - proxy
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -236,12 +247,15 @@ services:
     image: linuxserver/plex:${PLEX}
     container_name: plex
     networks:
-      - egress
       - proxy
+      - proxy_egress
     deploy:
       resources:
         limits:
           memory: 8G
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
     volumes:
       - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
@@ -259,12 +273,13 @@ services:
     build: ./images/proton-bridge
     container_name: proton-bridge
     networks:
-      - egress
       - mail
+      - proxy_egress
     ports:
       - "25:25"
     environment:
       <<: *default_service_environment
+      <<: *proxy_egress_environment
       PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
       PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
       PROTONMAIL_PASSWORD_MAILBOX_FILE: /run/secrets/protonmail_password_mailbox
@@ -280,8 +295,8 @@ services:
     image: linuxserver/syncthing:${SYNCTHING}
     container_name: syncthing
     networks:
-      - egress
       - proxy
+      - proxy_egress
     volumes:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
@@ -479,14 +494,24 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
+  squid:
+    <<: *default_service
+    image: atlas/squid:latest
+    build: ./images/squid
+    container_name: squid
+    networks:
+      - egress
+      - proxy_egress
+
   watchtower:
     <<: *default_service
     image: containrrr/watchtower
     container_name: watchtower
     networks:
-      - egress
+      - proxy_egress
     environment:
       <<: *default_service_environment
+      <<: *proxy_egress_environment
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_INCLUDE_RESTARTING: "true"
       WATCHTOWER_LABEL_ENABLE: "true"
@@ -512,9 +537,10 @@ services:
     devices:
       - /dev/fuse
     networks:
-      - egress
+      - proxy_egress
     environment: &restic_environment
       <<: *default_service_environment
+      <<: *proxy_egress_environment
       RESTIC_REPOSITORY: <empty>
       RESTIC_BACKUP_TAGS: auto
       RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
@@ -553,7 +579,7 @@ services:
     container_name: restic-check
     command: "check"
     networks:
-      - egress
+      - proxy_egress
     environment: *restic_environment
     volumes: *restic_volumes
     secrets: *restic_secrets
@@ -600,6 +626,8 @@ networks:
   proxy:
     <<: *internal_network
     name: proxy
+  proxy_egress:
+    <<: *internal_network
   # Database networks.
   authelia_db:
     <<: *internal_network
