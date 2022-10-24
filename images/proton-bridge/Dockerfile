@@ -24,9 +24,9 @@ ARG PGID="${PUID}"
 RUN addgroup -g "${PGID}" "${USER}" && \
     adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-RUN apk add --no-cache gnupg libsecret pass tzdata
+RUN apk add --no-cache gnupg libsecret pass socat tzdata
 
-EXPOSE 1025 1143
+EXPOSE 25 143
 
 COPY --from=builder --chown="${PUID}:${PGID}" /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
 COPY --chown="${PUID}:${PGID}" root/ /

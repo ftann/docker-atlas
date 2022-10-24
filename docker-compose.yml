@@ -263,7 +263,7 @@ services:
       - egress
       - mail
     ports:
-      - "25:1025"
+      - "25:25"
     environment:
       <<: *default_service_environment
       PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}

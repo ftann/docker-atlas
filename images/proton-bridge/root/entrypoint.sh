@@ -10,14 +10,7 @@ file_env 'PROTONMAIL_PASSWORD'
 file_env 'PROTONMAIL_PASSWORD_MAILBOX'
 
 if [[ ! -d /config/.gnupg ]]; then
-  /usr/bin/gpg --quiet --generate-key --batch <<EOF
-  %no-protection
-  Key-Type: RSA
-  Key-Length: 4096
-  Name-Real: ${BRIDGE_KEY_NAME}
-  Expire-Date: 0
-  %commit
-EOF
+  /usr/bin/gpg --quiet --batch --passphrase "" --quick-gen-key "${BRIDGE_KEY_NAME}" default default never
 fi
 
 if [[ ! -d /config/.password-store ]]; then
@@ -36,5 +29,8 @@ EOF
 info
 EOF
 fi
+
+socat TCP-LISTEN:25,fork TCP:127.0.0.1:1025 &
+socat TCP-LISTEN:143,fork TCP:127.0.0.1:1143 &
 
 /app/proton-bridge --noninteractive
