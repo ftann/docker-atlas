@@ -30,7 +30,7 @@ info
 EOF
 fi
 
-socat TCP-LISTEN:25,fork TCP:127.0.0.1:1025 &
-socat TCP-LISTEN:143,fork TCP:127.0.0.1:1143 &
+socat TCP-LISTEN:25,fork TCP:localhost:1025 &
+socat TCP-LISTEN:143,fork TCP:localhost:1143 &
 
 /app/proton-bridge --noninteractive

@@ -69,7 +69,6 @@ services:
       proton-bridge:
         condition: service_started
     networks:
-      - egress
       - auth
       - authelia_db
       - mail
