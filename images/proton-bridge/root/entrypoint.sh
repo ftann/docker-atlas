@@ -40,4 +40,4 @@ fi
 
 # Fake a terminal, so it does not quit because of EOF.
 # shellcheck disable=SC2002
-cat /tmp/fakettyp | /app/proton-bridge "${BRIDGE_ARGS[@]}" --noninteractive
+cat /tmp/fakettyp | /app/proton-bridge "${BRIDGE_ARGS[@]}"

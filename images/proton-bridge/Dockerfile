@@ -33,9 +33,10 @@ COPY --chown="${PUID}:${PGID}" root/ /
 
 RUN mkdir -p \
       /config && \
+    mkfifo /tmp/fakettyp && \
     chown "${USER}:${USER}" -R \
-      /config && \
-    mkfifo /tmp/fakettyp
+      /config \
+      /tmp/fakettyp
 
 VOLUME /config
 

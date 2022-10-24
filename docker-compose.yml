@@ -61,7 +61,6 @@ services:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
-    read_only: true
     depends_on:
       atlas-init:
         condition: service_completed_successfully
@@ -436,7 +435,7 @@ services:
       traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
       traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex,"
       # SSO.
-      traefik.http.middlewares.sso.forwardAuth.address=http://authelia:9091/api/verify?rd: "https%3A%2F%2Fsso.${DOMAIN}%2F"
+      traefik.http.middlewares.sso.forwardAuth.address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
       traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
       traefik.http.middlewares.sso.forwardAuth.trustForwardHeader: "true"
       # Chains.
@@ -518,7 +517,6 @@ services:
     environment: &restic_environment
       <<: *default_service_environment
       RESTIC_REPOSITORY: <empty>
-      RESTIC_SCHEDULE: 30 3 * * *
       RESTIC_BACKUP_TAGS: auto
       RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
       RESTIC_PASSWORD_FILE: /run/secrets/restic
@@ -546,6 +544,8 @@ services:
       chadburn.enabled: "true"
       chadburn.job-run.restic-backup.schedule: "0 30 3 * * *"
       chadburn.job-run.restic-backup.user: "abc"
+    profiles:
+      - backup
 
   restic-check:
     <<: *default_service
@@ -563,6 +563,8 @@ services:
       chadburn.job-run.restic-check.schedule: "30 8 1 * * *"
       chadburn.job-run.restic-check.container: "restic-check"
       chadburn.job-run.restic-check.user: "abc"
+    profiles:
+      - backup
 
 volumes:
   authelia:
