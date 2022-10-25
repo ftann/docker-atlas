@@ -54,7 +54,7 @@ services:
 
   atlas-init:
     <<: *default_task
-    image: atlas/atlas-init
+    image: atlas/atlas-init:${INIT}
     build: ./images/atlas-init
     container_name: atlas-init
     volumes:
@@ -112,7 +112,7 @@ services:
       - ldap_auth
       - protonmail_password_bridge
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       traefik.http.routers.authelia.rule: "Host(`sso.${DOMAIN}`)"
       traefik.http.routers.authelia.entryPoints: "https"
@@ -136,7 +136,7 @@ services:
     secrets:
       - authelia_db
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.authelia-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
@@ -206,7 +206,7 @@ services:
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
       traefik.http.routers.nextcloud.entryPoints: "https"
@@ -233,7 +233,7 @@ services:
     secrets:
       - nextcloud_db
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.nextcloud-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
@@ -257,7 +257,7 @@ services:
       - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       traefik.http.routers.plex.rule: "Host(`media.${DOMAIN}`)"
       traefik.http.routers.plex.entryPoints: "https"
@@ -303,7 +303,7 @@ services:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
       traefik.http.routers.syncthing.entryPoints: "https"
@@ -337,7 +337,7 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       traefik.tcp.routers.teamspeak.rule: "HostSNI(`*`)"
       traefik.tcp.routers.teamspeak.entryPoints: "teamspeakFileTransfer"
@@ -362,7 +362,7 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.teamspeak-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
@@ -421,7 +421,7 @@ services:
     secrets:
       - cloudflare
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
+      diun.enable: "true"
       traefik.enable: "true"
       # Middlewares.
       # Https only.
@@ -495,9 +495,31 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
+  duin:
+    <<: *default_service
+    image: crazymax/diun:${DIUN}
+    container_name: duin
+    networks:
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      DIUN_PROVIDERS_DOCKER: "true"
+      DIUN_WATCH_SCHEDULE: "0 */6 * * *"
+      DIUN_NOTIF_MAIL_HOST: proton-bridge
+      DIUN_NOTIF_MAIL_PORT: 25
+      DIUN_NOTIF_MAIL_USERNAME: admin@${DOMAIN}
+      DIUN_NOTIF_MAIL_PASSWORDFILE: /run/secrets/protonmail_password_bridge
+      DIUN_NOTIF_MAIL_FROM: "DIUN <admin@${DOMAIN}>"
+      DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+    secrets:
+      - protonmail_password_bridge
+
   squid:
     <<: *default_service
-    image: atlas/squid:latest
+    image: atlas/squid:${SQUID}
     build: ./images/squid
     container_name: squid
     networks:
@@ -505,26 +527,6 @@ services:
       - proxy_egress
     ulimits:
       nofile: 1048576
-
-  watchtower:
-    <<: *default_service
-    image: containrrr/watchtower
-    container_name: watchtower
-    networks:
-      - proxy_egress
-    environment:
-      <<: *default_service_environment
-      <<: *proxy_egress_environment
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_INCLUDE_RESTARTING: "true"
-      WATCHTOWER_LABEL_ENABLE: "true"
-      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-      WATCHTOWER_NOTIFICATIONS_LEVEL: error
-      WATCHTOWER_SCHEDULE: 0 0 6 * * *
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      com.centurylinklabs.watchtower.enable: "true"
 
   #
   # Backup.
