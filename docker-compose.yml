@@ -495,10 +495,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  duin:
+  diun:
     <<: *default_service
     image: crazymax/diun:${DIUN}
-    container_name: duin
+    container_name: diun
     networks:
       - proxy_egress
     environment:
@@ -508,9 +508,9 @@ services:
       DIUN_WATCH_SCHEDULE: "0 */6 * * *"
       DIUN_NOTIF_MAIL_HOST: proton-bridge
       DIUN_NOTIF_MAIL_PORT: 25
-      DIUN_NOTIF_MAIL_USERNAME: admin@${DOMAIN}
+      DIUN_NOTIF_MAIL_USERNAME: "admin@${DOMAIN}"
       DIUN_NOTIF_MAIL_PASSWORDFILE: /run/secrets/protonmail_password_bridge
-      DIUN_NOTIF_MAIL_FROM: "DIUN <admin@${DOMAIN}>"
+      DIUN_NOTIF_MAIL_FROM: "admin@${DOMAIN}"
       DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
