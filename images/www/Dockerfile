@@ -1,3 +1,5 @@
-FROM nginxinc/nginx-unprivileged:alpine
+FROM nginxinc/nginx-unprivileged:1.23.2-alpine-slim
 
-COPY config/ /usr/share/nginx/html
+ENV NGINX_ENTRYPOINT_QUIET_LOGS=true
+
+COPY root/ /

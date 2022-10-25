@@ -477,9 +477,8 @@ services:
     container_name: www
     networks:
       - proxy_ingress
-    environment:
-      <<: *default_service_environment
-      NGINX_ENTRYPOINT_QUIET_LOGS: "true"
+    logging:
+      driver: none
     labels:
       traefik.enable: "true"
       traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
