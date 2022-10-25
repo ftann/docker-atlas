@@ -12,12 +12,17 @@ if ! restic cat config >/dev/null 2>&1; then
   restic init
 fi
 
-if [[ "$1" == "backup" ]]; then
+case $1 in
+backup)
   /app/restic-backup.sh
-elif [[ "$1" == "check" ]]; then
+  ;;
+check)
   /app/restic-check.sh
-elif [[ "$1" == "diff" ]]; then
+  ;;
+diff)
   /app/restic-diff-last.sh
-else
+  ;;
+*)
   exit 1
-fi
+  ;;
+esac
