@@ -17,4 +17,4 @@ ldapsearch \
     -H "ldap://localhost" \
     -D "cn=${LDAP_BIND_USER},${LDAP_DOMAIN}" -w "${LDAP_BIND_PASSWORD}" \
     -Z -b "${LDAP_DOMAIN}" \
-    -LLL > "/config/backup/${DOMAIN}.ldif"
+    -LLL >"/config/${DOMAIN}.ldif"

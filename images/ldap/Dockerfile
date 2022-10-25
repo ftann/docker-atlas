@@ -18,7 +18,6 @@ ENV DOMAIN=atlas.com \
     LDAP_ROOT=root
 
 RUN mkdir -p \
-      /config/backup \
       /config/databases/openldap-data \
       /config/databases/slapd.d \
       /config/keys \
