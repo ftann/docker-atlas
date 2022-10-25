@@ -148,11 +148,8 @@ services:
     build: ./images/inadyn
     container_name: inadyn
     read_only: true
-    environment:
-      <<: *default_service_environment
-      <<: *proxy_egress_environment
     networks:
-      - proxy_egress
+      - egress # Proxy not supported.
     secrets:
       - inadyn
 
