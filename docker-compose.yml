@@ -505,13 +505,14 @@ services:
       <<: *default_service_environment
       <<: *proxy_egress_environment
       DIUN_PROVIDERS_DOCKER: "true"
-      DIUN_WATCH_SCHEDULE: "0 */6 * * *"
+      DIUN_WATCH_SCHEDULE: "0 1 * * *"
       DIUN_NOTIF_MAIL_HOST: proton-bridge
       DIUN_NOTIF_MAIL_PORT: 25
       DIUN_NOTIF_MAIL_USERNAME: "admin@${DOMAIN}"
       DIUN_NOTIF_MAIL_PASSWORDFILE: /run/secrets/protonmail_password_bridge
       DIUN_NOTIF_MAIL_FROM: "admin@${DOMAIN}"
       DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
+      DIUN_NOTIF_MAIL_INSECURESKIPVERIFY: "true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
     secrets:
