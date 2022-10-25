@@ -139,7 +139,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.authelia-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
-      chadburn.job-exec.authelia-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
       chadburn.job-exec.authelia-backup.user: "abc"
 
   inadyn:
@@ -184,7 +184,7 @@ services:
     labels:
       chadburn.enabled: "true"
       chadburn.job-exec.ldap-backup.command: "/bin/bash /app/ldap-backup.sh"
-      chadburn.job-exec.ldap-backup.schedule: "0 30 2 * * *"
+      chadburn.job-exec.ldap-backup.schedule: "30 2 * * *"
       chadburn.job-exec.ldap-backup.user: "atlas"
 
   nextcloud:
@@ -239,7 +239,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.nextcloud-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
-      chadburn.job-exec.nextcloud-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
       chadburn.job-exec.nextcloud-backup.user: "abc"
 
   plex:
@@ -363,7 +363,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.teamspeak-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
-      chadburn.job-exec.teamspeak-backup.schedule: "0 0 2 * * *"
+      chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
       chadburn.job-exec.teamspeak-backup.user: "abc"
 
   traefik:
@@ -567,7 +567,7 @@ services:
       - restic
     labels:
       chadburn.enabled: "true"
-      chadburn.job-run.restic-backup.schedule: "0 30 3 * * *"
+      chadburn.job-run.restic-backup.schedule: "30 3 * * *"
       chadburn.job-run.restic-backup.user: "abc"
     profiles:
       - backup
@@ -585,8 +585,7 @@ services:
     secrets: *restic_secrets
     labels:
       chadburn.enabled: "true"
-      chadburn.job-run.restic-check.schedule: "30 8 1 * * *"
-      chadburn.job-run.restic-check.container: "restic-check"
+      chadburn.job-run.restic-check.schedule: "30 8 1 * *"
       chadburn.job-run.restic-check.user: "abc"
     profiles:
       - backup
