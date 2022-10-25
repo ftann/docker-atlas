@@ -517,6 +517,7 @@ services:
       DIUN_NOTIF_MAIL_FROM: "admin@${DOMAIN}"
       DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
       DIUN_NOTIF_MAIL_INSECURESKIPVERIFY: "true"
+      LOG_LEVEL: "error"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
     secrets:
