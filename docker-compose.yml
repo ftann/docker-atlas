@@ -41,17 +41,6 @@ services:
   # Services.
   #
 
-  #  adminer:
-  #    image: adminer
-  #    container_name: adminer
-  #    networks:
-  #      - egress
-  #      - authelia_db
-  #      - nextcloud_db
-  #      - teamspeak_db
-  #    ports:
-  #      - "8080:8080"
-
   atlas-init:
     <<: *default_task
     image: atlas/atlas-init:${INIT}
@@ -486,6 +475,19 @@ services:
   #
   # Infrastructure.
   #
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    networks:
+      - ingress
+      - authelia_db
+      - nextcloud_db
+      - teamspeak_db
+    ports:
+      - "8080:8080"
+    profiles:
+      - debug
 
   chadburn:
     <<: *default_service
