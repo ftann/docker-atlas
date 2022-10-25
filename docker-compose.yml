@@ -141,6 +141,7 @@ services:
       chadburn.job-exec.authelia-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
       chadburn.job-exec.authelia-backup.user: "abc"
+      chadburn.job-exec.authelia-backup.no-overlap: "true"
 
   inadyn:
     <<: *default_service
@@ -183,6 +184,7 @@ services:
       chadburn.job-exec.ldap-backup.command: "/bin/bash /app/ldap-backup.sh"
       chadburn.job-exec.ldap-backup.schedule: "30 2 * * *"
       chadburn.job-exec.ldap-backup.user: "atlas"
+      chadburn.job-exec.ldap-backup.no-overlap: "true"
 
   nextcloud:
     <<: *default_service
@@ -238,6 +240,7 @@ services:
       chadburn.job-exec.nextcloud-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
       chadburn.job-exec.nextcloud-backup.user: "abc"
+      chadburn.job-exec.nextcloud-backup.no-overlap: "true"
 
   plex:
     <<: *default_service
@@ -367,6 +370,7 @@ services:
       chadburn.job-exec.teamspeak-backup.command: "with-contenv sh -c 'mariadb-dump -u$$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE > /config/$$MYSQL_DATABASE.sql'"
       chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
       chadburn.job-exec.teamspeak-backup.user: "abc"
+      chadburn.job-exec.teamspeak-backup.no-overlap: "true"
 
   traefik:
     <<: *default_service
@@ -575,6 +579,7 @@ services:
       chadburn.enabled: "true"
       chadburn.job-run.restic-backup.schedule: "30 3 * * *"
       chadburn.job-run.restic-backup.user: "abc"
+      chadburn.job-run.restic-backup.no-overlap: "true"
     profiles:
       - backup
 
@@ -593,6 +598,7 @@ services:
       chadburn.enabled: "true"
       chadburn.job-run.restic-check.schedule: "30 8 1 * *"
       chadburn.job-run.restic-check.user: "abc"
+      chadburn.job-run.restic-check.no-overlap: "true"
     profiles:
       - backup
 
