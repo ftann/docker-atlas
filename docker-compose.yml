@@ -10,8 +10,8 @@ x-default-environment: &default_environment
   PGID: ${PGID}
 
 x-proxy-egress-environment: &proxy_egress_environment
-  http_proxy: "squid:3128"
-  https_proxy: "squid:3128"
+  http_proxy: ${PROXY}
+  https_proxy: ${PROXY}
   no_proxy: "127.0.0.1,localhost"
 
 x-default-task: &default_task
@@ -297,6 +297,11 @@ services:
     networks:
       - proxy
       - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      all_proxy: ${PROXY}
+      ALL_PROXY_NO_FALLBACK: 1
     volumes:
       - syncthing:/config:z
       - ${VOLUME_SYNC}:/data1:z
@@ -501,6 +506,8 @@ services:
     networks:
       - egress
       - proxy_egress
+    ulimits:
+      nofile: 1048576
 
   watchtower:
     <<: *default_service
