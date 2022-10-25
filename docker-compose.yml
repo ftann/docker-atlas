@@ -475,7 +475,6 @@ services:
       <<: *default_service_environment
       NGINX_ENTRYPOINT_QUIET_LOGS: "true"
     labels:
-      com.centurylinklabs.watchtower.enable: "true"
       traefik.enable: "true"
       traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
       traefik.http.routers.www.entryPoints: "https"
