@@ -198,9 +198,6 @@ services:
       - nextcloud_db
       - proxy_ingress
       - proxy_egress
-    environment:
-      <<: *default_service_environment
-      <<: *proxy_egress_environment
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
