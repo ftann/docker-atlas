@@ -28,4 +28,4 @@ USER "${USER}"
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["backup"]
+CMD ["check"]

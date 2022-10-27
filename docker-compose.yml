@@ -15,16 +15,20 @@ x-proxy-egress-environment: &proxy_egress_environment
   no_proxy: "127.0.0.1,localhost"
 
 x-default-task: &default_task
+  deploy:
+    restart_policy:
+      condition: none
   environment:
     <<: *default_environment
   network_mode: none
-  restart: "no"
 
 x-default-service: &default_service
+  deploy:
+    restart_policy:
+      condition: any
   environment: &default_service_environment
     <<: *default_environment
     UMASK: ${UMASK}
-  restart: always
 
 x-internal-network: &internal_network
   driver_opts:
@@ -541,13 +545,14 @@ services:
     image: atlas/restic:${RESTIC}
     build: ./images/restic
     container_name: restic
+    command: "tail -f /dev/null" # The container should run indefinitely to allow chadburn to execute commands.
     cap_add:
       - SYS_ADMIN
     devices:
       - /dev/fuse
     networks:
       - proxy_egress
-    environment: &restic_environment
+    environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
       RESTIC_REPOSITORY: <empty>
@@ -556,7 +561,7 @@ services:
       RESTIC_PASSWORD_FILE: /run/secrets/restic
       AWS_ACCESS_KEY_ID_FILE: /run/secrets/backblaze_id
       AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
-    volumes: &restic_volumes
+    volumes:
       - restic:/config:z
       # Volumes
       - authelia_db:/data/authelia_db:z
@@ -570,36 +575,20 @@ services:
       - teamspeak_db:/data/teamspeak_db:z
       # Data
       - ${VOLUME_ROOT}:/data/data:z
-    secrets: &restic_secrets
+    secrets:
       - backblaze_id
       - backblaze_key
       - restic
     labels:
       chadburn.enabled: "true"
-      chadburn.job-run.restic-backup.schedule: "30 3 * * *"
-      chadburn.job-run.restic-backup.user: "abc"
-      chadburn.job-run.restic-backup.no-overlap: "true"
-    profiles:
-      - backup
-
-  restic-check:
-    <<: *default_service
-    image: atlas/restic:${RESTIC}
-    build: ./images/restic
-    container_name: restic-check
-    command: "check"
-    networks:
-      - proxy_egress
-    environment: *restic_environment
-    volumes: *restic_volumes
-    secrets: *restic_secrets
-    labels:
-      chadburn.enabled: "true"
-      chadburn.job-run.restic-check.schedule: "30 8 1 * *"
-      chadburn.job-run.restic-check.user: "abc"
-      chadburn.job-run.restic-check.no-overlap: "true"
-    profiles:
-      - backup
+      chadburn.job-exec.restic-backup.schedule: "30 3 * * *"
+      chadburn.job-exec.restic-backup.command: "backup"
+      chadburn.job-exec.restic-backup.user: "atlas"
+      chadburn.job-exec.restic-backup.no-overlap: "true"
+      chadburn.job-exec.restic-check.schedule: "30 8 1 * *"
+      chadburn.job-exec.restic-check.command: "check"
+      chadburn.job-exec.restic-check.user: "atlas"
+      chadburn.job-exec.restic-check.no-overlap: "true"
 
 volumes:
   authelia:

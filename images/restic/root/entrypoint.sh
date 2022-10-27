@@ -23,6 +23,6 @@ diff)
   /app/restic-diff-last.sh
   ;;
 *)
-  exit 1
+  exec "$@"
   ;;
 esac
