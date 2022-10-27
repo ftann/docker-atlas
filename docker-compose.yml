@@ -236,13 +236,13 @@ services:
     <<: *default_service
     image: linuxserver/plex:${PLEX}
     container_name: plex
-    networks:
-      - proxy_ingress
-      - proxy_egress
     deploy:
       resources:
         limits:
           memory: 8G
+    networks:
+      - proxy_ingress
+      - proxy_egress
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
@@ -465,10 +465,10 @@ services:
     image: atlas/www:${WWW}
     build: ./images/www
     container_name: www
-    networks:
-      - proxy_ingress
     logging:
       driver: none
+    networks:
+      - proxy_ingress
     labels:
       traefik.enable: "true"
       traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
@@ -546,10 +546,6 @@ services:
     build: ./images/restic
     container_name: restic
     command: "tail -f /dev/null" # The container should run indefinitely to allow chadburn to execute commands.
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
     networks:
       - proxy_egress
     environment:
