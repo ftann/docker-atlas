@@ -1,8 +1,7 @@
-version: "3.9"
-
 #
 # ATLAS
 #
+name: atlas
 
 x-default-environment: &default_environment
   TZ: ${TZ}

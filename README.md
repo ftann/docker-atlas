@@ -19,8 +19,10 @@ A working server installation is required (preferably fedora due to selinux). Th
 ### Software
 
 - Docker
-- Docker-compose >= 1.29
+- Docker compose plugin >= 2
 - Firewalld
+
+> The docker compose plugins is required.
 
 ### Credentials
 
