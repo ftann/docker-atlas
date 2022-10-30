@@ -9,9 +9,10 @@ logs
 .rnd
 .stversions
 
-config/custom.cnf
-config/databases
-config/initdb.d
+*db/custom.cnf
+*db/databases
+*ldap/databases
+*ldap/initdb.d
 
 nextcloud/appdata*/**/appstore
 nextcloud/appdata*/**/files_trashbin
@@ -26,6 +27,7 @@ plex/Library/Application Support/Plex Media Server/Media
 plex/Library/Application Support/Plex Media Server/Metadata
 plex/Library/Application Support/Plex Media Server/Plug-ins
 plex/Library/Application Support/Plex Media Server/Scripts
+plex/Library/Application Support/Plex Media Server/.LocalAdminToken
 plex/Library/Application Support/Plex Media Server/plexmediaserver.pid
 
 syncthing/index-*.db
