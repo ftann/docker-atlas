@@ -8,7 +8,7 @@ COPY --chown="${PUID}:${PGID}" root/ /
 RUN mkdir /config && \
     chown "${PUID}:${PGID}" /config
 
-VOLUME /config/authelia /config/ldap /config/traefik
+VOLUME /config/authelia /config/envoy /config/ldap /config/traefik
 
 USER "${PUID}:${PGID}"
 

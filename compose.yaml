@@ -18,6 +18,7 @@ x-default-task: &default_task
 #  deploy:
 #    restart_policy:
 #      condition: none
+  restart: "no"
   environment:
     <<: *default_environment
   network_mode: none
@@ -53,6 +54,7 @@ services:
     container_name: atlas-init
     volumes:
       - authelia:/config/authelia:z
+      - envoy:/config/envoy:z
       - ldap:/config/ldap:z
       - traefik:/config/traefik:z
 
@@ -536,6 +538,25 @@ services:
     ulimits:
       nofile: 1048576
 
+  envoy:
+    <<: *default_service
+    image: envoyproxy/envoy-distroless:${ENVOY}
+    container_name: envoy
+    depends_on:
+      atlas-init:
+        condition: service_completed_successfully
+    networks:
+      - egress
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      ENVOY_UID: ${PUID}
+      ENVOY_GID: ${PGID}
+    volumes:
+      - envoy:/etc/envoy:ro,z
+    labels:
+      diun.enable: "true"
+
   #
   # Backup.
   #
@@ -590,6 +611,7 @@ volumes:
   authelia:
   authelia_db:
   diun:
+  envoy:
   ldap:
   nextcloud:
   nextcloud_db:
