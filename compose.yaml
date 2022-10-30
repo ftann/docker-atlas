@@ -194,6 +194,9 @@ services:
       - nextcloud_db
       - proxy_ingress
       - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
     volumes:
       - nextcloud:/config:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -497,6 +500,7 @@ services:
     image: premoweb/chadburn:${CHADBURN}
     container_name: chadburn
     command: daemon --metrics
+    network_mode: none
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
