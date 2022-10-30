@@ -542,6 +542,7 @@ services:
     <<: *default_service
     image: envoyproxy/envoy-distroless:${ENVOY}
     container_name: envoy
+    command: "-c /config/envoy.yaml"
     depends_on:
       atlas-init:
         condition: service_completed_successfully
@@ -553,7 +554,7 @@ services:
       ENVOY_UID: ${PUID}
       ENVOY_GID: ${PGID}
     volumes:
-      - envoy:/etc/envoy:ro,z
+      - envoy:/config:ro,z
     labels:
       diun.enable: "true"
 

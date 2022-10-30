@@ -11,7 +11,7 @@ RUN apk add --no-cache bash gettext openldap openldap-backend-all openldap-overl
 
 EXPOSE 389 636
 
-COPY --chown="${PUID}:${PGID}" root/ /
+COPY --chown="${USER}" root/ /
 
 ENV DOMAIN=atlas.com \
     LDAP_BIND_USER=auth \

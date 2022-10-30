@@ -9,7 +9,7 @@ RUN addgroup -g "${PGID}" "${USER}" && \
 
 RUN apk add --no-cache bash restic tzdata
 
-COPY --chown="${PUID}:${PGID}" root/ /
+COPY --chown="${USER}" root/ /
 
 ENV RESTIC_REPOSITORY=/config/repo \
     RESTIC_BACKUP_SOURCES=/data \
