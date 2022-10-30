@@ -524,6 +524,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
     secrets:
       - protonmail_password_bridge
+    labels:
+      diun.enable: "true"
 
   squid:
     <<: *default_service
