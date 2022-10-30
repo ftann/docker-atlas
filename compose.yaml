@@ -14,17 +14,19 @@ x-proxy-egress-environment: &proxy_egress_environment
   no_proxy: "127.0.0.1,localhost"
 
 x-default-task: &default_task
-  deploy:
-    restart_policy:
-      condition: none
+  # TODO wait for fix in compose >= v2.12.2
+#  deploy:
+#    restart_policy:
+#      condition: none
   environment:
     <<: *default_environment
   network_mode: none
 
 x-default-service: &default_service
-  deploy:
-    restart_policy:
-      condition: any
+  # TODO wait for fix in compose >= v2.12.2
+#  deploy:
+#    restart_policy:
+#      condition: any
   environment: &default_service_environment
     <<: *default_environment
     UMASK: ${UMASK}
