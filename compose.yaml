@@ -237,10 +237,6 @@ services:
     <<: *default_service
     image: linuxserver/plex:${PLEX}
     container_name: plex
-    deploy:
-      resources:
-        limits:
-          memory: 8G
     networks:
       - proxy_ingress
       - proxy_egress
