@@ -519,6 +519,7 @@ services:
       LOG_LEVEL: "error"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
+      - diun:/data
     secrets:
       - protonmail_password_bridge
     labels:
@@ -588,6 +589,7 @@ services:
 volumes:
   authelia:
   authelia_db:
+  diun:
   ldap:
   nextcloud:
   nextcloud_db:
