@@ -110,6 +110,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.authelia.rule: "Host(`sso.${DOMAIN}`)"
       traefik.http.routers.authelia.entryPoints: "https"
       traefik.http.routers.authelia.middlewares: "secured"
@@ -219,6 +220,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
       traefik.http.routers.nextcloud.entryPoints: "https"
       traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
@@ -278,6 +280,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.plex.rule: "Host(`media.${DOMAIN}`)"
       traefik.http.routers.plex.entryPoints: "https"
       traefik.http.routers.plex.middlewares: "secured"
@@ -324,6 +327,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
       traefik.http.routers.syncthing.entryPoints: "https"
       traefik.http.routers.syncthing.middlewares: "securedAuth"
@@ -358,6 +362,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       traefik.tcp.routers.teamspeak.rule: "HostSNI(`*`)"
       traefik.tcp.routers.teamspeak.entryPoints: "teamspeakFileTransfer"
       traefik.tcp.services.teamspeak.loadBalancer.server.port: "30033"
@@ -398,7 +403,6 @@ services:
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.docker.network=proxy_ingress"
       - "--providers.file.directory=/config"
       - "--providers.file.watch=true"
       - "--entryPoints.http=true"
@@ -443,6 +447,7 @@ services:
     labels:
       diun.enable: "true"
       traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
       # Middlewares.
       # Https only.
       traefik.http.middlewares.httpsOnly.redirectScheme.scheme: "https"
@@ -500,7 +505,6 @@ services:
       traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
       traefik.http.routers.www.entryPoints: "https"
       traefik.http.routers.www.middlewares: "secured"
-      traefik.http.services.www.loadBalancer.server.port: "8080"
 
   #
   # Infrastructure.
@@ -527,6 +531,8 @@ services:
     network_mode: none
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      diun.enable: "true"
 
   diun:
     <<: *default_service
@@ -663,7 +669,7 @@ networks:
   # To allow services to reach outside networks attach to `proxy_egress`.
   proxy_ingress:
     <<: *internal_network
-    name: proxy_ingress
+    name: *proxy_ingress_network
   proxy_egress:
     <<: *internal_network
   # Internal special purpose networks.
