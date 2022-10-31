@@ -31,18 +31,8 @@ authentication_backend:
     username_attribute: uid
 
 access_control:
-  default_policy: deny
   # Add rules.
 #  rules:
 #    - domain:
 #        - domain.com
 #      policy: bypass
-
-notifier:
-  disable_startup_check: true
-  smtp:
-    tls:
-      skip_verify: true
-      # Required
-      server_name: proton-bridge
-      minimum_version: TLS1.3

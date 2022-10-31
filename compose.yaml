@@ -1,6 +1,3 @@
-#
-# ATLAS
-#
 name: atlas
 
 x-default-environment: &default_environment
@@ -9,8 +6,8 @@ x-default-environment: &default_environment
   PGID: ${PGID}
 
 x-proxy-egress-environment: &proxy_egress_environment
-  http_proxy: "http://${PROXY}"
-  https_proxy: "http://${PROXY}"
+  http_proxy: &http_proxy "http://${PROXY}"
+  https_proxy: *http_proxy
   no_proxy: "127.0.0.1,localhost"
 
 x-default-task: &default_task
@@ -24,13 +21,11 @@ x-default-task: &default_task
   network_mode: none
 
 x-default-service: &default_service
-  # TODO wait for fix in compose >= v2.12.2
-#  deploy:
-#    restart_policy:
-#      condition: any
   environment: &default_service_environment
     <<: *default_environment
     UMASK: ${UMASK}
+
+x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
 
 x-internal-network: &internal_network
   driver_opts:
@@ -69,9 +64,12 @@ services:
         condition: service_started
       proton-bridge:
         condition: service_started
+      authelia-redis:
+        condition: service_started
     networks:
       - auth
       - authelia_db
+      - authelia_redis
       - mail
       - proxy_ingress
     environment:
@@ -88,8 +86,11 @@ services:
       AUTHELIA_NOTIFIER_SMTP_USERNAME: admin@${DOMAIN}
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
       AUTHELIA_NOTIFIER_SMTP_SENDER: "SSO <admin@${DOMAIN}>"
+      AUTHELIA_NOTIFIER_SMTP_TLS_SKIP_VERIFY: "true"
+      AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK: "true"
       AUTHELIA_SESSION_DOMAIN: ${DOMAIN}
-      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session
+      AUTHELIA_SESSION_REDIS_HOST: authelia-redis
+      AUTHELIA_SESSION_REDIS_TLS_SKIP_VERIFY: "true"
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage
       AUTHELIA_STORAGE_MYSQL_HOST: authelia-db
       AUTHELIA_STORAGE_MYSQL_DATABASE: authelia
@@ -103,7 +104,6 @@ services:
       - authelia_identity_hmac
       - authelia_identity_key
       - authelia_jwt
-      - authelia_session
       - authelia_storage
       - ldap_auth
       - protonmail_password_bridge
@@ -138,6 +138,17 @@ services:
       chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
       chadburn.job-exec.authelia-backup.user: "abc"
       chadburn.job-exec.authelia-backup.no-overlap: "true"
+
+  authelia-redis:
+    <<: *default_service
+    image: redis:${REDIS}
+    container_name: authelia-redis
+    networks:
+      - authelia_redis
+    volumes:
+      - authelia_redis:/data:z
+    labels:
+      diun.enable: "true"
 
   inadyn:
     <<: *default_service
@@ -188,10 +199,12 @@ services:
     container_name: nextcloud
     depends_on:
       - nextcloud-db
+      - nextcloud-redis
     networks:
       - auth
       - mail
       - nextcloud_db
+      - nextcloud_redis
       - proxy_ingress
       - proxy_egress
     environment:
@@ -237,6 +250,17 @@ services:
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
       chadburn.job-exec.nextcloud-backup.user: "abc"
       chadburn.job-exec.nextcloud-backup.no-overlap: "true"
+
+  nextcloud-redis:
+    <<: *default_service
+    image: redis:${REDIS}
+    container_name: nextcloud-redis
+    networks:
+      - nextcloud_redis
+    volumes:
+      - nextcloud_redis:/data:z
+    labels:
+      diun.enable: "true"
 
   plex:
     <<: *default_service
@@ -604,11 +628,13 @@ services:
 volumes:
   authelia:
   authelia_db:
+  authelia_redis:
   diun:
   envoy:
   ldap:
   nextcloud:
   nextcloud_db:
+  nextcloud_redis:
   plex:
   proton-bridge:
   restic:
@@ -618,6 +644,8 @@ volumes:
   traefik:
 
 networks:
+  # Main cluster networks.
+  # Only ingress/egress proxies should be attached.
   ingress:
     <<: *external_network
     ipam:
@@ -630,20 +658,27 @@ networks:
       driver: default
       config:
         - subnet: "fd00:d0ce:2000::/64"
-  # Internal networks.
-  auth:
-    <<: *internal_network
-  mail:
-    <<: *internal_network
+  # Internal networks used to connect service with ingress/egress proxies.
+  # To expose services attach to `proxy_ingress`.
+  # To allow services to reach outside networks attach to `proxy_egress`.
   proxy_ingress:
     <<: *internal_network
     name: proxy_ingress
   proxy_egress:
     <<: *internal_network
-  # Database networks.
+  # Internal special purpose networks.
+  auth:
+    <<: *internal_network
+  mail:
+    <<: *internal_network
+  # Internal database networks.
   authelia_db:
     <<: *internal_network
+  authelia_redis:
+    <<: *internal_network
   nextcloud_db:
+    <<: *internal_network
+  nextcloud_redis:
     <<: *internal_network
   teamspeak_db:
     <<: *internal_network
@@ -657,8 +692,6 @@ secrets:
     file: ./secrets/authelia_identity_key
   authelia_jwt:
     file: ./secrets/authelia_jwt
-  authelia_session:
-    file: ./secrets/authelia_session
   authelia_storage:
     file: ./secrets/authelia_storage
   backblaze_id:
