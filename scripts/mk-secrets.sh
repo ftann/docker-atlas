@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-. ./scripts/util/openssl.sh
-. ./scripts/util/pw.sh
-. ./scripts/util/secret.sh
-. ./scripts/util/var.sh
+. ./scripts/inc.sh
 
 #
 # Generated secrets.

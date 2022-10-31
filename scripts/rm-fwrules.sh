@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-. ./scripts/util/fw.sh
+. ./scripts/inc.sh
 
 del_service_fw http
 del_service_fw https

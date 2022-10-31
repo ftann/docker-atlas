@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-. ./scripts/util/ask.sh
-. ./scripts/util/root.sh
-. ./scripts/util/run.sh
+. ./scripts/inc.sh
 
 install() {
   check_root
@@ -40,6 +38,30 @@ clean() {
 
 status() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+}
+
+print_usage() {
+  cat << EOF
+usage: ctl COMMAND
+
+Commands:
+
+install     creates networks and firewall rules, volumes and secrets
+up          builds and starts the containers
+down        stops the containers
+uninstall   stops and removes the containers
+clean       removes unneeded containers, images, networks and volumes
+status      displays current container status
+EOF
+}
+
+run_if_defined() {
+  if declare -f "$1" >/dev/null; then
+    "$@"
+  else
+    print_usage
+    exit 1
+  fi
 }
 
 run_if_defined "$@"
