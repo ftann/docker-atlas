@@ -5,8 +5,8 @@ is_answer_y() {
   [[ "${answer}" != "${answer#[Yy]}" ]]
 }
 
-agree_to() {
-  local question=$1
+ask() {
+  local question="${1:-sure}"
   echo -n "${question} (y/n)? "
   read -r answer
   if is_answer_y "${answer}"; then
@@ -14,10 +14,6 @@ agree_to() {
   else
     return 1
   fi
-}
-
-ask() {
-  agree_to "sure"
 }
 
 # fw
@@ -98,10 +94,6 @@ create_secret() {
 
 # selinux
 
-is_selinux_enabled() {
-  selinuxenabled
-}
-
 selinux_chcon() {
   local label=$1
   local level=$2
@@ -143,16 +135,3 @@ get_protonmail_password() {
 get_protonmail_password_mailbox() {
   get_var PROTONMAIL_PASSWORD_MAILBOX
 }
-
-get_selinux_label() {
-  get_var SELINUX_OBJ_LABEL
-}
-
-get_selinux_level() {
-  get_var SELINUX_OBJ_LEVEL
-}
-
-get_volume_root() {
-  get_var VOLUME_ROOT
-}
-

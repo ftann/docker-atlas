@@ -2,6 +2,16 @@
 
 . ./scripts/inc.sh
 
-if is_selinux_enabled; then
-  selinux_chcon "$(get_selinux_label)" "$(get_selinux_level)" ./.* ./* "$(get_volume_root)"
+if selinuxenabled; then
+
+  label="$(get_var SELINUX_OBJ_LABEL)"
+  level="$(get_var SELINUX_OBJ_level)"
+  volumes=(
+    "$(get_var VOLUME_MEDIA)"
+    "$(get_var VOLUME_NEXTCLOUD)"
+    "$(get_var VOLUME_POOL)"
+    "$(get_var VOLUME_SYNC)"
+  )
+
+  selinux_chcon "${label}" "${level}" ./.* ./* "${volumes[@]}"
 fi

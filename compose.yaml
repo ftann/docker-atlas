@@ -615,7 +615,10 @@ services:
       - teamspeak:/data/teamspeak:z
       - teamspeak_db:/data/teamspeak_db:z
       # Data
-      - ${VOLUME_ROOT}:/data/data:z
+      - ${VOLUME_MEDIA}:/data/data/media:z
+      - ${VOLUME_NEXTCLOUD}:/data/data/nextcloud:z
+      - ${VOLUME_POOL}:/data/data/pool:z
+      - ${VOLUME_SYNC}:/data/data/syncthing:z
     secrets:
       - backblaze_id
       - backblaze_key
