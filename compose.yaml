@@ -196,8 +196,9 @@ services:
 
   nextcloud:
     <<: *default_service
-    image: linuxserver/nextcloud:${NEXTCLOUD}
+    image: nextcloud:${NEXTCLOUD}
     container_name: nextcloud
+    user: "${PUID}:${PGID}"
     depends_on:
       - nextcloud-db
       - nextcloud-redis
@@ -211,14 +212,41 @@ services:
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin
+      NEXTCLOUD_DATA_DIR: /data
+      NEXTCLOUD_TRUSTED_DOMAINS: "cloud.${DOMAIN}"
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db
+      REDIS_HOST: nextcloud-redis
+      SMTP_HOST: proton-bridge
+      SMTP_PORT: 25
+      SMTP_NAME: "admin@${DOMAIN}"
+      SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
+      SMTP_SECURE: tls
+      MAIL_DOMAIN: "${DOMAIN}"
+      PHP_MEMORY_LIMIT: 4096M
+      PHP_UPLOAD_LIMIT: 4096M
+      APACHE_DISABLE_REWRITE_IP: 1
     volumes:
-      - nextcloud:/config:z
+      - nextcloud:/var/www/html:z
       - ${VOLUME_NEXTCLOUD}:/data:z
       - ${VOLUME_MEDIA}:/media:z
       - ${VOLUME_POOL}:/pool:z
       - ${VOLUME_SYNC}:/sync:z
+    secrets:
+      - nextcloud_admin
+      - nextcloud_db
+      - protonmail_password_bridge
     labels:
       diun.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.nextcloud-cron.schedule: "@every 5m"
+      chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/nextcloud/cron.php"
+      chadburn.job-exec.nextcloud-cron.user: "${PUID}"
+      chadburn.job-exec.nextcloud-cron.no-overlap: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
@@ -715,6 +743,8 @@ secrets:
     file: ./secrets/ldap_auth
   ldap_db:
     file: ./secrets/ldap_db
+  nextcloud_admin:
+    file: ./secrets/nextcloud_admin
   nextcloud_db:
     file: ./secrets/nextcloud_db
   protonmail_password:
