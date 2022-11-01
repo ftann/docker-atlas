@@ -28,7 +28,7 @@ RUN apk add --no-cache gnupg libsecret pass socat tzdata
 
 EXPOSE 25 143
 
-COPY --from=builder --chown="${PUID}:${PGID}" /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
+COPY --from=builder --chown="${USER}" /tmp/proton-bridge-*/proton-bridge /app/proton-bridge
 COPY --chown="${USER}" root/ /
 
 RUN mkdir -p \
