@@ -41,10 +41,10 @@ services:
   # Services.
   #
 
-  atlas-init:
+  init:
     <<: *default_task
-    image: atlas/atlas-init:${INIT}
-    build: ./images/atlas-init
+    image: atlas/init:${INIT}
+    build: ./images/init
     container_name: atlas-init
     volumes:
       - authelia:/config/authelia:z
@@ -57,7 +57,7 @@ services:
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
     depends_on:
-      atlas-init:
+      init:
         condition: service_completed_successfully
       authelia-db:
         condition: service_started
@@ -169,7 +169,7 @@ services:
     build: ./images/ldap
     container_name: ldap
     depends_on:
-      atlas-init:
+      init:
         condition: service_completed_successfully
     networks:
       - auth
@@ -436,7 +436,7 @@ services:
     image: traefik:${TRAEFIK}
     container_name: traefik
     depends_on:
-      atlas-init:
+      init:
         condition: service_completed_successfully
     command:
       - "--providers.docker=true"
@@ -605,7 +605,7 @@ services:
     container_name: envoy
     command: "-c /config/envoy.yaml"
     depends_on:
-      atlas-init:
+      init:
         condition: service_completed_successfully
     networks:
       - egress
