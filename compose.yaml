@@ -230,7 +230,7 @@ services:
       MAIL_DOMAIN: "${DOMAIN}"
       PHP_MEMORY_LIMIT: 4096M
       PHP_UPLOAD_LIMIT: 4096M
-      APACHE_DISABLE_REWRITE_IP: 1
+      # TRUSTED_PROXIES: ""
     volumes:
       - nextcloud:/var/www/html:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -245,7 +245,7 @@ services:
       diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.nextcloud-cron.schedule: "@every 5m"
-      chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/nextcloud/cron.php"
+      chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/html/cron.php"
       chadburn.job-exec.nextcloud-cron.user: "${PUID}"
       chadburn.job-exec.nextcloud-cron.no-overlap: "true"
       traefik.enable: "true"
@@ -253,8 +253,6 @@ services:
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
       traefik.http.routers.nextcloud.entryPoints: "https"
       traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
-      traefik.http.services.nextcloud.loadBalancer.server.port: "443"
-      traefik.http.services.nextcloud.loadBalancer.server.scheme: "https"
       traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
       traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
 
