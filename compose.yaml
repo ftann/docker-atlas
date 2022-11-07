@@ -319,6 +319,8 @@ services:
     <<: *default_service
     image: atlas/nftables:${NFTABLES}
     build: ./images/nftables
+    depends_on:
+      - envoy
     command: "nft add rule ip nat OUTPUT tcp dport 443 dnat to envoy:10001"
     cap_add:
       - NET_ADMIN
