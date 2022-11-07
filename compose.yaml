@@ -27,8 +27,6 @@ x-default-service: &default_service
 
 x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
 
-x-proxy-egress-gateway: &proxy_egress_gateway 172.200.0.250
-
 x-internal-network: &internal_network
   driver_opts:
     com.docker.network.bridge.enable_ip_masquerade: "false"
@@ -602,32 +600,16 @@ services:
       atlas-init:
         condition: service_completed_successfully
     networks:
-      egress:
-      proxy_egress:
-        ipv4_address: *proxy_egress_gateway
+      - egress
+      - proxy_egress
     environment:
       <<: *default_service_environment
       ENVOY_UID: ${PUID}
       ENVOY_GID: ${PGID}
     volumes:
       - envoy:/config:ro,z
-#    sysctls:
-#      net.ipv4.ip_forward: 1
-#      net.ipv4.conf.eth0.forwarding: 1
-#      net.ipv4.conf.eth0.route_localnet: 1
     labels:
       diun.enable: "true"
-
-  envoy-nftables:
-    <<: *default_service
-    image: atlas/nftables:${NFTABLES}
-    build: ./images/nftables
-    depends_on:
-      envoy:
-        condition: service_started
-    network_mode: service:envoy
-    cap_add:
-      - NET_ADMIN
 
   #
   # Backup.
@@ -723,11 +705,6 @@ networks:
     name: *proxy_ingress_network
   proxy_egress:
     <<: *internal_network
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.200.0.0/24
-          gateway: *proxy_egress_gateway
   # Internal special purpose networks.
   auth:
     <<: *internal_network

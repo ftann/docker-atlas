@@ -1,9 +1,0 @@
-FROM alpine:3.16
-
-RUN apk add --no-cache nftables tzdata
-
-COPY root/ /
-
-ENTRYPOINT ["nft"]
-
-CMD ["-f", "/nftables"]
