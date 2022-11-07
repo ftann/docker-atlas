@@ -25,6 +25,10 @@ static_resources:
                       domains: ["*"]
                       routes:
                         - match:
+                            prefix: "/"
+                          route:
+                            cluster: dynamic_forward_proxy_cluster
+                        - match:
                             connect_matcher: {}
                           route:
                             cluster: dynamic_forward_proxy_cluster
