@@ -23,7 +23,6 @@ x-default-task: &default_task
 x-default-service: &default_service
   environment: &default_service_environment
     <<: *default_environment
-    UMASK: ${UMASK}
 
 x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
 
