@@ -199,7 +199,7 @@ services:
     <<: *default_service
     image: nextcloud:${NEXTCLOUD}
     container_name: nextcloud
-    user: "${PUID}:${PGID}"
+    # user: "${PUID}:${PGID}"
     depends_on:
       - nextcloud-db
       - nextcloud-redis
@@ -314,6 +314,15 @@ services:
       traefik.http.routers.plex.entryPoints: "https"
       traefik.http.routers.plex.middlewares: "secured"
       traefik.http.services.plex.loadBalancer.server.port: "32400"
+
+  plex-nftables:
+    <<: *default_service
+    image: atlas/nftables:${NFTABLES}
+    build: ./images/nftables
+    command: "nft add rule ip nat OUTPUT tcp dport 443 dnat to envoy:10001"
+    cap_add:
+      - NET_ADMIN
+    network_mode: service:plex
 
   proton-bridge:
     <<: *default_service
