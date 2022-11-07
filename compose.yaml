@@ -89,8 +89,9 @@ services:
       AUTHELIA_NOTIFIER_SMTP_TLS_SKIP_VERIFY: "true"
       AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK: "true"
       AUTHELIA_SESSION_DOMAIN: ${DOMAIN}
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session
       AUTHELIA_SESSION_REDIS_HOST: authelia-redis
-      AUTHELIA_SESSION_REDIS_TLS_SKIP_VERIFY: "true"
+      AUTHELIA_SESSION_REDIS_PORT: 6379
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage
       AUTHELIA_STORAGE_MYSQL_HOST: authelia-db
       AUTHELIA_STORAGE_MYSQL_DATABASE: authelia
@@ -104,6 +105,7 @@ services:
       - authelia_identity_hmac
       - authelia_identity_key
       - authelia_jwt
+      - authelia_session
       - authelia_storage
       - ldap_auth
       - protonmail_password_bridge
@@ -729,6 +731,8 @@ secrets:
     file: ./secrets/authelia_identity_key
   authelia_jwt:
     file: ./secrets/authelia_jwt
+  authelia_session:
+    file: ./secrets/authelia_session
   authelia_storage:
     file: ./secrets/authelia_storage
   backblaze_id:
