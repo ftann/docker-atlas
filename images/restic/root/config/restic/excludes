@@ -9,8 +9,8 @@ logs
 .rnd
 .stversions
 
-*db/custom.cnf
-*db/databases
+*db/**/*
+!*db/*.sql
 *ldap/databases
 *ldap/initdb.d
 
