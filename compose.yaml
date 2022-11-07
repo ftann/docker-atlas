@@ -304,6 +304,8 @@ services:
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
+      VERSION: docker
+      # PLEX_CLAIM: "<token>"
     volumes:
       - plex:/config:z
       - ${VOLUME_MEDIA}:/data:z
