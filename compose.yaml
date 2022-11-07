@@ -349,7 +349,7 @@ services:
 
   syncthing:
     <<: *default_service
-    image: linuxserver/syncthing:${SYNCTHING}
+    image: syncthing/syncthing:${SYNCTHING}
     container_name: syncthing
     networks:
       - proxy_ingress
@@ -360,8 +360,8 @@ services:
       all_proxy: "${PROXY}"
       ALL_PROXY_NO_FALLBACK: 1
     volumes:
-      - syncthing:/config:z
-      - ${VOLUME_SYNC}:/data1:z
+      - syncthing:/var/syncthing:z
+      - ${VOLUME_SYNC}:/data:z
     labels:
       diun.enable: "true"
       traefik.enable: "true"
