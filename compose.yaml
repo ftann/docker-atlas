@@ -454,6 +454,8 @@ services:
       - "--providers.docker.exposedByDefault=false"
       - "--providers.file.directory=/config"
       - "--providers.file.watch=true"
+      - "--entryPoints.metrics=true"
+      - "--entryPoints.metrics.address=:9090"
       - "--entryPoints.http=true"
       - "--entryPoints.http.address=:8080"
       - "--entryPoints.http.forwardedHeaders.insecure=false"
@@ -473,7 +475,7 @@ services:
       - "--certificatesResolvers.le.acme.storage=/config/acme.json"
       - "--serversTransport.insecureSkipVerify=true"
       - "--metrics.prometheus=true"
-      - "--metrics.prometheus.entrypoint=http"
+      - "--metrics.prometheus.entrypoint=metrics"
       - "--global.checkNewVersion=false"
       - "--global.sendAnonymousUsage=false"
     networks:
@@ -551,7 +553,7 @@ services:
       - proxy_ingress
     labels:
       traefik.enable: "true"
-      traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
+      traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)" # TODO fix path
       traefik.http.routers.www.entryPoints: "https"
       traefik.http.routers.www.middlewares: "secured"
 
