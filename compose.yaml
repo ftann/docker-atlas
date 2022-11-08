@@ -442,98 +442,6 @@ services:
       chadburn.job-exec.teamspeak-backup.user: "mysql"
       chadburn.job-exec.teamspeak-backup.no-overlap: "true"
 
-  traefik:
-    <<: *default_service
-    image: traefik:${TRAEFIK}
-    container_name: traefik
-    depends_on:
-      init:
-        condition: service_completed_successfully
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedByDefault=false"
-      - "--providers.file.directory=/config"
-      - "--providers.file.watch=true"
-      - "--entryPoints.metrics=true"
-      - "--entryPoints.metrics.address=:9090"
-      - "--entryPoints.http=true"
-      - "--entryPoints.http.address=:8080"
-      - "--entryPoints.http.forwardedHeaders.insecure=false"
-      - "--entryPoints.http.proxyProtocol.insecure=true" # TODO false
-      - "--entryPoints.https=true"
-      - "--entryPoints.https.address=:8443"
-      - "--entryPoints.https.http.tls=true"
-      - "--entryPoints.https.http.tls.certResolver=le"
-      - "--entryPoints.https.http.tls.domains[0].main=${DOMAIN}"
-      - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
-      - "--entryPoints.https.forwardedHeaders.insecure=false"
-      - "--entryPoints.https.proxyProtocol.insecure=true" # TODO false
-      - "--entryPoints.teamspeakVoice.address=:9987/udp"
-      - "--entryPoints.teamspeakFileTransfer.address=:30033"
-      - "--entryPoints.syncthing.address=:22000"
-      - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
-      - "--certificatesResolvers.le.acme.storage=/config/acme.json"
-      - "--serversTransport.insecureSkipVerify=true"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.entrypoint=metrics"
-      - "--global.checkNewVersion=false"
-      - "--global.sendAnonymousUsage=false"
-    networks:
-      - ingress
-      - proxy_ingress
-    ports:
-      - "80:8080"
-      - "443:8443"
-      - "9987:9987/udp"
-      - "22000:22000"
-      - "30033:30033"
-    environment:
-      <<: *default_service_environment
-      CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik:/config:z
-    secrets:
-      - cloudflare
-    labels:
-      diun.enable: "true"
-      traefik.enable: "true"
-      traefik.docker.network: *proxy_ingress_network
-      # Middlewares.
-      # Https only.
-      traefik.http.middlewares.httpsOnly.redirectScheme.scheme: "https"
-      traefik.http.middlewares.httpsOnly.redirectScheme.permanent: "true"
-      # Rate limit.
-      traefik.http.middlewares.rateLimit.rateLimit.average: "100"
-      traefik.http.middlewares.rateLimit.rateLimit.burst: "50"
-      # Secure headers.
-      traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods: "GET,OPTIONS,PUT"
-      traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList: "https://${DOMAIN}"
-      traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge: "100"
-      traefik.http.middlewares.secureHeaders.headers.addVaryHeader: "true"
-      # traefik.http.middlewares.secureHeaders.headers.allowedHosts: "traefik.${DOMAIN}"
-      traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders: "X-Forwarded-Host"
-      traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto: "https"
-      traefik.http.middlewares.secureHeaders.headers.stsSeconds: "63072000"
-      traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains: "true"
-      traefik.http.middlewares.secureHeaders.headers.stsPreload: "true"
-      traefik.http.middlewares.secureHeaders.headers.forceSTSHeader: "true"
-      # traefik.http.middlewares.secureHeaders.headers.frameDeny: "true"
-      traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue: "SAMEORIGIN"
-      traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff: "true"
-      traefik.http.middlewares.secureHeaders.headers.browserXssFilter: "true"
-      # traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy: "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
-      traefik.http.middlewares.secureHeaders.headers.referrerPolicy: "same-origin"
-      traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
-      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
-      # SSO.
-      traefik.http.middlewares.sso.forwardAuth.address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
-      traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
-      traefik.http.middlewares.sso.forwardAuth.trustForwardHeader: "true"
-      # Chains.
-      traefik.http.middlewares.secured.chain.middlewares: "rateLimit,httpsOnly,secureHeaders"
-      traefik.http.middlewares.securedAuth.chain.middlewares: "secured,sso"
-
   udpxy:
     <<: *default_service
     image: atlas/udpxy:${UDPXY}
@@ -631,6 +539,98 @@ services:
       - envoy:/config:ro,z
     labels:
       diun.enable: "true"
+
+  traefik:
+    <<: *default_service
+    image: traefik:${TRAEFIK}
+    container_name: traefik
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.file.directory=/config"
+      - "--providers.file.watch=true"
+      - "--entryPoints.metrics=true"
+      - "--entryPoints.metrics.address=:9090"
+      - "--entryPoints.http=true"
+      - "--entryPoints.http.address=:8080"
+      - "--entryPoints.http.forwardedHeaders.insecure=false"
+      - "--entryPoints.http.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.https=true"
+      - "--entryPoints.https.address=:8443"
+      - "--entryPoints.https.http.tls=true"
+      - "--entryPoints.https.http.tls.certResolver=le"
+      - "--entryPoints.https.http.tls.domains[0].main=${DOMAIN}"
+      - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
+      - "--entryPoints.https.forwardedHeaders.insecure=false"
+      - "--entryPoints.https.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.teamspeakVoice.address=:9987/udp"
+      - "--entryPoints.teamspeakFileTransfer.address=:30033"
+      - "--entryPoints.syncthing.address=:22000"
+      - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.le.acme.storage=/config/acme.json"
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entrypoint=metrics"
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+    networks:
+      - ingress
+      - proxy_ingress
+    ports:
+      - "80:8080"
+      - "443:8443"
+      - "9987:9987/udp"
+      - "22000:22000"
+      - "30033:30033"
+    environment:
+      <<: *default_service_environment
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik:/config:z
+    secrets:
+      - cloudflare
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      # Middlewares.
+      # Https only.
+      traefik.http.middlewares.httpsOnly.redirectScheme.scheme: "https"
+      traefik.http.middlewares.httpsOnly.redirectScheme.permanent: "true"
+      # Rate limit.
+      traefik.http.middlewares.rateLimit.rateLimit.average: "100"
+      traefik.http.middlewares.rateLimit.rateLimit.burst: "50"
+      # Secure headers.
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods: "GET,OPTIONS,PUT"
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList: "https://${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge: "100"
+      traefik.http.middlewares.secureHeaders.headers.addVaryHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.allowedHosts: "traefik.${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders: "X-Forwarded-Host"
+      traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto: "https"
+      traefik.http.middlewares.secureHeaders.headers.stsSeconds: "63072000"
+      traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains: "true"
+      traefik.http.middlewares.secureHeaders.headers.stsPreload: "true"
+      traefik.http.middlewares.secureHeaders.headers.forceSTSHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.frameDeny: "true"
+      traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue: "SAMEORIGIN"
+      traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff: "true"
+      traefik.http.middlewares.secureHeaders.headers.browserXssFilter: "true"
+      # traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy: "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
+      traefik.http.middlewares.secureHeaders.headers.referrerPolicy: "same-origin"
+      traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
+      # SSO.
+      traefik.http.middlewares.sso.forwardAuth.address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
+      traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      traefik.http.middlewares.sso.forwardAuth.trustForwardHeader: "true"
+      # Chains.
+      traefik.http.middlewares.secured.chain.middlewares: "rateLimit,httpsOnly,secureHeaders"
+      traefik.http.middlewares.securedAuth.chain.middlewares: "secured,sso"
 
   #
   # Backup.
