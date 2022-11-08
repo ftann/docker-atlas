@@ -6,7 +6,7 @@ x-default-environment: &default_environment
   PGID: ${PGID}
 
 x-proxy-egress-environment: &proxy_egress_environment
-  http_proxy: &http_proxy "http://${PROXY}"
+  http_proxy: &http_proxy "http://envoy:10000"
   https_proxy: *http_proxy
   no_proxy: "127.0.0.1,localhost"
 
@@ -365,7 +365,7 @@ services:
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
-      all_proxy: "${PROXY}"
+      all_proxy: *http_proxy
       ALL_PROXY_NO_FALLBACK: 1
     volumes:
       - syncthing:/var/syncthing:z
