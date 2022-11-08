@@ -676,11 +676,9 @@ services:
       chadburn.enabled: "true"
       chadburn.job-exec.restic-backup.schedule: "30 3 * * *"
       chadburn.job-exec.restic-backup.command: "/bin/bash /app/restic-backup.sh"
-      chadburn.job-exec.restic-backup.user: "atlas"
       chadburn.job-exec.restic-backup.no-overlap: "true"
       chadburn.job-exec.restic-check.schedule: "30 8 1 * *"
       chadburn.job-exec.restic-check.command: "/bin/bash /app/restic-check.sh"
-      chadburn.job-exec.restic-check.user: "atlas"
       chadburn.job-exec.restic-check.no-overlap: "true"
 
 volumes:
