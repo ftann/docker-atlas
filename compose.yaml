@@ -5,6 +5,11 @@ x-default-environment: &default_environment
   PUID: ${PUID}
   PGID: ${PGID}
 
+x-database-environment: &database_environment
+  MARIADB_AUTO_UPGRADE: "true"
+  MARIADB_MYSQL_LOCALHOST_USER: "true"
+  MARIADB_MYSQL_LOCALHOST_GRANTS: "LOCK TABLES,SELECT,PROCESS"
+
 x-proxy-egress-environment: &proxy_egress_environment
   http_proxy: &http_proxy "http://envoy:10000"
   https_proxy: *http_proxy
@@ -125,13 +130,11 @@ services:
       - authelia_db
     environment:
       <<: *default_service_environment
+      <<: *database_environment
       MARIADB_DATABASE: authelia
       MARIADB_USER: authelia
       MARIADB_PASSWORD_FILE: /run/secrets/authelia_db
       MARIADB_ROOT_PASSWORD_FILE: /run/secrets/authelia_db
-      MARIADB_AUTO_UPGRADE: "true"
-      MARIADB_MYSQL_LOCALHOST_USER: "true"
-      MARIADB_MYSQL_LOCALHOST_GRANTS: "LOCK TABLES,SELECT,PROCESS"
     volumes:
       - authelia_db:/var/lib/mysql:z
     secrets:
@@ -267,13 +270,11 @@ services:
       - nextcloud_db
     environment:
       <<: *default_service_environment
+      <<: *database_environment
       MARIADB_DATABASE: nextcloud
       MARIADB_USER: nextcloud
       MARIADB_PASSWORD_FILE: /run/secrets/nextcloud_db
       MARIADB_ROOT_PASSWORD_FILE: /run/secrets/nextcloud_db
-      MARIADB_AUTO_UPGRADE: "true"
-      MARIADB_MYSQL_LOCALHOST_USER: "true"
-      MARIADB_MYSQL_LOCALHOST_GRANTS: "LOCK TABLES,SELECT,PROCESS"
     volumes:
       - nextcloud_db:/var/lib/mysql:z
     secrets:
@@ -423,13 +424,11 @@ services:
       - teamspeak_db
     environment:
       <<: *default_service_environment
+      <<: *database_environment
       MARIADB_DATABASE: teamspeak
       MARIADB_USER: teamspeak
       MARIADB_PASSWORD_FILE: /run/secrets/teamspeak_db
       MARIADB_ROOT_PASSWORD_FILE: /run/secrets/teamspeak_db
-      MARIADB_AUTO_UPGRADE: "true"
-      MARIADB_MYSQL_LOCALHOST_USER: "true"
-      MARIADB_MYSQL_LOCALHOST_GRANTS: "LOCK TABLES,SELECT,PROCESS"
     volumes:
       - teamspeak_db:/var/lib/mysql:z
     secrets:
