@@ -142,7 +142,7 @@ services:
     labels:
       diun.enable: "true"
       chadburn.enabled: "true"
-      chadburn.job-exec.authelia-backup.command: "mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql"
+      chadburn.job-exec.authelia-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
       chadburn.job-exec.authelia-backup.user: "mysql"
       chadburn.job-exec.authelia-backup.no-overlap: "true"
@@ -282,7 +282,7 @@ services:
     labels:
       diun.enable: "true"
       chadburn.enabled: "true"
-      chadburn.job-exec.nextcloud-backup.command: "mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql"
+      chadburn.job-exec.nextcloud-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
       chadburn.job-exec.nextcloud-backup.user: "mysql"
       chadburn.job-exec.nextcloud-backup.no-overlap: "true"
@@ -436,7 +436,7 @@ services:
     labels:
       diun.enable: "true"
       chadburn.enabled: "true"
-      chadburn.job-exec.teamspeak-backup.command: "mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql"
+      chadburn.job-exec.teamspeak-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
       chadburn.job-exec.teamspeak-backup.user: "mysql"
       chadburn.job-exec.teamspeak-backup.no-overlap: "true"
