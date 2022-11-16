@@ -486,9 +486,10 @@ services:
     image: premoweb/chadburn:${CHADBURN}
     container_name: chadburn
     command: daemon --metrics
-    network_mode: none
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - socket-proxy
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
     labels:
       diun.enable: "true"
 
@@ -498,10 +499,12 @@ services:
     container_name: diun
     networks:
       - proxy_egress
+      - socket-proxy
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
       DIUN_PROVIDERS_DOCKER: "true"
+      DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
       DIUN_WATCH_SCHEDULE: "0 1 * * *"
       DIUN_NOTIF_MAIL_HOST: proton-bridge
       DIUN_NOTIF_MAIL_PORT: 25
@@ -512,7 +515,6 @@ services:
       DIUN_NOTIF_MAIL_INSECURESKIPVERIFY: "true"
       LOG_LEVEL: "error"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro,z
       - diun:/data
     secrets:
       - protonmail_password_bridge
@@ -539,6 +541,27 @@ services:
     labels:
       diun.enable: "true"
 
+  socket-proxy:
+    <<: *default_service
+    image: tecnativa/docker-socket-proxy:${SOCKET_PROXY}
+    container_name: socket-proxy
+    networks:
+      - docker-proxy
+    environment:
+      <<: *default_service_environment
+      LOG_LEVEL: error
+      # chadburn: CONTAINERS, EXEC, IMAGES, NETWORKS, TASKS, SERVICES
+      # diun: CONTAINERS, IMAGES
+      # traefik: NETWORKS, SERVICES, TASKS
+      CONTAINERS: 1
+      EXEC: 1
+      IMAGES: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+
   traefik:
     <<: *default_service
     image: traefik:${TRAEFIK}
@@ -548,6 +571,7 @@ services:
         condition: service_completed_successfully
     command:
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://socket-proxy:2375"
       - "--providers.docker.exposedByDefault=false"
       - "--providers.file.directory=/config"
       - "--providers.file.watch=true"
@@ -578,6 +602,7 @@ services:
     networks:
       - ingress
       - proxy_ingress
+      - socket-proxy
     ports:
       - "80:8080"
       - "443:8443"
@@ -588,7 +613,6 @@ services:
       <<: *default_service_environment
       CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik:/config:z
     secrets:
       - cloudflare
@@ -727,6 +751,8 @@ networks:
   auth:
     <<: *internal_network
   mail:
+    <<: *internal_network
+  socket-proxy:
     <<: *internal_network
   # Internal database networks.
   authelia_db:
