@@ -1,6 +1,6 @@
 # Atlas
 
-__The Atlas collection provides a collection of containers that are configured to work as private cloud.__
+__The Atlas collection provides a set of containers that are configured to work as private cloud.__
 
 Included are a LDAP backend and OIDC provider for SSO and user management.<br/>
 Nextcloud for file management, Syncthing as file synchronization service and Plex to serve media content.<br/>
