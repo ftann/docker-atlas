@@ -205,16 +205,15 @@ services:
     <<: *default_service
     image: nextcloud:${NEXTCLOUD}
     container_name: nextcloud
-    # user: "${PUID}:${PGID}"
     depends_on:
       - nextcloud-db
       - nextcloud-redis
     networks:
       - auth
       - mail
+      - nextcloud
       - nextcloud_db
       - nextcloud_redis
-      - proxy_ingress
       - proxy_egress
     environment:
       <<: *default_service_environment
@@ -236,7 +235,6 @@ services:
       MAIL_DOMAIN: "${DOMAIN}"
       PHP_MEMORY_LIMIT: 4096M
       PHP_UPLOAD_LIMIT: 4096M
-      # TRUSTED_PROXIES: ""
     volumes:
       - nextcloud:/var/www/html:z
       - ${VOLUME_NEXTCLOUD}:/data:z
@@ -254,13 +252,6 @@ services:
       chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/html/cron.php"
       chadburn.job-exec.nextcloud-cron.user: "www-data"
       chadburn.job-exec.nextcloud-cron.no-overlap: "true"
-      traefik.enable: "true"
-      traefik.docker.network: *proxy_ingress_network
-      traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
-      traefik.http.routers.nextcloud.entryPoints: "https"
-      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
-      traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
-      traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
 
   nextcloud-db:
     <<: *default_service
@@ -297,6 +288,28 @@ services:
       - nextcloud_redis:/data:z
     labels:
       diun.enable: "true"
+
+  nextcloud-web:
+    <<: *default_service
+    image: atlas/nextcloud-web:${NEXTCLOUD_WEB}
+    build: ./images/nextcloud-web
+    container_name: nextcloud-web
+    depends_on:
+      - nextcloud
+    networks:
+      - nextcloud
+      - proxy_ingress
+    volumes_from:
+      - nextcloud
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
+      traefik.http.routers.nextcloud.entryPoints: "https"
+      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
+      traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
+      traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
 
   plex:
     <<: *default_service
@@ -751,6 +764,8 @@ networks:
   auth:
     <<: *internal_network
   mail:
+    <<: *internal_network
+  nextcloud:
     <<: *internal_network
   socket-proxy:
     <<: *internal_network
