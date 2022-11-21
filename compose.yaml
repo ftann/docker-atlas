@@ -1,9 +1,17 @@
 name: atlas
 
-x-default-environment: &default_environment
-  TZ: ${TZ}
-  PUID: ${PUID}
-  PGID: ${PGID}
+x-default-service: &default_service
+  environment: &default_service_environment
+    TZ: ${TZ}
+
+x-default-task: &default_task
+  <<: *default_service_environment
+  # TODO wait for fix in compose >= v2.12.2
+#  deploy:
+#    restart_policy:
+#      condition: none
+  restart: "no"
+  network_mode: none
 
 x-database-environment: &database_environment
   MARIADB_AUTO_UPGRADE: "true"
@@ -14,20 +22,6 @@ x-proxy-egress-environment: &proxy_egress_environment
   http_proxy: &http_proxy "http://envoy:10000"
   https_proxy: *http_proxy
   no_proxy: "127.0.0.1,localhost"
-
-x-default-task: &default_task
-  # TODO wait for fix in compose >= v2.12.2
-#  deploy:
-#    restart_policy:
-#      condition: none
-  restart: "no"
-  environment:
-    <<: *default_environment
-  network_mode: none
-
-x-default-service: &default_service
-  environment: &default_service_environment
-    <<: *default_environment
 
 x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
 
@@ -205,6 +199,7 @@ services:
     <<: *default_service
     image: nextcloud:${NEXTCLOUD}
     container_name: nextcloud
+    user: "${PUID}:${PGID}"
     depends_on:
       - nextcloud-db
       - nextcloud-redis
@@ -226,7 +221,6 @@ services:
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
       MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db
-      REDIS_HOST: nextcloud-redis
       SMTP_HOST: proton-bridge
       SMTP_PORT: 25
       SMTP_NAME: "admin@${DOMAIN}"
@@ -278,17 +272,6 @@ services:
       chadburn.job-exec.nextcloud-backup.user: "mysql"
       chadburn.job-exec.nextcloud-backup.no-overlap: "true"
 
-  nextcloud-redis:
-    <<: *default_service
-    image: redis:${REDIS}
-    container_name: nextcloud-redis
-    networks:
-      - nextcloud_redis
-    volumes:
-      - nextcloud_redis:/data:z
-    labels:
-      diun.enable: "true"
-
   nextcloud-web:
     <<: *default_service
     image: atlas/nextcloud-web:${NEXTCLOUD_WEB}
@@ -321,6 +304,8 @@ services:
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
+      PUID: ${PUID}
+      PGID: ${PGID}
       VERSION: docker
       # PLEX_CLAIM: "<token>"
     volumes:
@@ -379,6 +364,8 @@ services:
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
+      PUID: ${PUID}
+      PGID: ${PGID}
       all_proxy: *http_proxy
       ALL_PROXY_NO_FALLBACK: 1
     volumes:
@@ -461,6 +448,7 @@ services:
     container_name: udpxy
     read_only: true
     network_mode: host
+    userns_mode: host
 
   www:
     <<: *default_service
@@ -545,10 +533,6 @@ services:
     networks:
       - egress
       - proxy_egress
-    environment:
-      <<: *default_service_environment
-      ENVOY_UID: ${PUID}
-      ENVOY_GID: ${PGID}
     volumes:
       - envoy:/config:ro,z
     labels:
@@ -558,6 +542,7 @@ services:
     <<: *default_service
     image: tecnativa/docker-socket-proxy:${SOCKET_PROXY}
     container_name: socket-proxy
+    userns_mode: host
     networks:
       - docker-proxy
     environment:
@@ -728,7 +713,6 @@ volumes:
   ldap:
   nextcloud:
   nextcloud_db:
-  nextcloud_redis:
   plex:
   proton-bridge:
   restic:
@@ -775,8 +759,6 @@ networks:
   authelia_redis:
     <<: *internal_network
   nextcloud_db:
-    <<: *internal_network
-  nextcloud_redis:
     <<: *internal_network
   teamspeak_db:
     <<: *internal_network
