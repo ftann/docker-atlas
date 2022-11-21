@@ -5,7 +5,7 @@ x-default-service: &default_service
     TZ: ${TZ}
 
 x-default-task: &default_task
-  <<: *default_service_environment
+  <<: *default_service
   # TODO wait for fix in compose >= v2.12.2
 #  deploy:
 #    restart_policy:
@@ -202,13 +202,11 @@ services:
     user: "${PUID}:${PGID}"
     depends_on:
       - nextcloud-db
-      - nextcloud-redis
     networks:
       - auth
       - mail
       - nextcloud
       - nextcloud_db
-      - nextcloud_redis
       - proxy_egress
     environment:
       <<: *default_service_environment
@@ -487,6 +485,8 @@ services:
     image: premoweb/chadburn:${CHADBURN}
     container_name: chadburn
     command: daemon --metrics
+    depends_on:
+      - socket-proxy
     networks:
       - socket-proxy
     environment:
@@ -498,6 +498,8 @@ services:
     <<: *default_service
     image: crazymax/diun:${DIUN}
     container_name: diun
+    depends_on:
+      - socket-proxy
     networks:
       - proxy_egress
       - socket-proxy
@@ -544,16 +546,18 @@ services:
     container_name: socket-proxy
     userns_mode: host
     networks:
-      - docker-proxy
+      - socket-proxy
     environment:
       <<: *default_service_environment
-      LOG_LEVEL: error
-      # chadburn: CONTAINERS, EXEC, IMAGES, NETWORKS, TASKS, SERVICES
+      LOG_LEVEL: err
+      POST: 1
+      # chadburn: CONTAINERS, EXEC, IMAGES, INFO, NETWORKS, TASKS, SERVICES
       # diun: CONTAINERS, IMAGES
       # traefik: NETWORKS, SERVICES, TASKS
       CONTAINERS: 1
       EXEC: 1
       IMAGES: 1
+      INFO: 1
       NETWORKS: 1
       SERVICES: 1
       TASKS: 1
@@ -567,6 +571,8 @@ services:
     depends_on:
       init:
         condition: service_completed_successfully
+      socket-proxy:
+        condition: service_started
     command:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://socket-proxy:2375"
