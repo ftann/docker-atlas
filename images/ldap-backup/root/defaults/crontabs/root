@@ -1,1 +1,0 @@
-{{ LDAP_BACKUP_SCHEDULE }} /app/ldap-backup.sh

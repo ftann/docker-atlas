@@ -1,5 +1,11 @@
-#!/command/with-contenv bash
+#!/usr/bin/env bash
 
-[[ -f /config/restic/options ]] && . /config/restic/options
+set -euo pipefail
 
-s6-setuidgid abc restic restore "${RESTIC_OPTIONS[@]}" "$@"
+. /app/env.sh
+
+file_env 'AWS_ACCESS_KEY_ID'
+file_env 'AWS_SECRET_ACCESS_KEY'
+file_env 'RESTIC_PASSWORD'
+
+restic restore "$@"

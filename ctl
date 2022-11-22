@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-. ./scripts/util/ask.sh
-. ./scripts/util/root.sh
-. ./scripts/util/run.sh
+. ./scripts/inc.sh
 
 install() {
   check_root
@@ -12,22 +10,19 @@ install() {
 }
 
 up() {
-  docker-compose config -q
-  docker-compose build --parallel
-  docker-compose pull
-  docker-compose up -d --remove-orphans
+  docker compose up -d --build --remove-orphans
 }
 
 down() {
-  docker-compose down --remove-orphans
+  docker compose down --remove-orphans
 }
 
 uninstall() {
   check_root
   if ask; then
     # Don't remove volumes and secrets!
-    docker-compose down --rmi all
-    docker-compose rm
+    docker compose down --rmi all
+    docker compose rm
     ./scripts/rm-fwrules.sh
   fi
 }
@@ -43,6 +38,30 @@ clean() {
 
 status() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+}
+
+print_usage() {
+  cat << EOF
+usage: ctl COMMAND
+
+Commands:
+
+install     creates networks and firewall rules, volumes and secrets
+up          builds and starts the containers
+down        stops the containers
+uninstall   stops and removes the containers
+clean       removes unneeded containers, images, networks and volumes
+status      displays current container status
+EOF
+}
+
+run_if_defined() {
+  if declare -f "$1" >/dev/null; then
+    "$@"
+  else
+    print_usage
+    exit 1
+  fi
 }
 
 run_if_defined "$@"

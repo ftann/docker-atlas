@@ -1,6 +1,6 @@
 # Atlas
 
-__The Atlas collection provides a collection of containers that are configured to work as private cloud.__
+__The Atlas collection provides a set of containers that are configured to work as private cloud.__
 
 Included are a LDAP backend and OIDC provider for SSO and user management.<br/>
 Nextcloud for file management, Syncthing as file synchronization service and Plex to serve media content.<br/>
@@ -19,8 +19,10 @@ A working server installation is required (preferably fedora due to selinux). Th
 ### Software
 
 - Docker
-- Docker-compose >= 1.29
+- Docker compose plugin >= 2
 - Firewalld
+
+> The docker compose plugins is required.
 
 ### Credentials
 
