@@ -1,0 +1,811 @@
+name: atlas
+
+x-default-service: &default_service
+  environment: &default_service_environment
+    TZ: ${TZ}
+
+x-default-task: &default_task
+  <<: *default_service
+  # TODO wait for fix in compose >= v2.12.2
+#  deploy:
+#    restart_policy:
+#      condition: none
+  restart: "no"
+  network_mode: none
+
+x-database-environment: &database_environment
+  MARIADB_AUTO_UPGRADE: "true"
+  MARIADB_MYSQL_LOCALHOST_USER: "true"
+  MARIADB_MYSQL_LOCALHOST_GRANTS: "LOCK TABLES,SELECT,PROCESS"
+
+x-proxy-egress-environment: &proxy_egress_environment
+  http_proxy: &http_proxy "http://envoy:10000"
+  https_proxy: *http_proxy
+  no_proxy: "127.0.0.1,localhost"
+
+x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
+
+x-internal-network: &internal_network
+  driver_opts:
+    com.docker.network.bridge.enable_ip_masquerade: "false"
+
+x-external-network: &external_network
+  enable_ipv6: true
+  driver_opts:
+    com.docker.network.bridge.enable_icc: "false"
+
+services:
+
+  #
+  # Services.
+  #
+
+  init:
+    <<: *default_task
+    image: atlas/init:${INIT}
+    build: ./images/init
+    container_name: atlas-init
+    volumes:
+      - authelia:/config/authelia:z
+      - envoy:/config/envoy:z
+      - ldap:/config/ldap:z
+      - traefik:/config/traefik:z
+
+  authelia:
+    <<: *default_service
+    image: authelia/authelia:${AUTHELIA}
+    container_name: authelia
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      authelia-db:
+        condition: service_started
+      proton-bridge:
+        condition: service_started
+      authelia-redis:
+        condition: service_started
+    networks:
+      - auth
+      - authelia_db
+      - authelia_redis
+      - mail
+      - proxy_ingress
+    environment:
+      <<: *default_service_environment
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_URL: ldaps://ldap
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: cn=auth,dc=domain,dc=com
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: dc=domain,dc=com
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_auth
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_hmac
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /run/secrets/authelia_identity_key
+      AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt
+      AUTHELIA_NOTIFIER_SMTP_HOST: proton-bridge
+      AUTHELIA_NOTIFIER_SMTP_PORT: 25
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: admin@${DOMAIN}
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
+      AUTHELIA_NOTIFIER_SMTP_SENDER: "SSO <admin@${DOMAIN}>"
+      AUTHELIA_NOTIFIER_SMTP_TLS_SKIP_VERIFY: "true"
+      AUTHELIA_NOTIFIER_DISABLE_STARTUP_CHECK: "true"
+      AUTHELIA_SESSION_DOMAIN: ${DOMAIN}
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session
+      AUTHELIA_SESSION_REDIS_HOST: authelia-redis
+      AUTHELIA_SESSION_REDIS_PORT: 6379
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage
+      AUTHELIA_STORAGE_MYSQL_HOST: authelia-db
+      AUTHELIA_STORAGE_MYSQL_DATABASE: authelia
+      AUTHELIA_STORAGE_MYSQL_USERNAME: authelia
+      AUTHELIA_STORAGE_MYSQL_PASSWORD_FILE: /run/secrets/authelia_db
+      AUTHELIA_TOTP_ISSUER: ${DOMAIN}
+    volumes:
+      - authelia:/config:z
+    secrets:
+      - authelia_db
+      - authelia_identity_hmac
+      - authelia_identity_key
+      - authelia_jwt
+      - authelia_session
+      - authelia_storage
+      - ldap_auth
+      - protonmail_password_bridge
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.authelia.rule: "Host(`sso.${DOMAIN}`)"
+      traefik.http.routers.authelia.entryPoints: "https"
+      traefik.http.routers.authelia.middlewares: "secured"
+      traefik.http.services.authelia.loadBalancer.server.port: "9091"
+
+  authelia-db:
+    <<: *default_service
+    image: mariadb:${MARIADB}
+    container_name: authelia-db
+    networks:
+      - authelia_db
+    environment:
+      <<: *default_service_environment
+      <<: *database_environment
+      MARIADB_DATABASE: authelia
+      MARIADB_USER: authelia
+      MARIADB_PASSWORD_FILE: /run/secrets/authelia_db
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/authelia_db
+    volumes:
+      - authelia_db:/var/lib/mysql:z
+    secrets:
+      - authelia_db
+    labels:
+      diun.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.authelia-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
+      chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
+      chadburn.job-exec.authelia-backup.user: "mysql"
+      chadburn.job-exec.authelia-backup.no-overlap: "true"
+
+  authelia-redis:
+    <<: *default_service
+    image: redis:${REDIS}
+    container_name: authelia-redis
+    networks:
+      - authelia_redis
+    volumes:
+      - authelia_redis:/data:z
+    labels:
+      diun.enable: "true"
+
+  inadyn:
+    <<: *default_service
+    image: atlas/inadyn:${INADYN}
+    build: ./images/inadyn
+    container_name: inadyn
+    read_only: true
+    networks:
+      - egress # Proxy not supported.
+    secrets:
+      - inadyn
+
+  ldap:
+    <<: *default_service
+    image: atlas/ldap:${LDAP}
+    build: ./images/ldap
+    container_name: ldap
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      - auth
+    environment:
+      <<: *default_service_environment
+      DOMAIN: ${DOMAIN}
+      LDAP_BIND_USER: auth
+      LDAP_BIND_PASSWORD_FILE: /run/secrets/ldap_auth
+      LDAP_CONFIG_PASSWORD_FILE: /run/secrets/ldap_db
+      LDAP_ROOT: root
+      LDAP_ROOT_PASSWORD_FILE: /run/secrets/ldap_db
+    volumes:
+      - ldap:/config:z
+    secrets:
+      - ldap_auth
+      - ldap_db
+    ulimits:
+      nofile: 1024
+    labels:
+      chadburn.enabled: "true"
+      chadburn.job-exec.ldap-backup.command: "/bin/bash /app/ldap-backup.sh"
+      chadburn.job-exec.ldap-backup.schedule: "30 2 * * *"
+      chadburn.job-exec.ldap-backup.user: "atlas"
+      chadburn.job-exec.ldap-backup.no-overlap: "true"
+
+  nextcloud:
+    <<: *default_service
+    image: nextcloud:${NEXTCLOUD}
+    container_name: nextcloud
+    user: "${PUID}:${PGID}"
+    depends_on:
+      - nextcloud-db
+    networks:
+      - auth
+      - mail
+      - nextcloud
+      - nextcloud_db
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin
+      NEXTCLOUD_DATA_DIR: /data
+      NEXTCLOUD_TRUSTED_DOMAINS: "cloud.${DOMAIN}"
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db
+      SMTP_HOST: proton-bridge
+      SMTP_PORT: 25
+      SMTP_NAME: "admin@${DOMAIN}"
+      SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
+      MAIL_FROM_ADDRESS: "admin"
+      MAIL_DOMAIN: "${DOMAIN}"
+      TRUSTED_PROXIES: "192.168.0.0/16 172.17.0.0/12"
+      PHP_MEMORY_LIMIT: 4096M
+      PHP_UPLOAD_LIMIT: 4096M
+    volumes:
+      - nextcloud:/var/www/html:z
+      - ${VOLUME_NEXTCLOUD}:/data:z
+      - ${VOLUME_MEDIA}:/media:z
+      - ${VOLUME_POOL}:/pool:z
+      - ${VOLUME_SYNC}:/sync:z
+    secrets:
+      - nextcloud_admin
+      - nextcloud_db
+      - protonmail_password_bridge
+    labels:
+      diun.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.nextcloud-cron.schedule: "@every 5m"
+      chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/html/cron.php"
+      chadburn.job-exec.nextcloud-cron.user: "${PUID}"
+      chadburn.job-exec.nextcloud-cron.no-overlap: "true"
+
+  nextcloud-db:
+    <<: *default_service
+    image: mariadb:${MARIADB}
+    container_name: nextcloud-db
+    networks:
+      - nextcloud_db
+    environment:
+      <<: *default_service_environment
+      <<: *database_environment
+      MARIADB_DATABASE: nextcloud
+      MARIADB_USER: nextcloud
+      MARIADB_PASSWORD_FILE: /run/secrets/nextcloud_db
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/nextcloud_db
+    volumes:
+      - nextcloud_db:/var/lib/mysql:z
+    secrets:
+      - nextcloud_db
+    labels:
+      diun.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.nextcloud-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
+      chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
+      chadburn.job-exec.nextcloud-backup.user: "mysql"
+      chadburn.job-exec.nextcloud-backup.no-overlap: "true"
+
+  nextcloud-web:
+    <<: *default_service
+    image: atlas/nextcloud-web:${NEXTCLOUD_WEB}
+    build: ./images/nextcloud-web
+    container_name: nextcloud-web
+    depends_on:
+      - nextcloud
+    networks:
+      - nextcloud
+      - proxy_ingress
+    volumes_from:
+      - nextcloud
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
+      traefik.http.routers.nextcloud.entryPoints: "https"
+      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
+      traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
+      traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
+
+  plex:
+    <<: *default_service
+    image: linuxserver/plex:${PLEX}
+    container_name: plex
+    networks:
+      - proxy_ingress
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      PUID: ${PUID}
+      PGID: ${PGID}
+      VERSION: docker
+      # PLEX_CLAIM: "<token>"
+    volumes:
+      - plex:/config:z
+      - ${VOLUME_MEDIA}:/data:z
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.plex.rule: "Host(`media.${DOMAIN}`)"
+      traefik.http.routers.plex.entryPoints: "https"
+      traefik.http.routers.plex.middlewares: "secured"
+      traefik.http.services.plex.loadBalancer.server.port: "32400"
+
+  plex-nftables:
+    <<: *default_service
+    image: atlas/nftables:${NFTABLES}
+    build: ./images/nftables
+    depends_on:
+      - envoy
+    command: "nft add rule ip nat OUTPUT tcp dport 443 dnat to envoy:10001"
+    cap_add:
+      - NET_ADMIN
+    network_mode: service:plex
+
+  proton-bridge:
+    <<: *default_service
+    image: atlas/proton-bridge:${PROTON_BRIDGE}
+    build: ./images/proton-bridge
+    container_name: proton-bridge
+    networks:
+      - mail
+      - proxy_egress
+    ports:
+      - "25:25"
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
+      PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
+      PROTONMAIL_PASSWORD_MAILBOX_FILE: /run/secrets/protonmail_password_mailbox
+    volumes:
+      - proton-bridge:/config:z
+      - ./secrets/protonmail_password_bridge:/config/protonmail_password_bridge:z
+    secrets:
+      - protonmail_password
+      - protonmail_password_mailbox
+
+  syncthing:
+    <<: *default_service
+    image: syncthing/syncthing:${SYNCTHING}
+    container_name: syncthing
+    networks:
+      - proxy_ingress
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      PUID: ${PUID}
+      PGID: ${PGID}
+      all_proxy: *http_proxy
+      ALL_PROXY_NO_FALLBACK: 1
+    volumes:
+      - syncthing:/var/syncthing:z
+      - ${VOLUME_SYNC}:/data:z
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
+      traefik.http.routers.syncthing.entryPoints: "https"
+      traefik.http.routers.syncthing.middlewares: "securedAuth"
+      traefik.http.services.syncthing.loadBalancer.server.port: "8384"
+      traefik.tcp.routers.syncthing.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.syncthing.entryPoints: "syncthing"
+      traefik.tcp.services.syncthing.loadBalancer.server.port: "22000"
+
+  teamspeak:
+    <<: *default_service
+    image: teamspeak:${TEAMSPEAK}
+    container_name: teamspeak
+    depends_on:
+      - teamspeak-db
+    networks:
+      - proxy_ingress
+      - teamspeak_db
+    environment:
+      <<: *default_service_environment
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeak-db
+      TS3SERVER_DB_USER: teamspeak
+      TS3SERVER_DB_PASSWORD_FILE: /run/secrets/teamspeak_db
+      TS3SERVER_DB_NAME: teamspeak
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
+    volumes:
+      - teamspeak:/var/ts3server:z
+    secrets:
+      - teamspeak_db
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.tcp.routers.teamspeak.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.teamspeak.entryPoints: "teamspeakFileTransfer"
+      traefik.tcp.services.teamspeak.loadBalancer.server.port: "30033"
+      traefik.udp.routers.teamspeak.entryPoints: "teamspeakVoice"
+      traefik.udp.services.teamspeak.loadBalancer.server.port: "9987"
+
+  teamspeak-db:
+    <<: *default_service
+    image: mariadb:${MARIADB}
+    container_name: teamspeak-db
+    networks:
+      - teamspeak_db
+    environment:
+      <<: *default_service_environment
+      <<: *database_environment
+      MARIADB_DATABASE: teamspeak
+      MARIADB_USER: teamspeak
+      MARIADB_PASSWORD_FILE: /run/secrets/teamspeak_db
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/teamspeak_db
+    volumes:
+      - teamspeak_db:/var/lib/mysql:z
+    secrets:
+      - teamspeak_db
+    labels:
+      diun.enable: "true"
+      chadburn.enabled: "true"
+      chadburn.job-exec.teamspeak-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
+      chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
+      chadburn.job-exec.teamspeak-backup.user: "mysql"
+      chadburn.job-exec.teamspeak-backup.no-overlap: "true"
+
+  udpxy:
+    <<: *default_service
+    image: atlas/udpxy:${UDPXY}
+    build: ./images/udpxy
+    container_name: udpxy
+    read_only: true
+    network_mode: host
+    userns_mode: host
+
+  www:
+    <<: *default_service
+    image: atlas/www:${WWW}
+    build: ./images/www
+    container_name: www
+    logging:
+      driver: none
+    networks:
+      - proxy_ingress
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
+      traefik.http.routers.www.entryPoints: "https"
+      traefik.http.routers.www.middlewares: "secured"
+
+  #
+  # Infrastructure.
+  #
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    networks:
+      - ingress
+      - authelia_db
+      - nextcloud_db
+      - teamspeak_db
+    ports:
+      - "8080:8080"
+    profiles:
+      - debug
+
+  chadburn:
+    <<: *default_service
+    image: premoweb/chadburn:${CHADBURN}
+    container_name: chadburn
+    command: daemon --metrics
+    depends_on:
+      - socket-proxy
+    networks:
+      - socket-proxy
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+    labels:
+      diun.enable: "true"
+
+  diun:
+    <<: *default_service
+    image: crazymax/diun:${DIUN}
+    container_name: diun
+    depends_on:
+      - socket-proxy
+    networks:
+      - proxy_egress
+      - socket-proxy
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      DIUN_PROVIDERS_DOCKER: "true"
+      DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
+      DIUN_WATCH_SCHEDULE: "0 1 * * *"
+      DIUN_NOTIF_MAIL_HOST: proton-bridge
+      DIUN_NOTIF_MAIL_PORT: 25
+      DIUN_NOTIF_MAIL_USERNAME: "admin@${DOMAIN}"
+      DIUN_NOTIF_MAIL_PASSWORDFILE: /run/secrets/protonmail_password_bridge
+      DIUN_NOTIF_MAIL_FROM: "admin@${DOMAIN}"
+      DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
+      DIUN_NOTIF_MAIL_INSECURESKIPVERIFY: "true"
+      LOG_LEVEL: "error"
+    volumes:
+      - diun:/data
+    secrets:
+      - protonmail_password_bridge
+    labels:
+      diun.enable: "true"
+
+  envoy:
+    <<: *default_service
+    image: envoyproxy/envoy-distroless:${ENVOY}
+    container_name: envoy
+    command: "-c /config/envoy.yaml"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      - egress
+      - proxy_egress
+    volumes:
+      - envoy:/config:ro,z
+    labels:
+      diun.enable: "true"
+
+  socket-proxy:
+    <<: *default_service
+    image: tecnativa/docker-socket-proxy:${SOCKET_PROXY}
+    container_name: socket-proxy
+    userns_mode: host
+    networks:
+      - socket-proxy
+    environment:
+      <<: *default_service_environment
+      LOG_LEVEL: err
+      POST: 1
+      # chadburn: CONTAINERS, EXEC, IMAGES, INFO, NETWORKS, TASKS, SERVICES
+      # diun: CONTAINERS, IMAGES
+      # traefik: NETWORKS, SERVICES, TASKS
+      CONTAINERS: 1
+      EXEC: 1
+      IMAGES: 1
+      INFO: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+
+  traefik:
+    <<: *default_service
+    image: traefik:${TRAEFIK}
+    container_name: traefik
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      socket-proxy:
+        condition: service_started
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://socket-proxy:2375"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.file.directory=/config"
+      - "--providers.file.watch=true"
+      - "--entryPoints.metrics=true"
+      - "--entryPoints.metrics.address=:9090"
+      - "--entryPoints.http=true"
+      - "--entryPoints.http.address=:8080"
+      - "--entryPoints.http.forwardedHeaders.insecure=false"
+      - "--entryPoints.http.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.https=true"
+      - "--entryPoints.https.address=:8443"
+      - "--entryPoints.https.http.tls=true"
+      - "--entryPoints.https.http.tls.certResolver=le"
+      - "--entryPoints.https.http.tls.domains[0].main=${DOMAIN}"
+      - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
+      - "--entryPoints.https.forwardedHeaders.insecure=false"
+      - "--entryPoints.https.proxyProtocol.insecure=true" # TODO false
+      - "--entryPoints.teamspeakVoice.address=:9987/udp"
+      - "--entryPoints.teamspeakFileTransfer.address=:30033"
+      - "--entryPoints.syncthing.address=:22000"
+      - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.le.acme.storage=/config/acme.json"
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entrypoint=metrics"
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+    networks:
+      - ingress
+      - proxy_ingress
+      - socket-proxy
+    ports:
+      - "80:8080"
+      - "443:8443"
+      - "9987:9987/udp"
+      - "22000:22000"
+      - "30033:30033"
+    environment:
+      <<: *default_service_environment
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
+    volumes:
+      - traefik:/config:z
+    secrets:
+      - cloudflare
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      # Middlewares.
+      # Https only.
+      traefik.http.middlewares.httpsOnly.redirectScheme.scheme: "https"
+      traefik.http.middlewares.httpsOnly.redirectScheme.permanent: "true"
+      # Rate limit.
+      traefik.http.middlewares.rateLimit.rateLimit.average: "100"
+      traefik.http.middlewares.rateLimit.rateLimit.burst: "50"
+      # Secure headers.
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowMethods: "GET,OPTIONS,PUT"
+      traefik.http.middlewares.secureHeaders.headers.accessControlAllowOriginList: "https://${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.accessControlMaxAge: "100"
+      traefik.http.middlewares.secureHeaders.headers.addVaryHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.allowedHosts: "traefik.${DOMAIN}"
+      traefik.http.middlewares.secureHeaders.headers.hostsProxyHeaders: "X-Forwarded-Host"
+      traefik.http.middlewares.secureHeaders.headers.sslProxyHeaders.X-Forwarded-Proto: "https"
+      traefik.http.middlewares.secureHeaders.headers.stsSeconds: "63072000"
+      traefik.http.middlewares.secureHeaders.headers.stsIncludeSubdomains: "true"
+      traefik.http.middlewares.secureHeaders.headers.stsPreload: "true"
+      traefik.http.middlewares.secureHeaders.headers.forceSTSHeader: "true"
+      # traefik.http.middlewares.secureHeaders.headers.frameDeny: "true"
+      traefik.http.middlewares.secureHeaders.headers.customFrameOptionsValue: "SAMEORIGIN"
+      traefik.http.middlewares.secureHeaders.headers.contentTypeNosniff: "true"
+      traefik.http.middlewares.secureHeaders.headers.browserXssFilter: "true"
+      # traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy: "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
+      traefik.http.middlewares.secureHeaders.headers.referrerPolicy: "same-origin"
+      traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
+      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
+      # SSO.
+      traefik.http.middlewares.sso.forwardAuth.address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
+      traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      traefik.http.middlewares.sso.forwardAuth.trustForwardHeader: "true"
+      # Chains.
+      traefik.http.middlewares.secured.chain.middlewares: "rateLimit,httpsOnly,secureHeaders"
+      traefik.http.middlewares.securedAuth.chain.middlewares: "secured,sso"
+
+  #
+  # Backup.
+  #
+
+  restic:
+    <<: *default_service
+    image: atlas/restic:${RESTIC}
+    build: ./images/restic
+    container_name: restic
+    command: "tail -f /dev/null" # The container should run indefinitely to allow chadburn to execute commands.
+    networks:
+      - proxy_egress
+    environment:
+      <<: *default_service_environment
+      <<: *proxy_egress_environment
+      RESTIC_REPOSITORY: <empty>
+      RESTIC_BACKUP_TAGS: auto
+      RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
+      RESTIC_PASSWORD_FILE: /run/secrets/restic
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/backblaze_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
+    volumes:
+      - restic:/config:z
+      # Volumes
+      - authelia_db:/data/authelia_db:z
+      - nextcloud:/data/nextcloud:z
+      - nextcloud_db:/data/nextcloud_db:z
+      - ldap:/data/ldap:z
+      - plex:/data/plex:z
+      - proton-bridge:/data/proton-bridge:z
+      - syncthing:/data/syncthing:z
+      - teamspeak:/data/teamspeak:z
+      - teamspeak_db:/data/teamspeak_db:z
+      # Data
+      - ${VOLUME_MEDIA}:/data/data/media:z
+      - ${VOLUME_NEXTCLOUD}:/data/data/nextcloud:z
+      - ${VOLUME_POOL}:/data/data/pool:z
+      - ${VOLUME_SYNC}:/data/data/syncthing:z
+    secrets:
+      - backblaze_id
+      - backblaze_key
+      - restic
+    labels:
+      chadburn.enabled: "true"
+      chadburn.job-exec.restic-backup.schedule: "30 3 * * *"
+      chadburn.job-exec.restic-backup.command: "/bin/bash /app/restic-backup.sh"
+      chadburn.job-exec.restic-backup.no-overlap: "true"
+      chadburn.job-exec.restic-check.schedule: "30 8 1 * *"
+      chadburn.job-exec.restic-check.command: "/bin/bash /app/restic-check.sh"
+      chadburn.job-exec.restic-check.no-overlap: "true"
+
+volumes:
+  authelia:
+  authelia_db:
+  authelia_redis:
+  diun:
+  envoy:
+  ldap:
+  nextcloud:
+  nextcloud_db:
+  plex:
+  proton-bridge:
+  restic:
+  syncthing:
+  teamspeak:
+  teamspeak_db:
+  traefik:
+
+networks:
+  # Main cluster networks.
+  # Only ingress/egress proxies should be attached.
+  ingress:
+    <<: *external_network
+    ipam:
+      driver: default
+      config:
+        - subnet: "fd00:d0ce:1000::/64"
+  egress:
+    <<: *external_network
+    ipam:
+      driver: default
+      config:
+        - subnet: "fd00:d0ce:2000::/64"
+  # Internal networks used to connect service with ingress/egress proxies.
+  # To expose services attach to `proxy_ingress`.
+  # To allow services to reach outside networks attach to `proxy_egress`.
+  proxy_ingress:
+    <<: *internal_network
+    name: *proxy_ingress_network
+  proxy_egress:
+    <<: *internal_network
+  # Internal special purpose networks.
+  auth:
+    <<: *internal_network
+  mail:
+    <<: *internal_network
+  nextcloud:
+    <<: *internal_network
+  socket-proxy:
+    <<: *internal_network
+  # Internal database networks.
+  authelia_db:
+    <<: *internal_network
+  authelia_redis:
+    <<: *internal_network
+  nextcloud_db:
+    <<: *internal_network
+  teamspeak_db:
+    <<: *internal_network
+
+secrets:
+  authelia_db:
+    file: ./secrets/authelia_db
+  authelia_identity_hmac:
+    file: ./secrets/authelia_identity_hmac
+  authelia_identity_key:
+    file: ./secrets/authelia_identity_key
+  authelia_jwt:
+    file: ./secrets/authelia_jwt
+  authelia_session:
+    file: ./secrets/authelia_session
+  authelia_storage:
+    file: ./secrets/authelia_storage
+  backblaze_id:
+    file: ./secrets/backblaze_id
+  backblaze_key:
+    file: ./secrets/backblaze_key
+  cloudflare:
+    file: ./secrets/cloudflare
+  inadyn:
+    file: ./secrets/inadyn
+  ldap_auth:
+    file: ./secrets/ldap_auth
+  ldap_db:
+    file: ./secrets/ldap_db
+  nextcloud_admin:
+    file: ./secrets/nextcloud_admin
+  nextcloud_db:
+    file: ./secrets/nextcloud_db
+  protonmail_password:
+    file: ./secrets/protonmail_password
+  protonmail_password_bridge:
+    file: ./secrets/protonmail_password_bridge
+  protonmail_password_mailbox:
+    file: ./secrets/protonmail_password_mailbox
+  restic:
+    file: ./secrets/restic
+  teamspeak_db:
+    file: ./secrets/teamspeak_db

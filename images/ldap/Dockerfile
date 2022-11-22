@@ -7,18 +7,17 @@ ARG PGID="${PUID}"
 RUN addgroup -g "${PGID}" "${USER}" && \
     adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-RUN apk add --no-cache bash openldap openldap-backend-all openldap-overlay-all openldap-clients openssl tzdata
+RUN apk add --no-cache bash gettext openldap openldap-backend-all openldap-overlay-all openldap-clients openssl tzdata
 
 EXPOSE 389 636
 
-COPY --chown="${PUID}:${PGID}" root/ /
+COPY --chown="${USER}" root/ /
 
 ENV DOMAIN=atlas.com \
     LDAP_BIND_USER=auth \
     LDAP_ROOT=root
 
 RUN mkdir -p \
-      /config/backup \
       /config/databases/openldap-data \
       /config/databases/slapd.d \
       /config/keys \
@@ -33,3 +32,5 @@ VOLUME /config
 USER "${USER}"
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["/usr/sbin/slapd", "-d", "0", "-h", "ldap:/// ldaps:///", "-F", "/config/databases/slapd.d"]

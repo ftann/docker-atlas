@@ -5,7 +5,7 @@ split() {
 }
 
 prepend_each() {
-  local prefix=$1
+  local prefix="$1"
   shift
   printf "${prefix}%s " "$@"
 }

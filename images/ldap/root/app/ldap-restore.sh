@@ -17,4 +17,4 @@ ldapadd \
     -H "ldap://localhost" \
     -D "cn=${LDAP_BIND_USER},${LDAP_DOMAIN}" -w "${LDAP_BIND_PASSWORD}" \
     -Z -b "${LDAP_DOMAIN}" \
-    -c -f "/config/backup/${DOMAIN}.ldif"
+    -c -f "/config/${DOMAIN}.ldif"
