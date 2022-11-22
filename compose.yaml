@@ -65,9 +65,10 @@ services:
       authelia-redis:
         condition: service_started
     networks:
-      - auth
+      - authelia
       - authelia_db
       - authelia_redis
+      - ldap
       - mail
       - proxy_ingress
     environment:
@@ -172,7 +173,7 @@ services:
       init:
         condition: service_completed_successfully
     networks:
-      - auth
+      - ldap
     environment:
       <<: *default_service_environment
       DOMAIN: ${DOMAIN}
@@ -203,7 +204,7 @@ services:
     depends_on:
       - nextcloud-db
     networks:
-      - auth
+      - authelia
       - mail
       - nextcloud
       - nextcloud_db
@@ -752,7 +753,9 @@ networks:
   proxy_egress:
     <<: *internal_network
   # Internal special purpose networks.
-  auth:
+  authelia:
+    <<: *internal_network
+  ldap:
     <<: *internal_network
   mail:
     <<: *internal_network
