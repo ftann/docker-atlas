@@ -223,8 +223,9 @@ services:
       SMTP_PORT: 25
       SMTP_NAME: "admin@${DOMAIN}"
       SMTP_PASSWORD_FILE: /run/secrets/protonmail_password_bridge
-      SMTP_SECURE: tls
+      MAIL_FROM_ADDRESS: "admin"
       MAIL_DOMAIN: "${DOMAIN}"
+      TRUSTED_PROXIES: "192.168.0.0/16 172.17.0.0/12"
       PHP_MEMORY_LIMIT: 4096M
       PHP_UPLOAD_LIMIT: 4096M
     volumes:
