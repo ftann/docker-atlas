@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 60s
+  evaluation_interval: 60s
+
+rule_files:
+
+scrape_configs:
+  - job_name: "docker"
+    static_configs:
+      - targets: [ "host.docker.internal:9323" ]
+  - job_name: "docker-containers"
+    docker_sd_configs:
+      - host: tcp://socket-proxy:2375
+    relabel_configs:
+      - source_labels: [ __meta_docker_container_label_prometheus_enable ]
+        regex: "true"
+        action: keep
+      - source_labels: [ __meta_docker_network_label_com_docker_compose_network ]
+        regex: prometheus
+        action: keep
+      - source_labels: [ __meta_docker_container_label_com_docker_compose_service ]
+        target_label: job
+      - source_labels: [ __address__, __meta_docker_container_label_prometheus_port ]
+        target_label: __address__
+        regex: '(.*):(\d+);(\d+)'
+        replacement: '${1}:${3}'
+      - source_labels: [ __meta_docker_container_label_prometheus_path ]
+        target_label: __metrics_path__
+        regex: (.+)

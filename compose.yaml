@@ -1,10 +1,10 @@
 name: atlas
 
-x-default-service: &default_service
+x-service: &default_service
   environment: &default_service_environment
     TZ: ${TZ}
 
-x-default-task: &default_task
+x-task: &default_task
   <<: *default_service
   # TODO wait for fix in compose >= v2.12.2
 #  deploy:
@@ -23,6 +23,7 @@ x-proxy-egress-environment: &proxy_egress_environment
   https_proxy: *http_proxy
   no_proxy: "127.0.0.1,localhost"
 
+x-monitoring-network: &monitoring_network atlas_prometheus
 x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
 
 x-internal-network: &internal_network
@@ -44,11 +45,12 @@ services:
     <<: *default_task
     image: atlas/init:${INIT}
     build: ./images/init
-    container_name: atlas-init
+    container_name: init
     volumes:
       - authelia:/config/authelia:z
       - envoy:/config/envoy:z
       - ldap:/config/ldap:z
+      - prometheus:/config/prometheus:z
       - traefik:/config/traefik:z
 
   authelia:
@@ -70,6 +72,7 @@ services:
       - authelia_redis
       - ldap
       - mail
+      - prometheus
       - proxy_ingress
     environment:
       <<: *default_service_environment
@@ -110,6 +113,8 @@ services:
       - protonmail_password_bridge
     labels:
       diun.enable: "true"
+      prometheus.enable: "true"
+      prometheus.port: 9959
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.authelia.rule: "Host(`sso.${DOMAIN}`)"
@@ -536,11 +541,15 @@ services:
         condition: service_completed_successfully
     networks:
       - egress
+      - prometheus
       - proxy_egress
     volumes:
       - envoy:/config:ro,z
     labels:
       diun.enable: "true"
+      prometheus.enable: "true"
+      prometheus.port: 9901
+      prometheus.path: "/stats/prometheus"
 
   socket-proxy:
     <<: *default_service
@@ -607,6 +616,7 @@ services:
       - "--global.sendAnonymousUsage=false"
     networks:
       - ingress
+      - prometheus
       - proxy_ingress
       - socket-proxy
     ports:
@@ -624,6 +634,8 @@ services:
       - cloudflare
     labels:
       diun.enable: "true"
+      prometheus.enable: "true"
+      prometheus.port: 9090
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       # Middlewares.
@@ -660,6 +672,104 @@ services:
       # Chains.
       traefik.http.middlewares.secured.chain.middlewares: "rateLimit,httpsOnly,secureHeaders"
       traefik.http.middlewares.securedAuth.chain.middlewares: "secured,sso"
+
+  #
+  # Monitoring.
+  #
+
+  prometheus:
+    <<: *default_service
+    image: prom/prometheus:${PROMETHEUS}
+    container_name: prometheus
+    command:
+      - "--log.level=error"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      - prometheus
+      - proxy_ingress
+      - socket-proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      <<: *default_service_environment
+    volumes:
+      - prometheus:/etc/prometheus:z
+      - prometheus_db:/prometheus:z
+    labels:
+      diun.enable: "true"
+      prometheus.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.prometheus.rule: "Host(`prometheus.${DOMAIN}`)"
+      traefik.http.routers.prometheus.entryPoints: "https"
+      traefik.http.routers.prometheus.middlewares: "securedAuth"
+
+  node-exporter:
+    <<: *default_service
+    image: prom/node-exporter:${PROMETHEUS_NODE_EXPORTER}
+    container_name: node-exporter
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    pid: host
+    userns_mode: host
+    networks:
+      - prometheus
+    volumes:
+      - /proc:/host/proc:ro,z
+      - /sys:/host/sys:ro,z
+      - /:/rootfs:ro,z
+    labels:
+      diun.enable: "true"
+      prometheus.enable: "true"
+
+  grafana:
+    <<: *default_service
+    image: grafana/grafana-oss:${GRAFANA}
+    container_name: grafana
+    networks:
+      - prometheus
+      - proxy_ingress
+    environment:
+      <<: *default_service_environment
+      GF_SERVER_ROOT_URL: "https://metrics.${DOMAIN}"
+      GF_ADMIN_USER: admin
+      GF_ADMIN_PASSWORD_FILE: /run/secrets/grafana_admin
+      GF_LOG_LEVEL: "error"
+      GF_AUTH_OAUTH_AUTO_LOGIN: "true"
+      GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+      GF_AUTH_GENERIC_OAUTH_NAME: Authelia
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET__FILE: /run/secrets/oidc_grafana
+      GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email groups"
+      GF_AUTH_GENERIC_OAUTH_EMPTY_SCOPES: "false"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://sso.${DOMAIN}/api/oidc/authorization"
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://sso.${DOMAIN}/api/oidc/token"
+      GF_AUTH_GENERIC_OAUTH_API_URL: "https://sso.${DOMAIN}/api/oidc/userinfo"
+      GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: preferred_username
+      GF_AUTH_GENERIC_OAUTH_GROUPS_ATTRIBUTE_PATH: groups
+      GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
+      GF_AUTH_GENERIC_OAUTH_USE_PKCE: "true"
+    volumes:
+      - grafana:/var/lib/grafana:z
+    secrets:
+      - grafana_admin
+      - oidc_grafana
+    labels:
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.grafana.rule: "Host(`metrics.${DOMAIN}`)"
+      traefik.http.routers.grafana.entryPoints: "https"
+      traefik.http.routers.grafana.middlewares: "secured"
 
   #
   # Backup.
@@ -718,10 +828,13 @@ volumes:
   authelia_redis:
   diun:
   envoy:
+  grafana:
   ldap:
   nextcloud:
   nextcloud_db:
   plex:
+  prometheus:
+  prometheus_db:
   proton-bridge:
   restic:
   syncthing:
@@ -761,6 +874,9 @@ networks:
     <<: *internal_network
   nextcloud:
     <<: *internal_network
+  prometheus:
+    <<: *internal_network
+    name: *monitoring_network
   socket-proxy:
     <<: *internal_network
   # Internal database networks.
@@ -792,6 +908,8 @@ secrets:
     file: ./secrets/backblaze_key
   cloudflare:
     file: ./secrets/cloudflare
+  grafana_admin:
+    file: ./secrets/grafana_admin
   inadyn:
     file: ./secrets/inadyn
   ldap_auth:
@@ -802,6 +920,8 @@ secrets:
     file: ./secrets/nextcloud_admin
   nextcloud_db:
     file: ./secrets/nextcloud_db
+  oidc_grafana:
+    file: ./secrets/oidc_grafana
   protonmail_password:
     file: ./secrets/protonmail_password
   protonmail_password_bridge:
