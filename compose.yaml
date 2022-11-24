@@ -744,7 +744,7 @@ services:
       GF_ADMIN_USER: admin
       GF_ADMIN_PASSWORD_FILE: /run/secrets/grafana_admin
       GF_LOG_LEVEL: "error"
-      GF_AUTH_OAUTH_AUTO_LOGIN: "true"
+      GF_AUTH_OAUTH_AUTO_LOGIN: "false"
       GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
       GF_AUTH_GENERIC_OAUTH_NAME: Authelia
       GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
