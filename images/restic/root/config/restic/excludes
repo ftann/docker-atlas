@@ -1,6 +1,7 @@
 .cache
 cache
-databases/*.err
+caches
+*.err
 .git
 *.lock
 log
@@ -9,25 +10,21 @@ logs
 .rnd
 .stversions
 
-*db/**/*
-!*db/*.sql
-*ldap/databases
-*ldap/initdb.d
+*_db/**/*
+!*_db/*.sql
+
+ldap/databases
+ldap/initdb.ldif
 
 nextcloud/appdata*/**/appstore
 nextcloud/appdata*/**/files_trashbin
 nextcloud/appdata*/**/preview
+nextcloud/custom_apps
 nextcloud/updater-*
+nextcloud/**/*.htaccess
 
-plex/Library/Application Support/Plex Media Server/Cache
-plex/Library/Application Support/Plex Media Server/Codecs
-plex/Library/Application Support/Plex Media Server/Crash Reports
-plex/Library/Application Support/Plex Media Server/Diagnostics
-plex/Library/Application Support/Plex Media Server/Media
-plex/Library/Application Support/Plex Media Server/Metadata
-plex/Library/Application Support/Plex Media Server/Plug-ins
-plex/Library/Application Support/Plex Media Server/Scripts
-plex/Library/Application Support/Plex Media Server/.LocalAdminToken
-plex/Library/Application Support/Plex Media Server/plexmediaserver.pid
+plex/Library/Application Support/Plex Media Server/*
+!plex/Library/Application Support/Plex Media Server/Plug-in Support
+!plex/Library/Application Support/Plex Media Server/Preferences.xml
 
-syncthing/index-*.db
+syncthing/config/index-*.db

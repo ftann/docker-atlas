@@ -10,7 +10,7 @@ file_env 'AWS_SECRET_ACCESS_KEY'
 file_env 'RESTIC_PASSWORD'
 
 IFS=" " read -ra TAGS <<<"$(mk_tag_args "${RESTIC_BACKUP_TAGS}")"
-restic backup --iexclude-file=/config/restic/excludes "${TAGS[@]}" "${RESTIC_BACKUP_SOURCES}"
+restic backup --host "${RESTIC_BACKUP_HOST}" --iexclude-file=/config/restic/excludes "${TAGS[@]}" "${RESTIC_BACKUP_SOURCES}"
 
 if [[ -n "${RESTIC_FORGET_ARGS}" ]]; then
   IFS=" " read -ra FORGET_ARGS <<<"${RESTIC_FORGET_ARGS}"

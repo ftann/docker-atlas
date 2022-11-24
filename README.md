@@ -64,11 +64,12 @@ Configure docker to allow ipv6 addresses. Set the following keys in the docker c
 
 ```json
 {
+  "log-driver": "journald",
   "experimental": true,
   "ipv6": true,
   "ip6tables": true,
   "fixed-cidr-v6": "fd00:d0ce::/64",
-  "metrics-addr": "127.0.0.1:9323",
+  "metrics-addr": "0.0.0.0:9323",
   "userland-proxy": false
 }
 ```
@@ -91,7 +92,7 @@ cp atlas/configs/firewall/* /etc/firewalld/services
     - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts for the
       first time.
 2. Change the configuration in the volume init container
-    - `./images/atlas-init` Configure the authelia, ldap, traefik settings
+    - `./images/init` Configure the authelia, envoy, ldap, prometheus, traefik settings
     - `./images/www` Add a default landing page
 3. Run the installation command of the `ctl` script
    ```shell
