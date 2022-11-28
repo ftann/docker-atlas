@@ -495,11 +495,14 @@ services:
     depends_on:
       - socket-proxy
     networks:
+      - prometheus
       - socket-proxy
     environment:
       DOCKER_HOST: tcp://socket-proxy:2375
     labels:
       diun.enable: "true"
+      prometheus.enable: "true"
+      prometheus.port: 8080
 
   diun:
     <<: *default_service
