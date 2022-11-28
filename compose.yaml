@@ -1,16 +1,22 @@
 name: atlas
 
 x-service: &default_service
+  # TODO wait for fix in compose >= v2.12.2
+  #  deploy:
+  #    restart_policy:
+  #      condition: any
+  restart: always
   environment: &default_service_environment
     TZ: ${TZ}
 
 x-task: &default_task
-  <<: *default_service
   # TODO wait for fix in compose >= v2.12.2
-#  deploy:
-#    restart_policy:
-#      condition: none
+  #  deploy:
+  #    restart_policy:
+  #      condition: none
   restart: "no"
+  environment:
+    <<: *default_service_environment
   network_mode: none
 
 x-database-environment: &database_environment
