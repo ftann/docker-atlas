@@ -524,6 +524,7 @@ services:
       <<: *proxy_egress_environment
       DIUN_PROVIDERS_DOCKER: "true"
       DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
+      DIUN_PROVIDERS_DOCKER_TLSVERIFY: "false"
       DIUN_WATCH_SCHEDULE: "0 1 * * *"
       DIUN_NOTIF_MAIL_HOST: proton-bridge
       DIUN_NOTIF_MAIL_PORT: 25
