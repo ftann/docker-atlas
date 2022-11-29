@@ -27,7 +27,7 @@ x-database-environment: &database_environment
 x-proxy-egress-environment: &proxy_egress_environment
   http_proxy: &http_proxy "http://envoy:10000"
   https_proxy: *http_proxy
-  no_proxy: "127.0.0.1,localhost"
+  no_proxy: "127.0.0.1,localhost,socket-proxy"
 
 x-monitoring-network: &monitoring_network atlas_prometheus
 x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
