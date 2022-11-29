@@ -698,12 +698,14 @@ services:
         condition: service_completed_successfully
     networks:
       - prometheus
+      - proxy_egress
       - proxy_ingress
       - socket_proxy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
       <<: *default_service_environment
+      <<: *proxy_egress_environment
     volumes:
       - prometheus:/etc/prometheus:z
       - prometheus_db:/prometheus:z
