@@ -502,7 +502,7 @@ services:
       - socket-proxy
     networks:
       - prometheus
-      - socket-proxy
+      - socket_proxy
     environment:
       DOCKER_HOST: tcp://socket-proxy:2375
     labels:
@@ -518,7 +518,7 @@ services:
       - socket-proxy
     networks:
       - proxy_egress
-      - socket-proxy
+      - socket_proxy
     environment:
       <<: *default_service_environment
       <<: *proxy_egress_environment
@@ -566,7 +566,7 @@ services:
     container_name: socket-proxy
     userns_mode: host
     networks:
-      - socket-proxy
+      - socket_proxy
     environment:
       <<: *default_service_environment
       LOG_LEVEL: err
@@ -623,7 +623,7 @@ services:
       - ingress
       - prometheus
       - proxy_ingress
-      - socket-proxy
+      - socket_proxy
     ports:
       - "80:8080"
       - "443:8443"
@@ -698,7 +698,7 @@ services:
     networks:
       - prometheus
       - proxy_ingress
-      - socket-proxy
+      - socket_proxy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
@@ -882,7 +882,7 @@ networks:
   prometheus:
     <<: *internal_network
     name: *monitoring_network
-  socket-proxy:
+  socket_proxy:
     <<: *internal_network
   # Internal database networks.
   authelia_db:
