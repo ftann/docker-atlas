@@ -359,7 +359,7 @@ services:
       PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
       PROTONMAIL_PASSWORD_MAILBOX_FILE: /run/secrets/protonmail_password_mailbox
     volumes:
-      - proton-bridge:/config:z
+      - proton_bridge:/config:z
       - ./secrets/protonmail_password_bridge:/config/protonmail_password_bridge:z
     secrets:
       - protonmail_password
@@ -808,7 +808,7 @@ services:
       - nextcloud_db:/data/nextcloud_db:z
       - ldap:/data/ldap:z
       - plex:/data/plex:z
-      - proton-bridge:/data/proton-bridge:z
+      - proton_bridge:/data/proton_bridge:z
       - syncthing:/data/syncthing:z
       - teamspeak:/data/teamspeak:z
       - teamspeak_db:/data/teamspeak_db:z
@@ -843,7 +843,7 @@ volumes:
   plex:
   prometheus:
   prometheus_db:
-  proton-bridge:
+  proton_bridge:
   restic:
   syncthing:
   teamspeak:
