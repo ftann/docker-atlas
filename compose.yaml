@@ -749,8 +749,8 @@ services:
     environment:
       <<: *default_service_environment
       GF_SERVER_ROOT_URL: "https://metrics.${DOMAIN}"
-      GF_ADMIN_USER: admin
-      GF_ADMIN_PASSWORD_FILE: /run/secrets/grafana_admin
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin
       GF_LOG_LEVEL: "error"
       GF_AUTH_OAUTH_AUTO_LOGIN: "false"
       GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
@@ -766,6 +766,7 @@ services:
       GF_AUTH_GENERIC_OAUTH_GROUPS_ATTRIBUTE_PATH: groups
       GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
       GF_AUTH_GENERIC_OAUTH_USE_PKCE: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana:/var/lib/grafana:z
     secrets:
