@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine3.16 AS builder
+FROM golang:1.18-alpine3.17 AS builder
 
 RUN apk add --no-cache bash gcc make musl-dev libsecret-dev
 
