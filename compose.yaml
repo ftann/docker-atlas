@@ -242,10 +242,9 @@ services:
       PHP_UPLOAD_LIMIT: 4096M
     volumes:
       - nextcloud:/var/www/html:z
-      - ${VOLUME_NEXTCLOUD}:/data:z
-      - ${VOLUME_MEDIA}:/media:z
-      - ${VOLUME_POOL}:/pool:z
-      - ${VOLUME_SYNC}:/sync:z
+      - nextcloud_data:/data:z
+      - media_data:/media:z
+      - syncthing_data:/syncthing:z
     secrets:
       - nextcloud_admin
       - nextcloud_db
@@ -320,8 +319,8 @@ services:
       VERSION: docker
       # PLEX_CLAIM: "<token>"
     volumes:
+      - media_data:/data:z
       - plex:/config:z
-      - ${VOLUME_MEDIA}:/data:z
     labels:
       diun.enable: "true"
       traefik.enable: "true"
@@ -381,7 +380,7 @@ services:
       ALL_PROXY_NO_FALLBACK: 1
     volumes:
       - syncthing:/var/syncthing:z
-      - ${VOLUME_SYNC}:/data:z
+      - syncthing_data:/data:z
     labels:
       diun.enable: "true"
       traefik.enable: "true"
@@ -806,18 +805,17 @@ services:
       # Volumes
       - authelia_db:/data/authelia_db:z
       - nextcloud:/data/nextcloud:z
+      - nextcloud_data:/data/nextcloud_data:z
       - nextcloud_db:/data/nextcloud_db:z
       - ldap:/data/ldap:z
       - plex:/data/plex:z
       - proton_bridge:/data/proton_bridge:z
       - syncthing:/data/syncthing:z
+      - syncthing_data:/data/syncthing_data:z
       - teamspeak:/data/teamspeak:z
       - teamspeak_db:/data/teamspeak_db:z
       # Data
-      - ${VOLUME_MEDIA}:/data/data/media:z
-      - ${VOLUME_NEXTCLOUD}:/data/data/nextcloud:z
-      - ${VOLUME_POOL}:/data/data/pool:z
-      - ${VOLUME_SYNC}:/data/data/syncthing:z
+      - media_data:/data/media:z
     secrets:
       - backblaze_id
       - backblaze_key
@@ -850,6 +848,25 @@ volumes:
   teamspeak:
   teamspeak_db:
   traefik:
+  # Large data volumes.
+  media_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_MEDIA}
+  nextcloud_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_NEXTCLOUD}
+  syncthing_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_SYNCTHING}
 
 networks:
   # Main cluster networks.
