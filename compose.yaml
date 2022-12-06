@@ -802,8 +802,9 @@ services:
       AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
     volumes:
       - restic:/config:z
-      # Volumes
+      # Volumes.
       - authelia_db:/data/authelia_db:z
+      - media_data:/data/media:z
       - nextcloud:/data/nextcloud:z
       - nextcloud_data:/data/nextcloud_data:z
       - nextcloud_db:/data/nextcloud_db:z
@@ -814,8 +815,6 @@ services:
       - syncthing_data:/data/syncthing_data:z
       - teamspeak:/data/teamspeak:z
       - teamspeak_db:/data/teamspeak_db:z
-      # Data
-      - media_data:/data/media:z
     secrets:
       - backblaze_id
       - backblaze_key
