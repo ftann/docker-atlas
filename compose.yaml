@@ -603,6 +603,7 @@ services:
       - "--entryPoints.metrics.address=:9090"
       - "--entryPoints.http=true"
       - "--entryPoints.http.address=:8080"
+      - "--entryPoints.http.http.redirections.entrypoint.to=:443"
       - "--entryPoints.https=true"
       - "--entryPoints.https.address=:8443"
       - "--entryPoints.https.http.tls=true"
