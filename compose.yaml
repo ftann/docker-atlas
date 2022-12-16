@@ -327,7 +327,7 @@ services:
       traefik.http.services.plex.loadBalancer.server.port: "32400"
 
   plex-nftables:
-    <<: *default_task
+    <<: *default_service
     image: atlas/nftables:${NFTABLES}
     build: ./images/nftables
     depends_on:
