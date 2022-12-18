@@ -19,12 +19,12 @@ logs
 ldap/databases
 ldap/initdb.ldif
 
-nextcloud/appdata*/**/appstore
-nextcloud/appdata*/**/files_trashbin
-nextcloud/appdata*/**/preview
-nextcloud/custom_apps
-nextcloud/updater-*
-nextcloud/**/*.htaccess
+nextcloud_data/appdata*/**/appstore
+nextcloud_data/appdata*/**/files_trashbin
+nextcloud_data/appdata*/**/preview
+nextcloud_data/custom_apps
+nextcloud_data/updater-*
+nextcloud_data/**/*.htaccess
 
 plex/Library/Application Support/Plex Media Server/*
 !plex/Library/Application Support/Plex Media Server/Plug-in Support
