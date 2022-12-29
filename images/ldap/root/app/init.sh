@@ -46,12 +46,12 @@ if [[ ! -f /config/databases/openldap-data/data.mdb ]]; then
   slapadd -d 0 -n 1 -F /config/databases/slapd.d -l "${DATABASE}"
   rm "${DATABASE}"
 
-  if [[ -f /config/initdb.ldif ]]; then
+  if [[ -f /init.ldif ]]; then
 
     slapd -d 0 -h "ldapi://%2Frun%2Fopenldap%2Fldapi" -F /config/databases/slapd.d &
     while [[ ! -e /run/openldap/slapd.pid ]]; do sleep 1; done
 
-    ldapadd -c -Y EXTERNAL -Q -H "ldapi://%2Frun%2Fopenldap%2Fldapi" -f /config/initdb.ldif >/dev/null 2>&1
+    ldapadd -c -Y EXTERNAL -Q -H "ldapi://%2Frun%2Fopenldap%2Fldapi" -f /init.ldif >/dev/null 2>&1
 
     PID="$(cat /run/openldap/slapd.pid)"
     kill -SIGTERM "${PID}"

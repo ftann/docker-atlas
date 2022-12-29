@@ -7,14 +7,6 @@ x-service: &default_service
   environment: &default_service_environment
     TZ: ${TZ}
 
-x-task: &default_task
-  deploy:
-    restart_policy:
-      condition: none
-  environment:
-    <<: *default_service_environment
-  network_mode: none
-
 x-database-environment: &database_environment
   MARIADB_AUTO_UPGRADE: "true"
   MARIADB_MYSQL_LOCALHOST_USER: "true"
@@ -43,25 +35,12 @@ services:
   # Services.
   #
 
-  init:
-    <<: *default_task
-    image: atlas/init:${INIT}
-    build: ./images/init
-    container_name: init
-    volumes:
-      - authelia:/config/authelia:z
-      - envoy:/config/envoy:z
-      - ldap:/config/ldap:z
-      - prometheus:/config/prometheus:z
-      - traefik:/config/traefik:z
-
   authelia:
     <<: *default_service
     image: authelia/authelia:${AUTHELIA}
     container_name: authelia
+    command: "authelia --config=/authelia"
     depends_on:
-      init:
-        condition: service_completed_successfully
       authelia-db:
         condition: service_started
       proton-bridge:
@@ -104,6 +83,8 @@ services:
       AUTHELIA_TOTP_ISSUER: ${DOMAIN}
     volumes:
       - authelia:/config:z
+    configs:
+      - authelia
     secrets:
       - authelia_db
       - authelia_identity_hmac
@@ -162,12 +143,14 @@ services:
 
   inadyn:
     <<: *default_service
-    image: atlas/inadyn:${INADYN}
-    build: ./images/inadyn
+    image: troglobit/inadyn:${INADYN}
     container_name: inadyn
+    command: "--no-pidfile --loglevel=err --startup-delay=20 --config=/inadyn"
     read_only: true
     networks:
       - egress # Proxy not supported.
+    configs:
+      - inadyn
     secrets:
       - inadyn
 
@@ -176,9 +159,6 @@ services:
     image: atlas/ldap:${LDAP}
     build: ./images/ldap
     container_name: ldap
-    depends_on:
-      init:
-        condition: service_completed_successfully
     networks:
       - ldap
     environment:
@@ -191,6 +171,9 @@ services:
       LDAP_ROOT_PASSWORD_FILE: /run/secrets/ldap_db
     volumes:
       - ldap:/config:z
+    configs:
+      - source: ldap_init
+        target: /init.ldif
     secrets:
       - ldap_auth
       - ldap_db
@@ -540,16 +523,14 @@ services:
     <<: *default_service
     image: envoyproxy/envoy-distroless:${ENVOY}
     container_name: envoy
-    command: "-c /config/envoy.yaml"
-    depends_on:
-      init:
-        condition: service_completed_successfully
+    command: "--config-path /envoy.yml"
     networks:
       - egress
       - prometheus
       - proxy_egress
-    volumes:
-      - envoy:/config:ro,z
+    configs:
+      - source: envoy
+        target: /envoy.yml
     labels:
       diun.enable: "true"
       prometheus.enable: "true"
@@ -585,15 +566,13 @@ services:
     image: traefik:${TRAEFIK}
     container_name: traefik
     depends_on:
-      init:
-        condition: service_completed_successfully
       socket-proxy:
         condition: service_started
     command:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://socket-proxy:2375"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.file.directory=/config"
+      - "--providers.file.filename=/traefik.yml"
       - "--providers.file.watch=true"
       - "--entryPoints.metrics=true"
       - "--entryPoints.metrics.address=:9090"
@@ -632,6 +611,9 @@ services:
       CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare
     volumes:
       - traefik:/config:z
+    configs:
+      - source: traefik
+        target: /traefik.yml
     secrets:
       - cloudflare
     labels:
@@ -685,13 +667,10 @@ services:
     container_name: prometheus
     command:
       - "--log.level=error"
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--config.file=/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
-    depends_on:
-      init:
-        condition: service_completed_successfully
     networks:
       - prometheus
       - proxy_egress
@@ -703,8 +682,10 @@ services:
       <<: *default_service_environment
       <<: *proxy_egress_environment
     volumes:
-      - prometheus:/etc/prometheus:z
       - prometheus_db:/prometheus:z
+    configs:
+      - source: prometheus
+        target: /prometheus.yml
     labels:
       diun.enable: "true"
       prometheus.enable: "true"
@@ -830,13 +811,11 @@ volumes:
   authelia_db:
   authelia_redis:
   diun:
-  envoy:
   grafana:
   ldap:
   nextcloud:
   nextcloud_db:
   plex:
-  prometheus:
   prometheus_db:
   proton_bridge:
   restic:
@@ -910,6 +889,20 @@ networks:
     <<: *internal_network
   teamspeak_db:
     <<: *internal_network
+
+configs:
+  authelia:
+    file: ./configs/authelia/configuration.yml
+  envoy:
+    file: ./configs/envoy/envoy.yml
+  inadyn:
+    file: ./configs/inadyn/inadyn.conf
+  ldap_init:
+    file: ./configs/ldap/init.ldif
+  prometheus:
+    file: ./configs/prometheus/prometheus.yml
+  traefik:
+    file: ./configs/traefik/traefik.yml
 
 secrets:
   authelia_db:
