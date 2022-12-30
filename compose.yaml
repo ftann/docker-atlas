@@ -502,6 +502,7 @@ services:
       DIUN_PROVIDERS_DOCKER: "true"
       DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
       DIUN_PROVIDERS_DOCKER_TLSVERIFY: "false"
+      DIUN_PROVIDERS_FILE_FILENAME: &diun_images /images.yml
       DIUN_WATCH_SCHEDULE: "0 1 * * *"
       DIUN_NOTIF_MAIL_HOST: proton-bridge
       DIUN_NOTIF_MAIL_PORT: 25
@@ -513,6 +514,9 @@ services:
       LOG_LEVEL: "error"
     volumes:
       - diun:/data
+    configs:
+      - source: diun
+        target: *diun_images
     secrets:
       - protonmail_password_bridge
     labels:
@@ -891,6 +895,8 @@ volumes:
 configs:
   authelia:
     file: ./configs/authelia/configuration.yml
+  diun:
+    file: ./configs/diun/images.yml
   envoy:
     file: ./configs/envoy/envoy.yml
   inadyn:
