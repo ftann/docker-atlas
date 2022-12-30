@@ -805,43 +805,6 @@ services:
       chadburn.job-exec.restic-check.command: "/bin/bash /app/restic-check.sh"
       chadburn.job-exec.restic-check.no-overlap: "true"
 
-volumes:
-  authelia:
-  authelia_db:
-  authelia_redis:
-  diun:
-  grafana:
-  ldap:
-  nextcloud:
-  nextcloud_db:
-  plex:
-  prometheus_db:
-  proton_bridge:
-  restic:
-  syncthing:
-  teamspeak:
-  teamspeak_db:
-  traefik:
-  # Large data volumes.
-  media_data:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: ${VOLUME_MEDIA}
-  nextcloud_data:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: ${VOLUME_NEXTCLOUD}
-  syncthing_data:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: ${VOLUME_SYNCTHING}
-
 networks:
   # Main cluster networks.
   # Only ingress/egress proxies should be attached.
@@ -887,6 +850,43 @@ networks:
     <<: *internal_network
   teamspeak_db:
     <<: *internal_network
+
+volumes:
+  authelia:
+  authelia_db:
+  authelia_redis:
+  diun:
+  grafana:
+  ldap:
+  nextcloud:
+  nextcloud_db:
+  plex:
+  prometheus_db:
+  proton_bridge:
+  restic:
+  syncthing:
+  teamspeak:
+  teamspeak_db:
+  traefik:
+  # Large data volumes.
+  media_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_MEDIA}
+  nextcloud_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_NEXTCLOUD}
+  syncthing_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_SYNCTHING}
 
 configs:
   authelia:
