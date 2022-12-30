@@ -575,7 +575,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://socket-proxy:2375"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.file.filename=/traefik.yml"
+      - "--providers.file.directory=/dynamic"
       - "--providers.file.watch=true"
       - "--entryPoints.metrics=true"
       - "--entryPoints.metrics.address=:9090"
@@ -616,7 +616,7 @@ services:
       - traefik:/config:z
     configs:
       - source: traefik
-        target: /traefik.yml
+        target: /dynamic/traefik.yml
     secrets:
       - cloudflare
     labels:
