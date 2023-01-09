@@ -791,7 +791,6 @@ services:
       - nextcloud_db:/data/nextcloud_db:z
       - ldap:/data/ldap:z
       - plex:/data/plex:z
-      - proton_bridge:/data/proton_bridge:z
       - syncthing:/data/syncthing:z
       - syncthing_data:/data/syncthing_data:z
       - teamspeak:/data/teamspeak:z
