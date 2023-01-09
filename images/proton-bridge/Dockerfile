@@ -24,7 +24,7 @@ ARG PGID="${PUID}"
 RUN addgroup -g "${PGID}" "${USER}" && \
     adduser -D -u "${PUID}" -G "${USER}" -s /bin/false -h /config "${USER}"
 
-RUN apk add --no-cache gnupg libsecret pass socat tzdata
+RUN apk add --no-cache gnupg libsecret pass sed socat tzdata
 
 EXPOSE 25 143
 

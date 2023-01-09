@@ -334,12 +334,13 @@ services:
       <<: *proxy_egress_environment
       PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
       PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
+      PROTONMAIL_PASSWORD_BRIDGE_FILE: /run/secrets/protonmail_password_bridge
       PROTONMAIL_PASSWORD_MAILBOX_FILE: /run/secrets/protonmail_password_mailbox
     volumes:
       - proton_bridge:/config:z
-      - ./secrets/protonmail_password_bridge:/config/protonmail_password_bridge:z
     secrets:
       - protonmail_password
+      - protonmail_password_bridge
       - protonmail_password_mailbox
 
   syncthing:

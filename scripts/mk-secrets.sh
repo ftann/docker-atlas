@@ -16,6 +16,7 @@ create_secret secrets/ldap_db "$(rnd_pw 20)"
 create_secret secrets/nextcloud_admin "$(rnd_pw 40)"
 create_secret secrets/nextcloud_db "$(rnd_pw 20)"
 create_secret secrets/oidc_grafana "$(rnd_pw 40)"
+create_secret secrets/protonmail_password_bridge "$(rnd_pw 20)"
 create_secret secrets/restic "$(rnd_pw 20)"
 create_secret secrets/teamspeak_db "$(rnd_pw 20)"
 
@@ -33,8 +34,3 @@ EOF
 )"
 create_secret secrets/protonmail_password "$(get_protonmail_password)"
 create_secret secrets/protonmail_password_mailbox "$(get_protonmail_password_mailbox)"
-
-#
-# Runtime secrets.
-#
-create_secret secrets/protonmail_password_bridge ""
