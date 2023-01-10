@@ -19,10 +19,10 @@ A working server installation is required (preferably fedora due to selinux). Th
 ### Software
 
 - Docker
-- Docker compose plugin >= 2
+- Docker compose plugin >= 2.14
 - Firewalld
 
-> The docker compose plugins is required.
+> The docker compose plugin is required.
 
 ### Credentials
 
@@ -89,18 +89,11 @@ cp atlas/configs/firewall/* /etc/firewalld/services
 1. Adjust the configuration sections where the versions of the container images are set, the domain names, credentials,
    storage locations, timezone, default file permissions and ownership.
     - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
-    - The proton-bridge mailbox password must be read from the stdout when the proton-bridge container starts for the
-      first time.
-2. Change the configuration in the volume init container
-    - `./images/init` Configure the authelia, envoy, ldap, prometheus, traefik settings
-    - `./images/www` Add a default landing page
-3. Run the installation command of the `ctl` script
+2. Change the configurations in the configs folder
+3. Add a default landing page to the `www` container
+4. Run the installation command of the `ctl` script
    ```shell
    ./ctl install
-   ```
-4. Find the proton-bridge mailbox password. Look for the generated password for the provided user. Copy to `.env`.
-   ```shell
-   docker logs proton-bridge
    ```
 
 ## Usage
