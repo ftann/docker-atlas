@@ -1,0 +1,40 @@
+[
+    {
+        "mount_id": 1,
+        "mount_point": "\/Media",
+        "storage": "\\OC\\Files\\Storage\\Local",
+        "authentication_type": "null::null",
+        "configuration": {
+            "datadir": "\/media"
+        },
+        "options": {
+            "encrypt": true,
+            "previews": true,
+            "enable_sharing": true,
+            "filesystem_check_changes": 1,
+            "encoding_compatibility": false,
+            "readonly": false
+        },
+        "applicable_users": [],
+        "applicable_groups": []
+    },
+    {
+        "mount_id": 2,
+        "mount_point": "\/Sync",
+        "storage": "\\OC\\Files\\Storage\\Local",
+        "authentication_type": "null::null",
+        "configuration": {
+            "datadir": "\/syncthing"
+        },
+        "options": {
+            "encrypt": true,
+            "previews": true,
+            "enable_sharing": true,
+            "filesystem_check_changes": 1,
+            "encoding_compatibility": false,
+            "readonly": false
+        },
+        "applicable_users": [],
+        "applicable_groups": []
+    }
+]

@@ -7,6 +7,7 @@ install() {
   ./scripts/mk-fwrules.sh
   ./scripts/mk-secrets.sh
   ./scripts/mk-selinux.sh
+  ./scripts/setup.sh
 }
 
 up() {
