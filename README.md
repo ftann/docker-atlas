@@ -11,20 +11,20 @@ Automatic update of the running containers and automatic backup of both the cont
 
 An instance of Udpxy runs to convert multicast iptv signals to unicast.
 
-## Requirements
+# Requirements
 
 A working server installation is required (preferably fedora due to selinux). The storage locations must be set up
 (see `.env` for details).
 
-### Software
+## Software
 
-- Docker
-- Docker compose plugin >= 2.14
+- Docker >= 23.0.0
+- Docker compose plugin >= 2.17.3
 - Firewalld
 
 > The docker compose plugin is required.
 
-### Credentials
+## Credentials
 
 - Backblaze<br/>
   To back up the whole server a Backblaze account is required.
@@ -33,19 +33,19 @@ A working server installation is required (preferably fedora due to selinux). Th
 - Protonmail<br/>
   Sending emails via protonmail.
 
-## Installation
+# Installation
 
 It's recommended to create a separate user that has access to docker only. Clone the repository and create a new local
 branch. That branch contains all changes to the configuration including usernames and passwords. Commit those changes
 and __DO NOT PUSH__ (ofc no permission unless forked).
 
-### User
+## User
 
 ```shell
 useradd -r -U -m -d /atlas -G docker atlas
 ```
 
-### Repository
+## Repository
 
 ```shell
 sudo su atlas # login as atlas user
@@ -58,7 +58,7 @@ git add . # add changes
 git commit -m "config" # commit changes
 ```
 
-### Docker
+## Docker
 
 Configure docker to allow ipv6 addresses. Set the following keys in the docker configuration `/etc/docker/daemon.json`:
 
@@ -76,7 +76,7 @@ Configure docker to allow ipv6 addresses. Set the following keys in the docker c
 
 Make sure that the used network in `fixed-cidr-v6` matches the range used for ipv6 subnets.
 
-### Firewall
+## Firewall
 
 Copy the non-standard firewall rules to firewalld's configuration directory. The installation script applies the rules.
 
@@ -84,7 +84,7 @@ Copy the non-standard firewall rules to firewalld's configuration directory. The
 cp atlas/configs/firewall/* /etc/firewalld/services
 ```
 
-### Settings
+## Settings
 
 1. Adjust the configuration sections where the versions of the container images are set, the domain names, credentials,
    storage locations, timezone, default file permissions and ownership.
@@ -96,7 +96,7 @@ cp atlas/configs/firewall/* /etc/firewalld/services
    ./ctl install
    ```
 
-## Usage
+# Usage
 
 Run `./ctl` to see the documentation.
 
@@ -113,7 +113,7 @@ uninstall   removes unneeded containers, images, networks and volumes
 status      displays current container status
 ```
 
-### Update
+## Update
 
 To update the repository first stop the running services. Ensure that all local changes are committed then switch to the
 main branch. Fetch all changes from upstream and rebase onto upstream master.
@@ -125,14 +125,23 @@ git fetch --all --prune # Fetch upstream changes
 git rebase -i origin/master # Rebase local changes aka update
 ```
 
-## FAQ
+# Changelog
 
-### Permission denied
+## 0.16.0
+
+### Changed
+
+* Merged multiple '<<' mapping keys into a single line.
+  Docker compose 2.17.3 update go-yaml to v3 which requires this change.
+
+# FAQ
+
+## Permission denied
 
 Ensure that the volumes are owned by the UID and GID defined in `.env`. Make sure that the selinux labels are
 correct `./scripts/mk-selinux.sh`.
 
-## Disclaimer
+# Disclaimer
 
 This collection is made to serve my needs. Feel free to adjust to yours.
 
