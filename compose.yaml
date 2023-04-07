@@ -267,8 +267,8 @@ services:
     networks:
       - nextcloud
       - proxy_ingress
-    volumes_from:
-      - nextcloud
+    volumes:
+      - nextcloud:/var/www/html:ro,z
     labels:
       diun.enable: "true"
       traefik.enable: "true"
