@@ -13,19 +13,18 @@ telemetry:
 #    clients:
 
 authentication_backend:
-  password_reset:
-    disable: true
-
   ldap:
     tls:
       skip_verify: true
 
-    additional_groups_dn: ou=groups
-    additional_users_dn: ou=users
-    groups_filter: (&(member={dn})(objectclass=groupOfNames))
-    users_filter: (&({username_attribute}={input})(objectClass=person))
+    implementation: custom
 
-    display_name_attribute: cn
+    additional_groups_dn: ou=groups
+    additional_users_dn: ou=people
+    groups_filter: "(member={dn})"
+    users_filter: "(&({username_attribute}={input})(objectClass=person))"
+
+    display_name_attribute: displayName
     mail_attribute: mail
     group_name_attribute: cn
     username_attribute: uid

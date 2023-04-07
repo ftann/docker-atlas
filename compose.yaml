@@ -50,16 +50,16 @@ services:
       - authelia
       - authelia_db
       - authelia_redis
-      - ldap
+      - lldap
       - mail
       - prometheus
       - proxy_ingress
     environment:
       <<: *default_service_environment
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_URL: ldaps://ldap
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: cn=auth,dc=domain,dc=com
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: dc=domain,dc=com
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_auth
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_URL: ldap://lldap:3890
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_USER: uid=admin,ou=people,dc=atlas
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_BASE_DN: dc=atlas
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/lldap_admin
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_hmac
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /run/secrets/authelia_identity_key
       AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt
@@ -91,7 +91,7 @@ services:
       - authelia_jwt
       - authelia_session
       - authelia_storage
-      - ldap_auth
+      - lldap_admin
       - protonmail_password_bridge
     labels:
       diun.enable: "true"
@@ -152,37 +152,34 @@ services:
     secrets:
       - inadyn
 
-  ldap:
+  lldap:
     <<: *default_service
-    image: atlas/ldap:${LDAP}
-    build: ./images/ldap
-    container_name: ldap
+    image: lldap/lldap:${LLDAP}
+    container_name: lldap
     networks:
-      - ldap
+      - lldap
     environment:
       <<: *default_service_environment
-      DOMAIN: ${DOMAIN}
-      LDAP_BIND_USER: auth
-      LDAP_BIND_PASSWORD_FILE: /run/secrets/ldap_auth
-      LDAP_CONFIG_PASSWORD_FILE: /run/secrets/ldap_db
-      LDAP_ROOT: root
-      LDAP_ROOT_PASSWORD_FILE: /run/secrets/ldap_db
+      LLDAP_LDAP_BASE_DN: "dc=atlas"
+      LLDAP_LDAP_USER_DN: "admin"
+      LLDAP_LDAP_USER_PASS_FILE: /run/secrets/lldap_admin
+      LLDAP_LDAP_USER_EMAIL: "admin@${DOMAIN}"
+      LLDAP_LDAPS_OPTIONS__ENABLED: "false"
+      LLDAP_JWT_SECRET_FILE: /run/secrets/lldap_jwt
+      LLDAP_KEY_FILE: /run/secrets/lldap_key
     volumes:
-      - ldap:/config:z
-    configs:
-      - source: ldap_init
-        target: /init.ldif
+      - lldap:/data:z
     secrets:
-      - ldap_auth
-      - ldap_db
-    ulimits:
-      nofile: 1024
+      - lldap_admin
+      - lldap_jwt
     labels:
-      chadburn.enabled: "true"
-      chadburn.job-exec.ldap-backup.command: "/bin/bash /app/ldap-backup.sh"
-      chadburn.job-exec.ldap-backup.schedule: "30 2 * * *"
-      chadburn.job-exec.ldap-backup.user: "atlas"
-      chadburn.job-exec.ldap-backup.no-overlap: "true"
+      diun.enable: "true"
+      traefik.enable: "true"
+      traefik.docker.network: *proxy_ingress_network
+      traefik.http.routers.nextcloud.rule: "Host(`ldap.${DOMAIN}`)"
+      traefik.http.routers.nextcloud.entryPoints: "https"
+      traefik.http.routers.nextcloud.middlewares: "secured"
+      traefik.http.services.authelia.loadBalancer.server.port: "17170"
 
   nextcloud:
     <<: *default_service
@@ -757,6 +754,8 @@ services:
       - oidc_grafana
     labels:
       diun.enable: "true"
+      prometheus.enable: "true"
+      prometheus.port: 3000
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.grafana.rule: "Host(`metrics.${DOMAIN}`)"
@@ -785,18 +784,20 @@ services:
       AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
     volumes:
       - restic:/config:z
-      # Volumes.
+      # Database volumes.
       - authelia_db:/data/authelia_db:z
-      - media_data:/data/media:z
-      - nextcloud:/data/nextcloud:z
-      - nextcloud_data:/data/nextcloud_data:z
       - nextcloud_db:/data/nextcloud_db:z
-      - ldap:/data/ldap:z
+      - teamspeak_db:/data/teamspeak_db:z
+      # State volumes.
+      - lldap:/data/lldap:z
+      - nextcloud:/data/nextcloud:z
       - plex:/data/plex:z
       - syncthing:/data/syncthing:z
-      - syncthing_data:/data/syncthing_data:z
       - teamspeak:/data/teamspeak:z
-      - teamspeak_db:/data/teamspeak_db:z
+      # Data volumes.
+      - media_data:/data/media:z
+      - nextcloud_data:/data/nextcloud_data:z
+      - syncthing_data:/data/syncthing_data:z
     secrets:
       - backblaze_id
       - backblaze_key
@@ -836,7 +837,7 @@ networks:
   # Internal special purpose networks.
   authelia:
     <<: *internal_network
-  ldap:
+  lldap:
     <<: *internal_network
   mail:
     <<: *internal_network
@@ -862,7 +863,7 @@ volumes:
   authelia_redis:
   diun:
   grafana:
-  ldap:
+  lldap:
   nextcloud:
   nextcloud_db:
   plex:
@@ -902,8 +903,6 @@ configs:
     file: ./configs/envoy/envoy.yml
   inadyn:
     file: ./configs/inadyn/inadyn.conf
-  ldap_init:
-    file: ./configs/ldap/init.ldif
   prometheus:
     file: ./configs/prometheus/prometheus.yml
   traefik:
@@ -932,10 +931,10 @@ secrets:
     file: ./secrets/grafana_admin
   inadyn:
     file: ./secrets/inadyn
-  ldap_auth:
-    file: ./secrets/ldap_auth
-  ldap_db:
-    file: ./secrets/ldap_db
+  lldap_admin:
+    file: ./secrets/lldap_admin
+  lldap_jwt:
+    file: ./secrets/lldap_jwt
   nextcloud_admin:
     file: ./secrets/nextcloud_admin
   nextcloud_db:
