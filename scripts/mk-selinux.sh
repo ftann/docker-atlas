@@ -9,7 +9,6 @@ if selinuxenabled; then
   volumes=(
     "$(get_var VOLUME_MEDIA)"
     "$(get_var VOLUME_NEXTCLOUD)"
-    "$(get_var VOLUME_POOL)"
     "$(get_var VOLUME_SYNC)"
   )
 
