@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:1.23.3-alpine-slim
+FROM nginxinc/nginx-unprivileged:1.23.4-alpine-slim
 
 ENV NGINX_ENTRYPOINT_QUIET_LOGS=true
 
