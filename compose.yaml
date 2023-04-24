@@ -644,7 +644,7 @@ services:
       # traefik.http.middlewares.secureHeaders.headers.contentSecurityPolicy: "frame-ancestors 'none'; object-src 'none'; base-uri 'none';"
       traefik.http.middlewares.secureHeaders.headers.referrerPolicy: "same-origin"
       traefik.http.middlewares.secureHeaders.headers.permissionsPolicy: "camera 'none'; geolocation 'none'; microphone 'none'; payment 'none'; usb 'none'; vr 'none';"
-      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"
+      traefik.http.middlewares.secureHeaders.headers.customResponseHeaders.X-Robots-Tag: "noindex, nofollow"
       # SSO.
       traefik.http.middlewares.sso.forwardAuth.address: "http://authelia:9091/api/verify?rd=https%3A%2F%2Fsso.${DOMAIN}%2F"
       traefik.http.middlewares.sso.forwardAuth.authResponseHeaders: "Remote-User,Remote-Groups,Remote-Name,Remote-Email"
