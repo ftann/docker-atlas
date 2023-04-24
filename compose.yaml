@@ -275,9 +275,13 @@ services:
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
       traefik.http.routers.nextcloud.entryPoints: "https"
-      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud"
-      traefik.http.middlewares.nextcloud.redirectRegex.regex: "https://(.*)/.well-known/(card|cal)dav"
-      traefik.http.middlewares.nextcloud.redirectRegex.replacement: "https://$$1/remote.php/dav/"
+      traefik.http.routers.nextcloud.middlewares: "secured,nextcloud-dav,nextcloud-wk"
+      traefik.http.middlewares.nextcloud-dav.redirectRegex.regex: "https?://([^/]*)/.well-known/(card|cal)dav"
+      traefik.http.middlewares.nextcloud-dav.redirectRegex.replacement: "https://$$1/remote.php/dav/"
+      traefik.http.middlewares.nextcloud-dav.redirectRegex.permanent: true
+      traefik.http.middlewares.nextcloud-wk.redirectRegex.regex: "https?://([^/]*)(/.well-known[^#]*)"
+      traefik.http.middlewares.nextcloud-wk.redirectRegex.replacement: "https://$$1/index.php$$2"
+      traefik.http.middlewares.nextcloud-wk.redirectRegex.permanent: true
 
   plex:
     <<: *default_service
