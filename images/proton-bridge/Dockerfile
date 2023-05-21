@@ -15,7 +15,7 @@ RUN wget \
     cd proton-bridge-* && \
     make build-nogui
 
-FROM alpine:3.17.2
+FROM alpine:3.18.0
 
 ARG USER=atlas
 ARG PUID=2000
