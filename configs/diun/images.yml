@@ -1,2 +1,3 @@
 - name: alpine:3.18.0
+- name: haproxy:2.7.8-alpine3.17
 - name: nginxinc/nginx-unprivileged:1.24.0-alpine-slim

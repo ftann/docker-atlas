@@ -539,10 +539,14 @@ services:
 
   socket-proxy:
     <<: *default_service
-    image: tecnativa/docker-socket-proxy:${SOCKET_PROXY}
+    image: atlas/socket-proxy:${SOCKET_PROXY}
+    build: ./images/socket-proxy
     container_name: socket-proxy
+    # Allow haproxy to read from docker socket.
+    user: "haproxy:${DOCKER_GID}"
     userns_mode: host
     networks:
+      - prometheus
       - socket_proxy
     environment:
       <<: *default_service_environment
@@ -560,6 +564,12 @@ services:
       TASKS: 1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro,z
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    labels:
+      prometheus.enable: "true"
+      prometheus.port: 9090
+      prometheus.path: "/metrics"
 
   traefik:
     <<: *default_service
