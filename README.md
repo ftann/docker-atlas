@@ -110,7 +110,6 @@ up          builds and starts the containers
 down        stops the containers
 remove      stops and removes the containers and volumes
 uninstall   removes unneeded containers, images, networks and volumes
-status      displays current container status
 ```
 
 ## Update
