@@ -110,7 +110,6 @@ up          builds and starts the containers
 down        stops the containers
 remove      stops and removes the containers and volumes
 uninstall   removes unneeded containers, images, networks and volumes
-status      displays current container status
 ```
 
 ## Update
@@ -126,6 +125,34 @@ git rebase -i origin/master # Rebase local changes aka update
 ```
 
 # Changelog
+
+## 0.17.0
+
+### Added
+
+* socket-proxy replaces tecnativa/docker-socket-proxy. Uses latest haproxy version, exposes metrics.
+
+## 0.16.5
+
+### Fixed
+
+* Resolved nextcloud warnings X-Robot-Tag, redirects of well-known uris
+
+### Changed
+
+* Updated alpine base images to 3.18.0
+* Updated nginx base images to 1.24.0
+* Updated chadburn to 1.0.7
+* Updated envoy to 1.26.1
+* Updated grafana to 9.5.2
+* Updated inadyn to 2.11.0
+* Updated mariadb to 10.11.3
+* Updated nextcloud to 26.0.1
+* Updated prometheus to 2.44
+* Updated redis to 6.2.12
+* Updated syncthing to 1.23.4
+* Updated traefik to 2.10.1
+* Updated plex to 1.32.1
 
 ## 0.16.0
 
