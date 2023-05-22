@@ -10,7 +10,7 @@
   max_tags: 10
   include_tags:
     - ^\d+\.\d+\.\d+-alpine.*
-- name: nginxinc/nginx-unprivileged:1.24.0-alpine-slim
+- name: nginxinc/nginx-unprivileged
   watch_repo: true
   notify_on: new
   max_tags: 10
