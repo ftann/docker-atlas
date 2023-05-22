@@ -567,7 +567,6 @@ services:
     labels:
       prometheus.enable: "true"
       prometheus.port: 9090
-      prometheus.path: "/metrics"
 
   traefik:
     <<: *default_service
