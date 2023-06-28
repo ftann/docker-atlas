@@ -111,7 +111,7 @@ services:
     networks:
       - authelia_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: authelia
       MARIADB_USER: authelia
       MARIADB_PASSWORD_FILE: /run/secrets/authelia_db
@@ -130,7 +130,7 @@ services:
 
   authelia-redis:
     <<: *default_service
-    image: redis:${REDIS}
+    image: redis:${REDIS_AUTHELIA}
     container_name: authelia-redis
     networks:
       - authelia_redis
@@ -184,21 +184,35 @@ services:
       chadburn.job-exec.ldap-backup.user: "atlas"
       chadburn.job-exec.ldap-backup.no-overlap: "true"
 
+  nextcloud-init-redis-fix:
+    image: nextcloud:${NEXTCLOUD}
+    command: >
+      sh -c "umask 113 && touch /usr/local/etc/php/conf.d/redis-session.ini && chown :${PGID} /usr/local/etc/php/conf.d/redis-session.ini"
+    environment:
+      <<: [ *default_service_environment ]
+    volumes:
+      - nextcloud:/var/www/html:z
+      - nextcloud_redis_fix:/usr/local/etc/php/conf.d:z
+
   nextcloud:
     <<: *default_service
     image: nextcloud:${NEXTCLOUD}
     container_name: nextcloud
     user: "${PUID}:${PGID}"
     depends_on:
-      - nextcloud-db
+      nextcloud-db:
+        condition: service_started
+      nextcloud-init-redis-fix:
+        condition: service_completed_successfully
     networks:
       - authelia
       - mail
       - nextcloud
       - nextcloud_db
+      - nextcloud_redis
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       NEXTCLOUD_ADMIN_USER: admin
       NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin
       NEXTCLOUD_DATA_DIR: /data
@@ -207,6 +221,7 @@ services:
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
       MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db
+      REDIS_HOST: nextcloud-redis
       SMTP_HOST: proton-bridge
       SMTP_PORT: 25
       SMTP_NAME: "admin@${DOMAIN}"
@@ -219,6 +234,7 @@ services:
     volumes:
       - nextcloud:/var/www/html:z
       - nextcloud_data:/data:z
+      - nextcloud_redis_fix:/usr/local/etc/php/conf.d:z
       - media_data:/media:z
       - syncthing_data:/syncthing:z
     secrets:
@@ -240,7 +256,7 @@ services:
     networks:
       - nextcloud_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: nextcloud
       MARIADB_USER: nextcloud
       MARIADB_PASSWORD_FILE: /run/secrets/nextcloud_db
@@ -256,6 +272,17 @@ services:
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
       chadburn.job-exec.nextcloud-backup.user: "mysql"
       chadburn.job-exec.nextcloud-backup.no-overlap: "true"
+
+  nextcloud-redis:
+    <<: *default_service
+    image: redis:${REDIS}
+    container_name: nextcloud-redis
+    networks:
+      - nextcloud_redis
+    volumes:
+      - nextcloud_redis:/data:z
+    labels:
+      diun.enable: "true"
 
   nextcloud-web:
     <<: *default_service
@@ -291,7 +318,7 @@ services:
       - proxy_ingress
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PUID: ${PUID}
       PGID: ${PGID}
       VERSION: docker
@@ -330,7 +357,7 @@ services:
     ports:
       - "25:25"
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
       PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
       PROTONMAIL_PASSWORD_BRIDGE_FILE: /run/secrets/protonmail_password_bridge
@@ -350,7 +377,7 @@ services:
       - proxy_ingress
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PUID: ${PUID}
       PGID: ${PGID}
       all_proxy: *http_proxy
@@ -410,7 +437,7 @@ services:
     networks:
       - teamspeak_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: teamspeak
       MARIADB_USER: teamspeak
       MARIADB_PASSWORD_FILE: /run/secrets/teamspeak_db
@@ -495,7 +522,7 @@ services:
       - proxy_egress
       - socket_proxy
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       DIUN_PROVIDERS_DOCKER: "true"
       DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
       DIUN_PROVIDERS_DOCKER_TLSVERIFY: "false"
@@ -689,7 +716,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
     volumes:
       - prometheus_db:/prometheus:z
     configs:
@@ -779,7 +806,7 @@ services:
     networks:
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       RESTIC_REPOSITORY: <empty>
       RESTIC_BACKUP_TAGS: auto
       RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
@@ -856,6 +883,8 @@ networks:
     <<: *internal_network
   nextcloud_db:
     <<: *internal_network
+  nextcloud_redis:
+    <<: *internal_network
   teamspeak_db:
     <<: *internal_network
 
@@ -868,6 +897,8 @@ volumes:
   ldap:
   nextcloud:
   nextcloud_db:
+  nextcloud_redis:
+  nextcloud_redis_fix:
   plex:
   prometheus_db:
   proton_bridge:
