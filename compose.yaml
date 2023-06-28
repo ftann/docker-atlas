@@ -111,7 +111,7 @@ services:
     networks:
       - authelia_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: authelia
       MARIADB_USER: authelia
       MARIADB_PASSWORD_FILE: /run/secrets/authelia_db
@@ -198,7 +198,7 @@ services:
       - nextcloud_db
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       NEXTCLOUD_ADMIN_USER: admin
       NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin
       NEXTCLOUD_DATA_DIR: /data
@@ -240,7 +240,7 @@ services:
     networks:
       - nextcloud_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: nextcloud
       MARIADB_USER: nextcloud
       MARIADB_PASSWORD_FILE: /run/secrets/nextcloud_db
@@ -291,7 +291,7 @@ services:
       - proxy_ingress
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PUID: ${PUID}
       PGID: ${PGID}
       VERSION: docker
@@ -330,7 +330,7 @@ services:
     ports:
       - "25:25"
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PROTONMAIL_ADDRESS: ${PROTONMAIL_ADDRESS}
       PROTONMAIL_PASSWORD_FILE: /run/secrets/protonmail_password
       PROTONMAIL_PASSWORD_BRIDGE_FILE: /run/secrets/protonmail_password_bridge
@@ -350,7 +350,7 @@ services:
       - proxy_ingress
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       PUID: ${PUID}
       PGID: ${PGID}
       all_proxy: *http_proxy
@@ -410,7 +410,7 @@ services:
     networks:
       - teamspeak_db
     environment:
-      <<: [*default_service_environment, *database_environment]
+      <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: teamspeak
       MARIADB_USER: teamspeak
       MARIADB_PASSWORD_FILE: /run/secrets/teamspeak_db
@@ -495,7 +495,7 @@ services:
       - proxy_egress
       - socket_proxy
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       DIUN_PROVIDERS_DOCKER: "true"
       DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
       DIUN_PROVIDERS_DOCKER_TLSVERIFY: "false"
@@ -689,7 +689,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
     volumes:
       - prometheus_db:/prometheus:z
     configs:
@@ -779,7 +779,7 @@ services:
     networks:
       - proxy_egress
     environment:
-      <<: [*default_service_environment, *proxy_egress_environment]
+      <<: [ *default_service_environment, *proxy_egress_environment ]
       RESTIC_REPOSITORY: <empty>
       RESTIC_BACKUP_TAGS: auto
       RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
