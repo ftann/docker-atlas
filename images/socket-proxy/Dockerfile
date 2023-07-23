@@ -1,4 +1,4 @@
-FROM haproxy:2.7.8-alpine3.17
+FROM haproxy:2.8.1-alpine3.18
 
 EXPOSE 2375
 
