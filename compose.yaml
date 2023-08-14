@@ -590,7 +590,7 @@ services:
       SERVICES: 1
       TASKS: 1
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     sysctls:
       - net.ipv4.ip_unprivileged_port_start=0
     labels:
