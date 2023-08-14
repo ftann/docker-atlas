@@ -5,7 +5,7 @@
 if selinuxenabled; then
 
   label="$(get_var SELINUX_OBJ_LABEL)"
-  level="$(get_var SELINUX_OBJ_level)"
+  level="$(get_var SELINUX_OBJ_LEVEL)"
   volumes=(
     "$(get_var VOLUME_MEDIA)"
     "$(get_var VOLUME_NEXTCLOUD)"
