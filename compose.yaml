@@ -745,9 +745,9 @@ services:
     networks:
       - prometheus
     volumes:
-      - /proc:/host/proc:ro,z
-      - /sys:/host/sys:ro,z
-      - /:/rootfs:ro,z
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
     labels:
       diun.enable: "true"
       prometheus.enable: "true"
