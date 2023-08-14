@@ -385,6 +385,9 @@ services:
     volumes:
       - syncthing:/var/syncthing:z
       - syncthing_data:/data:z
+    sysctls:
+      - net.core.rmem_max=2500000
+      - net.core.wmem_max=2500000
     labels:
       diun.enable: "true"
       traefik.enable: "true"
