@@ -386,8 +386,8 @@ services:
       - syncthing:/var/syncthing:z
       - syncthing_data:/data:z
     sysctls:
-      - net.core.rmem_max=2500000
-      - net.core.wmem_max=2500000
+      net.core.rmem_max: 2500000
+      net.core.wmem_max: 2500000
     labels:
       diun.enable: "true"
       traefik.enable: "true"
@@ -596,7 +596,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     sysctls:
-      - net.ipv4.ip_unprivileged_port_start=0
+      net.ipv4.ip_unprivileged_port_start: 0
     labels:
       prometheus.enable: "true"
       prometheus.port: 9090
