@@ -1,4 +1,4 @@
-FROM alpine:3.18.0
+FROM alpine:3.18.4
 
 ARG USER=atlas
 ARG PUID=2000
