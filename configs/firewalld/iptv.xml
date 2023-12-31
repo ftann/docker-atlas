@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<service>
-  <short>iptv</short>
-  <description>IPTV via multicast.</description>
-  <protocol value="igmp"/>
-  <port protocol="udp" port="5000"/>
-</service>

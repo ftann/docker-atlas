@@ -94,7 +94,6 @@ services:
       - ldap_auth
       - protonmail_password_bridge
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
       prometheus.port: 9959
       traefik.enable: "true"
@@ -121,7 +120,6 @@ services:
     secrets:
       - authelia_db
     labels:
-      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.authelia-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.authelia-backup.schedule: "0 2 * * *"
@@ -137,7 +135,6 @@ services:
     volumes:
       - authelia_redis:/data:z
     labels:
-      diun.enable: "true"
 
   inadyn:
     <<: *default_service
@@ -242,7 +239,6 @@ services:
       - nextcloud_db
       - protonmail_password_bridge
     labels:
-      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.nextcloud-cron.schedule: "@every 5m"
       chadburn.job-exec.nextcloud-cron.command: "/usr/local/bin/php -f /var/www/html/cron.php"
@@ -266,7 +262,6 @@ services:
     secrets:
       - nextcloud_db
     labels:
-      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.nextcloud-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.nextcloud-backup.schedule: "0 2 * * *"
@@ -282,7 +277,6 @@ services:
     volumes:
       - nextcloud_redis:/data:z
     labels:
-      diun.enable: "true"
 
   nextcloud-web:
     <<: *default_service
@@ -297,7 +291,6 @@ services:
     volumes_from:
       - nextcloud
     labels:
-      diun.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.nextcloud.rule: "Host(`cloud.${DOMAIN}`)"
@@ -327,7 +320,6 @@ services:
       - media_data:/data:z
       - plex:/config:z
     labels:
-      diun.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.plex.rule: "Host(`media.${DOMAIN}`)"
@@ -389,7 +381,6 @@ services:
       net.core.rmem_max: 2500000
       net.core.wmem_max: 2500000
     labels:
-      diun.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
@@ -424,7 +415,6 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      diun.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.tcp.routers.teamspeak.rule: "HostSNI(`*`)"
@@ -450,36 +440,11 @@ services:
     secrets:
       - teamspeak_db
     labels:
-      diun.enable: "true"
       chadburn.enabled: "true"
       chadburn.job-exec.teamspeak-backup.command: "/bin/bash -c 'mariadb-dump $$MARIADB_DATABASE > /var/lib/mysql/$$MARIADB_DATABASE.sql'"
       chadburn.job-exec.teamspeak-backup.schedule: "0 2 * * *"
       chadburn.job-exec.teamspeak-backup.user: "mysql"
       chadburn.job-exec.teamspeak-backup.no-overlap: "true"
-
-  udpxy:
-    <<: *default_service
-    image: atlas/udpxy:${UDPXY}
-    build: ./images/udpxy
-    container_name: udpxy
-    read_only: true
-    network_mode: host
-    userns_mode: host
-
-  www:
-    <<: *default_service
-    image: atlas/www:${WWW}
-    build: ./images/www
-    container_name: www
-    logging:
-      driver: none
-    networks:
-      - proxy_ingress
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.www.rule: "Host(`${DOMAIN}`, `www.${DOMAIN}`)"
-      traefik.http.routers.www.entryPoints: "https"
-      traefik.http.routers.www.middlewares: "secured"
 
   #
   # Infrastructure.
@@ -511,43 +476,8 @@ services:
     environment:
       DOCKER_HOST: tcp://socket-proxy:2375
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
       prometheus.port: 8080
-
-  diun:
-    <<: *default_service
-    image: crazymax/diun:${DIUN}
-    container_name: diun
-    depends_on:
-      - socket-proxy
-    networks:
-      - proxy_egress
-      - socket_proxy
-    environment:
-      <<: [ *default_service_environment, *proxy_egress_environment ]
-      DIUN_PROVIDERS_DOCKER: "true"
-      DIUN_PROVIDERS_DOCKER_ENDPOINT: tcp://socket-proxy:2375
-      DIUN_PROVIDERS_DOCKER_TLSVERIFY: "false"
-      DIUN_PROVIDERS_FILE_FILENAME: &diun_images /images.yml
-      DIUN_WATCH_SCHEDULE: "0 1 * * *"
-      DIUN_NOTIF_MAIL_HOST: proton-bridge
-      DIUN_NOTIF_MAIL_PORT: 25
-      DIUN_NOTIF_MAIL_USERNAME: "admin@${DOMAIN}"
-      DIUN_NOTIF_MAIL_PASSWORDFILE: /run/secrets/protonmail_password_bridge
-      DIUN_NOTIF_MAIL_FROM: "admin@${DOMAIN}"
-      DIUN_NOTIF_MAIL_TO: "${PROTONMAIL_ADDRESS}"
-      DIUN_NOTIF_MAIL_INSECURESKIPVERIFY: "true"
-      LOG_LEVEL: "error"
-    volumes:
-      - diun:/data
-    configs:
-      - source: diun
-        target: *diun_images
-    secrets:
-      - protonmail_password_bridge
-    labels:
-      diun.enable: "true"
 
   envoy:
     <<: *default_service
@@ -562,7 +492,6 @@ services:
       - source: envoy
         target: /envoy.yml
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
       prometheus.port: 9901
       prometheus.path: "/stats/prometheus"
@@ -584,7 +513,6 @@ services:
       LOG_LEVEL: err
       POST: 1
       # chadburn: CONTAINERS, EXEC, IMAGES, INFO, NETWORKS, TASKS, SERVICES
-      # diun: CONTAINERS, IMAGES
       # traefik: NETWORKS, SERVICES, TASKS
       CONTAINERS: 1
       EXEC: 1
@@ -658,7 +586,6 @@ services:
     secrets:
       - cloudflare
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
       prometheus.port: 9090
       traefik.enable: "true"
@@ -727,7 +654,6 @@ services:
       - source: prometheus
         target: /prometheus.yml
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
@@ -753,7 +679,6 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     labels:
-      diun.enable: "true"
       prometheus.enable: "true"
 
   grafana:
@@ -790,59 +715,11 @@ services:
       - grafana_admin
       - oidc_grafana
     labels:
-      diun.enable: "true"
       traefik.enable: "true"
       traefik.docker.network: *proxy_ingress_network
       traefik.http.routers.grafana.rule: "Host(`metrics.${DOMAIN}`)"
       traefik.http.routers.grafana.entryPoints: "https"
       traefik.http.routers.grafana.middlewares: "secured"
-
-  #
-  # Backup.
-  #
-
-  restic:
-    <<: *default_service
-    image: atlas/restic:${RESTIC}
-    build: ./images/restic
-    container_name: restic
-    command: "tail -f /dev/null" # The container should run indefinitely to allow chadburn to execute commands.
-    networks:
-      - proxy_egress
-    environment:
-      <<: [ *default_service_environment, *proxy_egress_environment ]
-      RESTIC_REPOSITORY: <empty>
-      RESTIC_BACKUP_TAGS: auto
-      RESTIC_FORGET_ARGS: --prune --keep-daily 7 --keep-weekly 4 --keep-monthly 3 --keep-yearly 1
-      RESTIC_PASSWORD_FILE: /run/secrets/restic
-      AWS_ACCESS_KEY_ID_FILE: /run/secrets/backblaze_id
-      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backblaze_key
-    volumes:
-      - restic:/config:z
-      # Volumes.
-      - authelia_db:/data/authelia_db:z
-      - media_data:/data/media:z
-      - nextcloud:/data/nextcloud:z
-      - nextcloud_data:/data/nextcloud_data:z
-      - nextcloud_db:/data/nextcloud_db:z
-      - ldap:/data/ldap:z
-      - plex:/data/plex:z
-      - syncthing:/data/syncthing:z
-      - syncthing_data:/data/syncthing_data:z
-      - teamspeak:/data/teamspeak:z
-      - teamspeak_db:/data/teamspeak_db:z
-    secrets:
-      - backblaze_id
-      - backblaze_key
-      - restic
-    labels:
-      chadburn.enabled: "true"
-      chadburn.job-exec.restic-backup.schedule: "30 3 * * *"
-      chadburn.job-exec.restic-backup.command: "/bin/bash /app/restic-backup.sh"
-      chadburn.job-exec.restic-backup.no-overlap: "true"
-      chadburn.job-exec.restic-check.schedule: "30 8 1 * *"
-      chadburn.job-exec.restic-check.command: "/bin/bash /app/restic-check.sh"
-      chadburn.job-exec.restic-check.no-overlap: "true"
 
 networks:
   # Main cluster networks.
@@ -896,7 +773,6 @@ volumes:
   authelia:
   authelia_db:
   authelia_redis:
-  diun:
   grafana:
   ldap:
   nextcloud:
@@ -906,7 +782,6 @@ volumes:
   plex:
   prometheus_db:
   proton_bridge:
-  restic:
   syncthing:
   teamspeak:
   teamspeak_db:
@@ -934,8 +809,6 @@ volumes:
 configs:
   authelia:
     file: ./configs/authelia/configuration.yml
-  diun:
-    file: ./configs/diun/images.yml
   envoy:
     file: ./configs/envoy/envoy.yml
   inadyn:
@@ -960,10 +833,6 @@ secrets:
     file: ./secrets/authelia_session
   authelia_storage:
     file: ./secrets/authelia_storage
-  backblaze_id:
-    file: ./secrets/backblaze_id
-  backblaze_key:
-    file: ./secrets/backblaze_key
   cloudflare:
     file: ./secrets/cloudflare
   grafana_admin:
@@ -986,7 +855,5 @@ secrets:
     file: ./secrets/protonmail_password_bridge
   protonmail_password_mailbox:
     file: ./secrets/protonmail_password_mailbox
-  restic:
-    file: ./secrets/restic
   teamspeak_db:
     file: ./secrets/teamspeak_db

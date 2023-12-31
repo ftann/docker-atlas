@@ -17,15 +17,12 @@ create_secret secrets/nextcloud_admin "$(rnd_pw 40)"
 create_secret secrets/nextcloud_db "$(rnd_pw 20)"
 create_secret secrets/oidc_grafana "$(rnd_pw 40)"
 create_secret secrets/protonmail_password_bridge "$(rnd_pw 20)"
-create_secret secrets/restic "$(rnd_pw 20)"
 create_secret secrets/teamspeak_db "$(rnd_pw 20)"
 
 #
 # Predefined secrets.
 #
-create_secret secrets/backblaze_id "$(get_b2_id)"
-create_secret secrets/backblaze_key "$(get_b2_key)"
-create_secret secrets/backblaze_key "$(get_cloudflare_token)"
+create_secret secrets/cloudflare "$(get_cloudflare_token)"
 create_secret secrets/inadyn "$(cat <<-EOF
 username=$(get_domain)
 password=$(get_cloudflare_token)

@@ -51,12 +51,11 @@ EOF
 }
 
 run_if_defined() {
-  if declare -f "$1" >/dev/null; then
-    "$@"
-  else
+  if ! declare -f "$1" >/dev/null; then
     print_usage
     exit 1
   fi
+  "$@"
 }
 
 run_if_defined "$@"
