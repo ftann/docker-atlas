@@ -26,16 +26,8 @@ add_service_fw() {
   fw_perm --add-service="$1"
 }
 
-add_source_fw() {
-  fw_perm --add-source="$1"
-}
-
 del_service_fw() {
   fw_perm --remove-service="$1"
-}
-
-del_source_fw() {
-  fw_perm --remove-source="$1"
 }
 
 reload_fw() {
@@ -114,14 +106,6 @@ get_var() {
 
 get_domain() {
   get_var DOMAIN
-}
-
-get_b2_id() {
-  get_var BACKBLAZE_ID
-}
-
-get_b2_key() {
-  get_var BACKBLAZE_KEY
 }
 
 get_cloudflare_token() {

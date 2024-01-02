@@ -7,10 +7,6 @@ Nextcloud for file management, Syncthing as file synchronization service and Ple
 Traefik reverse proxy in front of http, tcp and udp services with automatic renewal of certificates.<br/>
 Proton-bridge that allows for sending mails to the admin or registered users.
 
-Automatic update of the running containers and automatic backup of both the container state and the data.
-
-An instance of Udpxy runs to convert multicast iptv signals to unicast.
-
 # Requirements
 
 A working server installation is required (preferably fedora due to selinux). The storage locations must be set up
@@ -26,8 +22,6 @@ A working server installation is required (preferably fedora due to selinux). Th
 
 ## Credentials
 
-- Backblaze<br/>
-  To back up the whole server a Backblaze account is required.
 - Cloudflare (or other supported providers by traefik)<br/>
   Automatic certificate renewal and dynamic dns require control of a dns zone.
 - Protonmail<br/>
@@ -90,8 +84,7 @@ cp atlas/configs/firewall/* /etc/firewalld/services
    storage locations, timezone, default file permissions and ownership.
     - Database credentials are set up automatically by `./ctl install` (or manually `./scripts/mk-secrets.sh`)
 2. Change the configurations in the configs folder
-3. Add a default landing page to the `www` container
-4. Run the installation command of the `ctl` script
+3. Run the installation command of the `ctl` script
    ```shell
    ./ctl install
    ```
@@ -125,6 +118,20 @@ git rebase -i origin/master # Rebase local changes aka update
 ```
 
 # Changelog
+
+## 0.19.0
+
+### Removed
+
+* **BREAKING**: diun, www container images removed
+* **BREAKING**: restic container image removed because backup moved to proxmox
+* **BREAKING**: udpxy container image removed because of host ns requirement, moved to proxmox
+
+## 0.18.x
+
+### Changed
+
+* Updated container images
 
 ## 0.17.0
 
