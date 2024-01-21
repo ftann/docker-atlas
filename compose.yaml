@@ -135,19 +135,6 @@ services:
     volumes:
       - authelia_redis:/data:z
 
-  inadyn:
-    <<: *default_service
-    image: troglobit/inadyn:${INADYN}
-    container_name: inadyn
-    command: "--no-pidfile --loglevel=err --startup-delay=20 --config=/inadyn"
-    read_only: true
-    networks:
-      - egress # Proxy not supported.
-    configs:
-      - inadyn
-    secrets:
-      - inadyn
-
   ldap:
     <<: *default_service
     image: atlas/ldap:${LDAP}
@@ -770,8 +757,6 @@ configs:
     file: ./configs/authelia/configuration.yml
   envoy:
     file: ./configs/envoy/envoy.yml
-  inadyn:
-    file: ./configs/inadyn/inadyn.conf
   ldap_init:
     file: ./configs/ldap/init.ldif
   prometheus:
@@ -796,8 +781,6 @@ secrets:
     file: ./secrets/cloudflare
   grafana_admin:
     file: ./secrets/grafana_admin
-  inadyn:
-    file: ./secrets/inadyn
   ldap_auth:
     file: ./secrets/ldap_auth
   ldap_db:

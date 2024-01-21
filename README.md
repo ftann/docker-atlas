@@ -123,6 +123,7 @@ git rebase -i origin/master # Rebase local changes aka update
 
 ### Removed
 
+* **BREAKING**: inadyn replaced by pfsense
 * **BREAKING**: syncthing file synchronisation replaced by nextcloud
 
 ## 0.19.0

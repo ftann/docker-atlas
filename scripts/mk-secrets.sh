@@ -23,11 +23,5 @@ create_secret secrets/teamspeak_db "$(rnd_pw 20)"
 # Predefined secrets.
 #
 create_secret secrets/cloudflare "$(get_cloudflare_token)"
-create_secret secrets/inadyn "$(cat <<-EOF
-username=$(get_domain)
-password=$(get_cloudflare_token)
-hostname={$(get_domain)}
-EOF
-)"
 create_secret secrets/protonmail_password "$(get_protonmail_password)"
 create_secret secrets/protonmail_password_mailbox "$(get_protonmail_password_mailbox)"
