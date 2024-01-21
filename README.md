@@ -3,7 +3,7 @@
 __The Atlas collection provides a set of containers that are configured to work as private cloud.__
 
 Included are a LDAP backend and OIDC provider for SSO and user management.<br/>
-Nextcloud for file management, Syncthing as file synchronization service and Plex to serve media content.<br/>
+Nextcloud for file management and Plex to serve media content.<br/>
 Traefik reverse proxy in front of http, tcp and udp services with automatic renewal of certificates.<br/>
 Proton-bridge that allows for sending mails to the admin or registered users.
 
@@ -118,6 +118,12 @@ git rebase -i origin/master # Rebase local changes aka update
 ```
 
 # Changelog
+
+## 0.20.0
+
+### Removed
+
+* **BREAKING**: syncthing file synchronisation replaced by nextcloud
 
 ## 0.19.0
 

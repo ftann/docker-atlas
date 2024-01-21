@@ -232,7 +232,6 @@ services:
       - nextcloud_data:/data:z
       - nextcloud_redis_fix:/usr/local/etc/php/conf.d:z
       - media_data:/media:z
-      - syncthing_data:/syncthing:z
     secrets:
       - nextcloud_admin
       - nextcloud_db
@@ -358,36 +357,6 @@ services:
       - protonmail_password
       - protonmail_password_bridge
       - protonmail_password_mailbox
-
-  syncthing:
-    <<: *default_service
-    image: syncthing/syncthing:${SYNCTHING}
-    container_name: syncthing
-    networks:
-      - proxy_ingress
-      - proxy_egress
-    environment:
-      <<: [ *default_service_environment, *proxy_egress_environment ]
-      PUID: ${PUID}
-      PGID: ${PGID}
-      all_proxy: *http_proxy
-      ALL_PROXY_NO_FALLBACK: 1
-    volumes:
-      - syncthing:/var/syncthing:z
-      - syncthing_data:/data:z
-    sysctls:
-      net.core.rmem_max: 2500000
-      net.core.wmem_max: 2500000
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: *proxy_ingress_network
-      traefik.http.routers.syncthing.rule: "Host(`syncthing.${DOMAIN}`)"
-      traefik.http.routers.syncthing.entryPoints: "https"
-      traefik.http.routers.syncthing.middlewares: "securedAuth"
-      traefik.http.services.syncthing.loadBalancer.server.port: "8384"
-      traefik.tcp.routers.syncthing.rule: "HostSNI(`*`)"
-      traefik.tcp.routers.syncthing.entryPoints: "syncthing"
-      traefik.tcp.services.syncthing.loadBalancer.server.port: "22000"
 
   teamspeak:
     <<: *default_service
@@ -554,7 +523,6 @@ services:
       - "--entryPoints.https.http.tls.domains[0].sans=*.${DOMAIN}"
       - "--entryPoints.teamspeakVoice.address=:9987/udp"
       - "--entryPoints.teamspeakFileTransfer.address=:30033"
-      - "--entryPoints.syncthing.address=:22000"
       - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
       - "--certificatesResolvers.le.acme.storage=/config/acme.json"
       - "--serversTransport.insecureSkipVerify=true"
@@ -780,7 +748,6 @@ volumes:
   plex:
   prometheus_db:
   proton_bridge:
-  syncthing:
   teamspeak:
   teamspeak_db:
   traefik:
@@ -797,12 +764,6 @@ volumes:
       o: bind
       type: none
       device: ${VOLUME_NEXTCLOUD}
-  syncthing_data:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: ${VOLUME_SYNCTHING}
 
 configs:
   authelia:
