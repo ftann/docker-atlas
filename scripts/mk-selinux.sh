@@ -9,7 +9,6 @@ if selinuxenabled; then
   volumes=(
     "$(get_var VOLUME_MEDIA)"
     "$(get_var VOLUME_NEXTCLOUD)"
-    "$(get_var VOLUME_SYNCTHING)"
   )
 
   selinux_chcon "${label}" "${level}" ./.* ./* "${volumes[@]}"

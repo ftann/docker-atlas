@@ -104,10 +104,6 @@ get_var() {
   eval "echo \${$1}"
 }
 
-get_domain() {
-  get_var DOMAIN
-}
-
 get_cloudflare_token() {
   get_var CLOUDFLARE_TOKEN
 }
