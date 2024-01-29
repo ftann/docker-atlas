@@ -119,6 +119,12 @@ git rebase -i origin/master # Rebase local changes aka update
 
 # Changelog
 
+## 0.20.1
+
+### Fixed
+
+* Use legacy iptables for proxmox host
+
 ## 0.20.0
 
 ### Removed

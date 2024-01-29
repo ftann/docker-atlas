@@ -317,7 +317,8 @@ services:
     build: ./images/nftables
     depends_on:
       - envoy
-    command: "nft add rule ip nat OUTPUT tcp dport 443 dnat to envoy:10001"
+    #command: "nft add rule ip nat OUTPUT tcp dport 443 dnat to envoy:10001"
+    command: "iptables-legacy -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $(nslookup envoy | grep Address | tail -n1 | cut -f2 -d' '):10001"
     cap_add:
       - NET_ADMIN
     network_mode: service:plex
