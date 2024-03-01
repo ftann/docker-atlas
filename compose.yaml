@@ -15,9 +15,9 @@ x-database-environment: &database_environment
 x-proxy-egress-environment: &proxy_egress_environment
   http_proxy: &http_proxy "http://envoy:10000"
   https_proxy: *http_proxy
-  no_proxy: "socket-proxy,localhost,127.0.0.1"
+  no_proxy: "authelia,socket-proxy,localhost,127.0.0.1"
 
-x-proxy-ingress-network: &proxy_ingress_network atlas_proxy_ingress
+x-proxy-ingress-network: &proxy_ingress_network proxy_ingress
 
 x-internal-network: &internal_network
   driver_opts:
@@ -47,10 +47,7 @@ services:
       authelia-redis:
         condition: service_started
     networks:
-      - authelia
-      - authelia_db
-      - authelia_redis
-      - ldap
+      - authelia_private
       - mail
       - prometheus
       - proxy_ingress
@@ -108,7 +105,7 @@ services:
     image: mariadb:${MARIADB}
     container_name: authelia-db
     networks:
-      - authelia_db
+      - authelia_private
     environment:
       <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: authelia
@@ -131,7 +128,7 @@ services:
     image: redis:${REDIS_AUTHELIA}
     container_name: authelia-redis
     networks:
-      - authelia_redis
+      - authelia_private
     volumes:
       - authelia_redis:/data:z
 
@@ -141,7 +138,7 @@ services:
     build: ./images/ldap
     container_name: ldap
     networks:
-      - ldap
+      - authelia_private
     environment:
       <<: *default_service_environment
       DOMAIN: ${DOMAIN}
@@ -188,12 +185,10 @@ services:
       nextcloud-init-redis-fix:
         condition: service_completed_successfully
     networks:
-      - authelia
       - mail
-      - nextcloud
-      - nextcloud_db
-      - nextcloud_redis
+      - nextcloud_private
       - proxy_egress
+      - proxy_ingress
     environment:
       <<: [ *default_service_environment, *proxy_egress_environment ]
       NEXTCLOUD_ADMIN_USER: admin
@@ -235,7 +230,7 @@ services:
     image: mariadb:${MARIADB}
     container_name: nextcloud-db
     networks:
-      - nextcloud_db
+      - nextcloud_private
     environment:
       <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: nextcloud
@@ -258,7 +253,7 @@ services:
     image: redis:${REDIS}
     container_name: nextcloud-redis
     networks:
-      - nextcloud_redis
+      - nextcloud_private
     volumes:
       - nextcloud_redis:/data:z
 
@@ -270,7 +265,6 @@ services:
     depends_on:
       - nextcloud
     networks:
-      - nextcloud
       - proxy_ingress
     volumes_from:
       - nextcloud
@@ -354,7 +348,7 @@ services:
       - teamspeak-db
     networks:
       - proxy_ingress
-      - teamspeak_db
+      - teamspeak_private
     environment:
       <<: *default_service_environment
       TS3SERVER_DB_PLUGIN: ts3db_mariadb
@@ -383,7 +377,7 @@ services:
     image: mariadb:${MARIADB}
     container_name: teamspeak-db
     networks:
-      - teamspeak_db
+      - teamspeak_private
     environment:
       <<: [ *default_service_environment, *database_environment ]
       MARIADB_DATABASE: teamspeak
@@ -410,9 +404,9 @@ services:
     container_name: adminer
     networks:
       - ingress
-      - authelia_db
-      - nextcloud_db
-      - teamspeak_db
+      - authelia_private
+      - nextcloud_private
+      - teamspeak_private
     ports:
       - "8080:8080"
     profiles:
@@ -512,6 +506,7 @@ services:
       - "--entryPoints.teamspeakVoice.address=:9987/udp"
       - "--entryPoints.teamspeakFileTransfer.address=:30033"
       - "--certificatesResolvers.le.acme.dnsChallenge.provider=cloudflare"
+      - "--certificatesResolvers.le.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
       - "--certificatesResolvers.le.acme.storage=/config/acme.json"
       - "--serversTransport.insecureSkipVerify=true"
       - "--metrics.prometheus=true"
@@ -686,6 +681,7 @@ networks:
         - subnet: "fd00:d0ce:1000::/64"
   egress:
     <<: *external_network
+    name: "aaa_first"
     ipam:
       driver: default
       config:
@@ -698,29 +694,19 @@ networks:
     name: *proxy_ingress_network
   proxy_egress:
     <<: *internal_network
+    name: "aaa_second"
   # Internal special purpose networks.
-  authelia:
-    <<: *internal_network
-  ldap:
+  authelia_private:
     <<: *internal_network
   mail:
     <<: *internal_network
-  nextcloud:
+  nextcloud_private:
     <<: *internal_network
   prometheus:
     <<: *internal_network
   socket_proxy:
     <<: *internal_network
-  # Internal database networks.
-  authelia_db:
-    <<: *internal_network
-  authelia_redis:
-    <<: *internal_network
-  nextcloud_db:
-    <<: *internal_network
-  nextcloud_redis:
-    <<: *internal_network
-  teamspeak_db:
+  teamspeak_private:
     <<: *internal_network
 
 volumes:
