@@ -1,3 +1,5 @@
+> Archived: Moved to kubernetes
+
 # Atlas
 
 __The Atlas collection provides a set of containers that are configured to work as private cloud.__
